@@ -13,7 +13,7 @@ READY FOR DEVICE TESTING
 
 - Mobile repo: `hisham7961/lynomia-hub-app`
 - Branch: `claude/new-session-6mm7zs`
-- Commit: (رأس الفرع المدفوع — سجل git)
+- Commit: `31c9526` (دفعة التأسيس v0.1.0)
 
 ## BACKEND REFERENCE
 

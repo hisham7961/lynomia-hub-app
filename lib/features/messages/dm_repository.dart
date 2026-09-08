@@ -1,0 +1,116 @@
+/// الرسائل المباشرة (§52) — المسار بمعرف الطرف الآخر؛ الخيط يُبنى خادمياً
+/// (لا thread_key من العميل، ولا استعلام عن محادثات الغير).
+library;
+
+import 'package:uuid/uuid.dart';
+
+import '../../core/api/api_client.dart';
+
+class DmThread {
+  const DmThread({
+    required this.userId,
+    required this.userName,
+    required this.unread,
+    this.lastExcerpt,
+    this.lastMine = false,
+    this.lastAt,
+  });
+
+  factory DmThread.fromJson(Map<String, dynamic> j) {
+    final user = (j['user'] as Map?)?.cast<String, dynamic>() ?? const {};
+    final last = (j['last'] as Map?)?.cast<String, dynamic>() ?? const {};
+    return DmThread(
+      userId: user['id']?.toString() ?? '',
+      userName: user['name']?.toString() ?? '',
+      unread: (j['unread'] as num?)?.toInt() ?? 0,
+      lastExcerpt: last['excerpt']?.toString(),
+      lastMine: last['mine'] == true,
+      lastAt: DateTime.tryParse(last['created_at']?.toString() ?? ''),
+    );
+  }
+
+  final String userId;
+  final String userName;
+  final int unread;
+  final String? lastExcerpt;
+  final bool lastMine;
+  final DateTime? lastAt;
+}
+
+class DmMessage {
+  const DmMessage({
+    required this.id,
+    required this.mine,
+    this.body,
+    this.deleted = false,
+    this.hasAttachment = false,
+    this.read = false,
+    this.createdAt,
+  });
+
+  factory DmMessage.fromJson(Map<String, dynamic> j) => DmMessage(
+    id: j['id']?.toString() ?? '',
+    mine: j['mine'] == true,
+    body: j['body']?.toString(),
+    deleted: j['deleted'] == true,
+    hasAttachment: j['has_attachment'] == true,
+    read: j['read'] == true,
+    createdAt: DateTime.tryParse(j['created_at']?.toString() ?? ''),
+  );
+
+  final String id;
+  final bool mine;
+  final String? body;
+  final bool deleted;
+  final bool hasAttachment;
+  final bool read;
+  final DateTime? createdAt;
+}
+
+class DmRepository {
+  DmRepository(this.api);
+
+  final ApiClient api;
+
+  Future<({List<DmThread> threads, int unreadTotal})> threads() async {
+    final data = await api.getData('dm/threads');
+    return (
+      threads: (data['threads'] as List? ?? const [])
+          .whereType<Map>()
+          .map((e) => DmThread.fromJson(e.cast<String, dynamic>()))
+          .toList(),
+      unreadTotal: (data['unread_total'] as num?)?.toInt() ?? 0,
+    );
+  }
+
+  Future<List<DmMessage>> messages(String otherUserId) async {
+    final data = await api.getData('dm/threads/$otherUserId/messages');
+    return (data['messages'] as List? ?? const [])
+        .whereType<Map>()
+        .map((e) => DmMessage.fromJson(e.cast<String, dynamic>()))
+        .toList();
+  }
+
+  /// الإرسال قابل لإعادة المحاولة ⇒ مفتاح idempotency للرسالة الواحدة (§58).
+  Future<DmMessage> send(
+    String otherUserId,
+    String body, {
+    String? idempotencyKey,
+  }) async {
+    final data = await api.sendData(
+      'POST',
+      'dm/threads/$otherUserId/send',
+      body: {'body': body},
+      idempotencyKey: idempotencyKey ?? const Uuid().v4(),
+    );
+    return DmMessage.fromJson(
+      (data['message'] as Map?)?.cast<String, dynamic>() ?? const {},
+    );
+  }
+
+  Future<int> markRead(String otherUserId) async =>
+      ((await api.sendData('POST', 'dm/threads/$otherUserId/read'))['marked']
+              as num?)
+          ?.toInt() ??
+      0;
+}

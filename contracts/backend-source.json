@@ -1,0 +1,15 @@
+{
+  "backend_repository": "hisham7961/lynomia-hub",
+  "backend_ref": "claude/lynomia-hub-enterprise-upgrade-xn4p2t",
+  "backend_commit_sha": "791951d0e9e5a53b0832ecd3dd573271e03047d8",
+  "note": "الفرع المرجعي قائم عند هذا الـSHA؛ وفرع claude/new-session-6mm7zs عند 111d2a6be67c591a2b47919975a6473631451501 هو دمجُه (git diff بين الشجرتين فارغ — المحتوى مطابق).",
+  "backend_version": "2.446.0",
+  "mobile_api_version": "1",
+  "schema_version": "4a9f8b3a502e",
+  "snapshot_taken_at": "2026-09-08T21:15:54Z",
+  "snapshot_sources": {
+    "mobile_capabilities": "docs/mobile-readiness/mobile-capabilities.json @ backend_commit_sha",
+    "mobile_openapi": "GET /api/mobile/v1/openapi.json (مولَّدة حيّاً — راجع contracts/README.md لحالة اللقطة)"
+  },
+  "update_tool": "tool/update_contracts.sh"
+}

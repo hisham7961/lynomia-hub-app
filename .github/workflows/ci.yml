@@ -1,0 +1,58 @@
+# بوابة CI (§137) — تنسيق/تحليل/اختبارات (وحدات+widget+عقود) + بناء Android تجريبي.
+# لا اعتماد إنتاجي مطلوب — كل الاختبارات على fakes ولقطات العقد الملتزمة.
+name: ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.2'
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - name: Dart format check
+        run: dart format --set-exit-if-changed .
+      - name: Analyze
+        run: flutter analyze
+      - name: Tests (unit + widget + contract)
+        run: flutter test
+
+  android-build:
+    runs-on: ubuntu-latest
+    needs: quality
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.2'
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - name: Build debug APK (smoke)
+        run: flutter build apk --debug
+
+  # يفعل عند توفر عداء macOS للمشروع — بناء iOS بلا توقيع (§137).
+  ios-build:
+    if: ${{ false }}
+    runs-on: macos-latest
+    needs: quality
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.2'
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: flutter build ios --no-codesign

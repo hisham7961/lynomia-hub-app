@@ -1147,6 +1147,360 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'الخروج من كل الأجهزة والجلسات؟'**
   String get confirmLogoutAll;
+
+  /// No description provided for @portalTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'بوابة العميل'**
+  String get portalTitle;
+
+  /// No description provided for @portalYourSpace.
+  ///
+  /// In ar, this message translates to:
+  /// **'مساحتك'**
+  String get portalYourSpace;
+
+  /// No description provided for @portalEngagements.
+  ///
+  /// In ar, this message translates to:
+  /// **'الارتباطات'**
+  String get portalEngagements;
+
+  /// No description provided for @portalProjects.
+  ///
+  /// In ar, this message translates to:
+  /// **'المشاريع'**
+  String get portalProjects;
+
+  /// No description provided for @portalDocuments.
+  ///
+  /// In ar, this message translates to:
+  /// **'الوثائق المشتركة'**
+  String get portalDocuments;
+
+  /// No description provided for @portalInvoices.
+  ///
+  /// In ar, this message translates to:
+  /// **'الفواتير'**
+  String get portalInvoices;
+
+  /// No description provided for @portalConversations.
+  ///
+  /// In ar, this message translates to:
+  /// **'المحادثات'**
+  String get portalConversations;
+
+  /// No description provided for @portalYourOrgs.
+  ///
+  /// In ar, this message translates to:
+  /// **'منظماتك'**
+  String get portalYourOrgs;
+
+  /// No description provided for @portalEmptyWorld.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا وصول فعّالاً لحسابك بعد — تواصل مع مسؤولك لدى الشركة'**
+  String get portalEmptyWorld;
+
+  /// No description provided for @portalClientNote.
+  ///
+  /// In ar, this message translates to:
+  /// **'ملاحظة لك'**
+  String get portalClientNote;
+
+  /// No description provided for @invoiceTotal.
+  ///
+  /// In ar, this message translates to:
+  /// **'الإجمالي'**
+  String get invoiceTotal;
+
+  /// No description provided for @invoicePaid.
+  ///
+  /// In ar, this message translates to:
+  /// **'المدفوع'**
+  String get invoicePaid;
+
+  /// No description provided for @invoiceState.
+  ///
+  /// In ar, this message translates to:
+  /// **'الحالة'**
+  String get invoiceState;
+
+  /// No description provided for @invoiceDue.
+  ///
+  /// In ar, this message translates to:
+  /// **'تاريخ الاستحقاق'**
+  String get invoiceDue;
+
+  /// No description provided for @invoiceDate.
+  ///
+  /// In ar, this message translates to:
+  /// **'التاريخ'**
+  String get invoiceDate;
+
+  /// No description provided for @invoiceKind.
+  ///
+  /// In ar, this message translates to:
+  /// **'النوع'**
+  String get invoiceKind;
+
+  /// No description provided for @projectProgress.
+  ///
+  /// In ar, this message translates to:
+  /// **'نسبة الإنجاز'**
+  String get projectProgress;
+
+  /// No description provided for @projectStatus.
+  ///
+  /// In ar, this message translates to:
+  /// **'الحالة'**
+  String get projectStatus;
+
+  /// No description provided for @projectPriority.
+  ///
+  /// In ar, this message translates to:
+  /// **'الأولوية'**
+  String get projectPriority;
+
+  /// No description provided for @projectStart.
+  ///
+  /// In ar, this message translates to:
+  /// **'تاريخ البدء'**
+  String get projectStart;
+
+  /// No description provided for @projectLaunchExpected.
+  ///
+  /// In ar, this message translates to:
+  /// **'الإطلاق المتوقع'**
+  String get projectLaunchExpected;
+
+  /// No description provided for @projectLaunchActual.
+  ///
+  /// In ar, this message translates to:
+  /// **'الإطلاق الفعلي'**
+  String get projectLaunchActual;
+
+  /// No description provided for @projectEngagement.
+  ///
+  /// In ar, this message translates to:
+  /// **'الارتباط'**
+  String get projectEngagement;
+
+  /// No description provided for @projectClient.
+  ///
+  /// In ar, this message translates to:
+  /// **'العميل'**
+  String get projectClient;
+
+  /// No description provided for @docCategory.
+  ///
+  /// In ar, this message translates to:
+  /// **'التصنيف'**
+  String get docCategory;
+
+  /// No description provided for @docNo.
+  ///
+  /// In ar, this message translates to:
+  /// **'رقم الوثيقة'**
+  String get docNo;
+
+  /// No description provided for @docIssueDate.
+  ///
+  /// In ar, this message translates to:
+  /// **'تاريخ الإصدار'**
+  String get docIssueDate;
+
+  /// No description provided for @docExpiry.
+  ///
+  /// In ar, this message translates to:
+  /// **'تاريخ الانتهاء'**
+  String get docExpiry;
+
+  /// No description provided for @docRenewal.
+  ///
+  /// In ar, this message translates to:
+  /// **'التجديد'**
+  String get docRenewal;
+
+  /// No description provided for @conversationWrite.
+  ///
+  /// In ar, this message translates to:
+  /// **'اكتب رسالة…'**
+  String get conversationWrite;
+
+  /// No description provided for @conversationEmpty.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا رسائل بعد'**
+  String get conversationEmpty;
+
+  /// No description provided for @activationTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'تفعيل الحساب'**
+  String get activationTitle;
+
+  /// No description provided for @activationIntro.
+  ///
+  /// In ar, this message translates to:
+  /// **'أنشئ كلمة مرورك لحساب {email}'**
+  String activationIntro(String email);
+
+  /// No description provided for @activationOtp.
+  ///
+  /// In ar, this message translates to:
+  /// **'رمز التحقق (٦ أرقام)'**
+  String get activationOtp;
+
+  /// No description provided for @activationPassword.
+  ///
+  /// In ar, this message translates to:
+  /// **'كلمة المرور الجديدة'**
+  String get activationPassword;
+
+  /// No description provided for @activationPasswordConfirm.
+  ///
+  /// In ar, this message translates to:
+  /// **'تأكيد كلمة المرور'**
+  String get activationPasswordConfirm;
+
+  /// No description provided for @activationSubmit.
+  ///
+  /// In ar, this message translates to:
+  /// **'تفعيل الحساب'**
+  String get activationSubmit;
+
+  /// No description provided for @activationExpired.
+  ///
+  /// In ar, this message translates to:
+  /// **'انتهت صلاحية رابط التفعيل — اطلب دعوة جديدة من مسؤولك لدى الشركة'**
+  String get activationExpired;
+
+  /// No description provided for @activationDone.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم تفعيل حسابك — سجّل الدخول بكلمة مرورك الجديدة'**
+  String get activationDone;
+
+  /// No description provided for @activationPasswordMismatch.
+  ///
+  /// In ar, this message translates to:
+  /// **'كلمتا المرور غير متطابقتين'**
+  String get activationPasswordMismatch;
+
+  /// No description provided for @membersTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'أعضاء العميل'**
+  String get membersTitle;
+
+  /// No description provided for @membersInvite.
+  ///
+  /// In ar, this message translates to:
+  /// **'دعوة عضو'**
+  String get membersInvite;
+
+  /// No description provided for @membersEmail.
+  ///
+  /// In ar, this message translates to:
+  /// **'البريد الإلكتروني'**
+  String get membersEmail;
+
+  /// No description provided for @membersNameOptional.
+  ///
+  /// In ar, this message translates to:
+  /// **'الاسم (اختياري)'**
+  String get membersNameOptional;
+
+  /// No description provided for @membersRole.
+  ///
+  /// In ar, this message translates to:
+  /// **'الدور'**
+  String get membersRole;
+
+  /// No description provided for @membersRevoke.
+  ///
+  /// In ar, this message translates to:
+  /// **'سحب الوصول'**
+  String get membersRevoke;
+
+  /// No description provided for @membersRevokeConfirm.
+  ///
+  /// In ar, this message translates to:
+  /// **'أتريد سحب وصول هذا العضو؟ يسري التعليق فوراً.'**
+  String get membersRevokeConfirm;
+
+  /// No description provided for @membersChangeRole.
+  ///
+  /// In ar, this message translates to:
+  /// **'تغيير الدور'**
+  String get membersChangeRole;
+
+  /// No description provided for @membersInviteSent.
+  ///
+  /// In ar, this message translates to:
+  /// **'أُرسلت الدعوة برسالة تفعيل — لا كلمة سر تُرسل أبداً'**
+  String get membersInviteSent;
+
+  /// No description provided for @membersStatusInvited.
+  ///
+  /// In ar, this message translates to:
+  /// **'مدعو'**
+  String get membersStatusInvited;
+
+  /// No description provided for @membersStatusActive.
+  ///
+  /// In ar, this message translates to:
+  /// **'فعّال'**
+  String get membersStatusActive;
+
+  /// No description provided for @membersStatusSuspended.
+  ///
+  /// In ar, this message translates to:
+  /// **'معلَّق'**
+  String get membersStatusSuspended;
+
+  /// No description provided for @membersActivatedYes.
+  ///
+  /// In ar, this message translates to:
+  /// **'فعّل حسابه'**
+  String get membersActivatedYes;
+
+  /// No description provided for @membersActivatedNo.
+  ///
+  /// In ar, this message translates to:
+  /// **'لم يفعّل حسابه بعد'**
+  String get membersActivatedNo;
+
+  /// No description provided for @roleOwner.
+  ///
+  /// In ar, this message translates to:
+  /// **'مالك'**
+  String get roleOwner;
+
+  /// No description provided for @roleLead.
+  ///
+  /// In ar, this message translates to:
+  /// **'مسؤول رئيسي'**
+  String get roleLead;
+
+  /// No description provided for @roleTechnical.
+  ///
+  /// In ar, this message translates to:
+  /// **'تقني'**
+  String get roleTechnical;
+
+  /// No description provided for @roleFinance.
+  ///
+  /// In ar, this message translates to:
+  /// **'مالي'**
+  String get roleFinance;
+
+  /// No description provided for @roleViewer.
+  ///
+  /// In ar, this message translates to:
+  /// **'مشاهد'**
+  String get roleViewer;
 }
 
 class _AppLocalizationsDelegate

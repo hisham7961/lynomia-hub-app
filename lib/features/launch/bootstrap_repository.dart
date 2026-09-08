@@ -38,6 +38,26 @@ class ContextDimension {
   final List<({String id, String name})> items;
 }
 
+/// عضوية حساب العميل الفعّالة كما يبثها الخادم (`bootstrap.memberships`).
+class ClientMembershipInfo {
+  const ClientMembershipInfo({
+    required this.clientId,
+    required this.clientName,
+    required this.role,
+  });
+
+  factory ClientMembershipInfo.fromJson(Map<String, dynamic> j) =>
+      ClientMembershipInfo(
+        clientId: j['client_id']?.toString() ?? '',
+        clientName: j['client_name']?.toString() ?? '',
+        role: j['role']?.toString() ?? '',
+      );
+
+  final String clientId;
+  final String clientName;
+  final String role;
+}
+
 class Bootstrap {
   const Bootstrap({
     required this.user,
@@ -47,6 +67,7 @@ class Bootstrap {
     required this.unreadNotifications,
     required this.ia,
     required this.schemaVersion,
+    this.memberships = const [],
     this.timezone,
     this.appVersionOnServer,
   });
@@ -71,6 +92,10 @@ class Bootstrap {
     ia: j['ia'] is Map
         ? IaTree.fromJson((j['ia'] as Map).cast<String, dynamic>())
         : IaTree.empty,
+    memberships: (j['memberships'] as List? ?? const [])
+        .whereType<Map>()
+        .map((e) => ClientMembershipInfo.fromJson(e.cast<String, dynamic>()))
+        .toList(),
     schemaVersion: j['schema_version']?.toString() ?? '',
     timezone: j['timezone']?.toString(),
     appVersionOnServer: ((j['versions'] as Map?) ?? const {})['app']
@@ -83,6 +108,9 @@ class Bootstrap {
 
   /// أعلام قدرة **للعرض فقط** (`can_approve` …) — الخادم يعيد الفحص في كل نقطة.
   final Map<String, dynamic> featureFlags;
+
+  /// عضويات حساب العميل الفعّالة (فارغة للحساب الداخلي).
+  final List<ClientMembershipInfo> memberships;
   final int unreadNotifications;
   final IaTree ia;
   final String schemaVersion;

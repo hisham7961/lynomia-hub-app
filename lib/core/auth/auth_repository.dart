@@ -16,6 +16,7 @@ class AuthUser {
     required this.email,
     this.role,
     this.isOwner = false,
+    this.accountType = 'internal',
   });
 
   factory AuthUser.fromJson(Map<String, dynamic> json) => AuthUser(
@@ -24,6 +25,7 @@ class AuthUser {
     email: json['email']?.toString() ?? '',
     role: json['role']?.toString(),
     isOwner: json['is_owner'] == true,
+    accountType: json['account_type']?.toString() ?? 'internal',
   );
 
   final String id;
@@ -33,6 +35,13 @@ class AuthUser {
 
   /// **عرض فقط** — الخادم لا يثق به ويعيد فحص الملكية في كل نقطة.
   final bool isOwner;
+
+  /// نمط الحساب من المصنِّف الخادمي الصلب `users.account_type` — به يختار
+  /// التطبيق **القشرة** (بوابة العميل أو اللوحة الداخلية). عرضٌ لا تخويل:
+  /// `MobilePortalGuard` خادمياً يصدّ النداء المباشر أياً كانت القشرة.
+  final String accountType;
+
+  bool get isClient => accountType == 'client';
 }
 
 /// نتيجة الدخول: جلسة، أو تحدي MFA.

@@ -107,11 +107,15 @@ class _AccountScreenState extends State<AccountScreen> {
     final l = AppLocalizations.of(context)!;
     final c = AppScope.of(context);
     final account = c.account;
+    // نمط الحساب يقود العرض: لا سياق شركات ولا أدوات داخلية لحساب العميل،
+    // ومسارات القشرة (الجلسات/التشخيص) تتبع قشرته (§10 §12).
+    final isClient = account.isClient;
+    final accountBase = isClient ? '/portal/account' : '/account';
 
     return Scaffold(
       appBar: AppBar(
         title: Text(l.accountTitle),
-        actions: shellHeaderActions(context),
+        actions: isClient ? null : shellHeaderActions(context),
       ),
       body: ListenableBuilder(
         listenable: account,
@@ -142,38 +146,40 @@ class _AccountScreenState extends State<AccountScreen> {
                 ),
               ),
 
-              // سياق العرض (§42)
-              Text(
-                l.accountContext,
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
-              const SizedBox(height: 8),
-              Card(
-                margin: const EdgeInsets.only(bottom: 16),
-                child: Column(
-                  children: [
-                    ListTile(
-                      leading: const Icon(Icons.business_outlined),
-                      title: Text(l.accountContextCompany),
-                      subtitle: Text(
-                        c.viewContext.companyName ?? l.accountContextAll,
-                      ),
-                      trailing: const Icon(Icons.unfold_more),
-                      onTap: () => _pickContext(company: true),
-                    ),
-                    if (_hasClients(bootstrap))
+              // سياق العرض (§42) — مفهوم داخلي؛ نطاق العميل عضويته الخادمية.
+              if (!isClient) ...[
+                Text(
+                  l.accountContext,
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                const SizedBox(height: 8),
+                Card(
+                  margin: const EdgeInsets.only(bottom: 16),
+                  child: Column(
+                    children: [
                       ListTile(
-                        leading: const Icon(Icons.handshake_outlined),
-                        title: Text(l.accountContextClient),
+                        leading: const Icon(Icons.business_outlined),
+                        title: Text(l.accountContextCompany),
                         subtitle: Text(
-                          c.viewContext.clientName ?? l.accountContextAll,
+                          c.viewContext.companyName ?? l.accountContextAll,
                         ),
                         trailing: const Icon(Icons.unfold_more),
-                        onTap: () => _pickContext(company: false),
+                        onTap: () => _pickContext(company: true),
                       ),
-                  ],
+                      if (_hasClients(bootstrap))
+                        ListTile(
+                          leading: const Icon(Icons.handshake_outlined),
+                          title: Text(l.accountContextClient),
+                          subtitle: Text(
+                            c.viewContext.clientName ?? l.accountContextAll,
+                          ),
+                          trailing: const Icon(Icons.unfold_more),
+                          onTap: () => _pickContext(company: false),
+                        ),
+                    ],
+                  ),
                 ),
-              ),
+              ],
 
               // الأمان والجلسات (§39 §40)
               Text(
@@ -189,7 +195,7 @@ class _AccountScreenState extends State<AccountScreen> {
                       leading: const Icon(Icons.devices_outlined),
                       title: Text(l.accountSessions),
                       trailing: const Icon(Icons.chevron_right),
-                      onTap: () => context.go('/account/sessions'),
+                      onTap: () => context.go('$accountBase/sessions'),
                     ),
                     if (_biometricAvailable)
                       SwitchListTile(
@@ -265,27 +271,29 @@ class _AccountScreenState extends State<AccountScreen> {
                 ),
               ),
 
-              // أدوات
-              Card(
-                margin: const EdgeInsets.only(bottom: 16),
-                child: Column(
-                  children: [
-                    ListTile(
-                      leading: const Icon(Icons.location_on_outlined),
-                      title: Text(l.trackingTitle),
-                      trailing: const Icon(Icons.chevron_right),
-                      onTap: () => context.push('/tracking'),
-                    ),
-                    if (kDebugMode)
-                      ListTile(
-                        leading: const Icon(Icons.bug_report_outlined),
-                        title: Text(l.diagnosticsTitle),
-                        trailing: const Icon(Icons.chevron_right),
-                        onTap: () => context.go('/account/diagnostics'),
-                      ),
-                  ],
+              // أدوات — التتبع قدرة ميدانية داخلية (خارج قائمة العميل البيضاء).
+              if (!isClient || kDebugMode)
+                Card(
+                  margin: const EdgeInsets.only(bottom: 16),
+                  child: Column(
+                    children: [
+                      if (!isClient)
+                        ListTile(
+                          leading: const Icon(Icons.location_on_outlined),
+                          title: Text(l.trackingTitle),
+                          trailing: const Icon(Icons.chevron_right),
+                          onTap: () => context.push('/tracking'),
+                        ),
+                      if (kDebugMode)
+                        ListTile(
+                          leading: const Icon(Icons.bug_report_outlined),
+                          title: Text(l.diagnosticsTitle),
+                          trailing: const Icon(Icons.chevron_right),
+                          onTap: () => context.go('$accountBase/diagnostics'),
+                        ),
+                    ],
+                  ),
                 ),
-              ),
 
               // الخروج (§39)
               Card(

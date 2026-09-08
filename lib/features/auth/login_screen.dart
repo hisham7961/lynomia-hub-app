@@ -10,7 +10,11 @@ import '../../core/ui/async_view.dart';
 import '../../l10n/app_localizations.dart';
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+  const LoginScreen({super.key, this.initialEmail, this.justActivated = false});
+
+  /// تعبئة مسبقة بعد تفعيل الحساب (§13) — البريد فقط، لا كلمة أبداً.
+  final String? initialEmail;
+  final bool justActivated;
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -18,7 +22,7 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final _form = GlobalKey<FormState>();
-  final _email = TextEditingController();
+  late final _email = TextEditingController(text: widget.initialEmail ?? '');
   final _password = TextEditingController();
   final _code = TextEditingController();
 
@@ -116,6 +120,22 @@ class _LoginScreenState extends State<LoginScreen> {
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 24),
+                    if (widget.justActivated && !mfa) ...[
+                      Card(
+                        color: Theme.of(context).colorScheme.primaryContainer,
+                        child: Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.check_circle_outline),
+                              const SizedBox(width: 8),
+                              Expanded(child: Text(l.activationDone)),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                    ],
                     if (!mfa) ...[
                       TextFormField(
                         controller: _email,

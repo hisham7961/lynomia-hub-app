@@ -260,6 +260,19 @@ class _RecordScreenState extends State<RecordScreen> {
             overflow: TextOverflow.ellipsis,
           ),
           actions: [
+            // إدارة أعضاء العميل (§15) — على سجل العميل لمن يملك تعديله؛
+            // الخادم يعيد الفحص (clients:e + hub_scope) في كل نقطة.
+            if (widget.module == 'clients' && schema.can.e)
+              IconButton(
+                tooltip: l.membersTitle,
+                icon: const Icon(Icons.group_outlined),
+                onPressed: () => context.push(
+                  Uri(
+                    path: '/clients/${widget.id}/members',
+                    queryParameters: {'name': record.display(schema)},
+                  ).toString(),
+                ),
+              ),
             if (schema.can.e)
               IconButton(
                 tooltip: l.actionEdit,

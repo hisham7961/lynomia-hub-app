@@ -1,6 +1,6 @@
 # مصفوفة تغطية القدرات (§124)
 
-المصدر: `contracts/mobile-capabilities.json` (٥٩ نقطة). الحالة:
+المصدر: `contracts/mobile-capabilities.json` (٧٥ نقطة · خلفية v2.447.0). الحالة:
 `IMPLEMENTED` مبنية ومختبرة · `NOT_APPLICABLE` ليست شاشة جوال بطبيعتها ·
 `BLOCKED_EXTERNAL_CONFIG` تنتظر اعتماداً خارجياً فقط · `BACKEND_GAP` فجوة عقد.
 
@@ -30,11 +30,14 @@
 | تسجيل الدفع (٢) | `push/register,unregister` | `PushRegistrar` | تلقائي عند الدخول/الخروج | ONLINE | مبني (مستودع) | BLOCKED_EXTERNAL_CONFIG (لا اعتماد FCM/APNs — المزود الصفري صادق) |
 | إدارة الدفع (٢) | `push/admin/status,test` | — | — | — | — | NOT_APPLICABLE (إدارة مالك — مركز المنصة ويب §98) |
 | openapi.json | `openapi.json` | `contracts/mobile-openapi.json` | لقطة عقد + أداة تحديث | عامة | contract tests | IMPLEMENTED (لقطة) |
+| تفعيل حساب العميل (٢) | `activation/{token}[,/complete]` | `ActivationRepository` + شاشة التفعيل | رابط عميق `/activate/{token}` (عام) | ONLINE (عامة) | client_experience | IMPLEMENTED |
+| بوابة العميل (١٠) | `portal/home,engagements,projects[,/{id}],documents[,/{id}],invoices[,/{id}],conversations[,/{id}]` | `PortalRepository` + `ClientShell` وشاشات البوابة | قشرة حساب العميل كاملة | ONLINE (لا تخبئة — عالم حي) | client_experience + عزل القشرة | IMPLEMENTED |
+| إدارة أعضاء العميل (٤) | `clients/{client}/members…` | `ClientMembersRepository` + شاشة الأعضاء | سجل وحدة clients ← «أعضاء العميل» | ONLINE (+ تصعيد بالغرض) | client_experience | IMPLEMENTED |
 
 ## الحصيلة
 
-- قدرات الخلفية الجوالية: **59 نقطة / 22 مجموعة**
-- IMPLEMENTED: **20 مجموعة**
+- قدرات الخلفية الجوالية: **75 نقطة / 25 مجموعة** (خلفية v2.447.0 — تجربة العميل §10–§18)
+- IMPLEMENTED: **23 مجموعة**
 - NOT_APPLICABLE: **1** (إدارة الدفع للمالك — سطح ويب إداري)
 - BLOCKED_EXTERNAL_CONFIG: **1** (تفعيل مزود الدفع الحقيقي)
 - BACKEND_GAP: بند فرعي واحد (سرد مرفقات سجل) — موثق

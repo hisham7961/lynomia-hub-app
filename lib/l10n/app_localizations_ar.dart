@@ -561,4 +561,188 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get confirmLogoutAll => 'الخروج من كل الأجهزة والجلسات؟';
+
+  @override
+  String get portalTitle => 'بوابة العميل';
+
+  @override
+  String get portalYourSpace => 'مساحتك';
+
+  @override
+  String get portalEngagements => 'الارتباطات';
+
+  @override
+  String get portalProjects => 'المشاريع';
+
+  @override
+  String get portalDocuments => 'الوثائق المشتركة';
+
+  @override
+  String get portalInvoices => 'الفواتير';
+
+  @override
+  String get portalConversations => 'المحادثات';
+
+  @override
+  String get portalYourOrgs => 'منظماتك';
+
+  @override
+  String get portalEmptyWorld =>
+      'لا وصول فعّالاً لحسابك بعد — تواصل مع مسؤولك لدى الشركة';
+
+  @override
+  String get portalClientNote => 'ملاحظة لك';
+
+  @override
+  String get invoiceTotal => 'الإجمالي';
+
+  @override
+  String get invoicePaid => 'المدفوع';
+
+  @override
+  String get invoiceState => 'الحالة';
+
+  @override
+  String get invoiceDue => 'تاريخ الاستحقاق';
+
+  @override
+  String get invoiceDate => 'التاريخ';
+
+  @override
+  String get invoiceKind => 'النوع';
+
+  @override
+  String get projectProgress => 'نسبة الإنجاز';
+
+  @override
+  String get projectStatus => 'الحالة';
+
+  @override
+  String get projectPriority => 'الأولوية';
+
+  @override
+  String get projectStart => 'تاريخ البدء';
+
+  @override
+  String get projectLaunchExpected => 'الإطلاق المتوقع';
+
+  @override
+  String get projectLaunchActual => 'الإطلاق الفعلي';
+
+  @override
+  String get projectEngagement => 'الارتباط';
+
+  @override
+  String get projectClient => 'العميل';
+
+  @override
+  String get docCategory => 'التصنيف';
+
+  @override
+  String get docNo => 'رقم الوثيقة';
+
+  @override
+  String get docIssueDate => 'تاريخ الإصدار';
+
+  @override
+  String get docExpiry => 'تاريخ الانتهاء';
+
+  @override
+  String get docRenewal => 'التجديد';
+
+  @override
+  String get conversationWrite => 'اكتب رسالة…';
+
+  @override
+  String get conversationEmpty => 'لا رسائل بعد';
+
+  @override
+  String get activationTitle => 'تفعيل الحساب';
+
+  @override
+  String activationIntro(String email) {
+    return 'أنشئ كلمة مرورك لحساب $email';
+  }
+
+  @override
+  String get activationOtp => 'رمز التحقق (٦ أرقام)';
+
+  @override
+  String get activationPassword => 'كلمة المرور الجديدة';
+
+  @override
+  String get activationPasswordConfirm => 'تأكيد كلمة المرور';
+
+  @override
+  String get activationSubmit => 'تفعيل الحساب';
+
+  @override
+  String get activationExpired =>
+      'انتهت صلاحية رابط التفعيل — اطلب دعوة جديدة من مسؤولك لدى الشركة';
+
+  @override
+  String get activationDone =>
+      'تم تفعيل حسابك — سجّل الدخول بكلمة مرورك الجديدة';
+
+  @override
+  String get activationPasswordMismatch => 'كلمتا المرور غير متطابقتين';
+
+  @override
+  String get membersTitle => 'أعضاء العميل';
+
+  @override
+  String get membersInvite => 'دعوة عضو';
+
+  @override
+  String get membersEmail => 'البريد الإلكتروني';
+
+  @override
+  String get membersNameOptional => 'الاسم (اختياري)';
+
+  @override
+  String get membersRole => 'الدور';
+
+  @override
+  String get membersRevoke => 'سحب الوصول';
+
+  @override
+  String get membersRevokeConfirm =>
+      'أتريد سحب وصول هذا العضو؟ يسري التعليق فوراً.';
+
+  @override
+  String get membersChangeRole => 'تغيير الدور';
+
+  @override
+  String get membersInviteSent =>
+      'أُرسلت الدعوة برسالة تفعيل — لا كلمة سر تُرسل أبداً';
+
+  @override
+  String get membersStatusInvited => 'مدعو';
+
+  @override
+  String get membersStatusActive => 'فعّال';
+
+  @override
+  String get membersStatusSuspended => 'معلَّق';
+
+  @override
+  String get membersActivatedYes => 'فعّل حسابه';
+
+  @override
+  String get membersActivatedNo => 'لم يفعّل حسابه بعد';
+
+  @override
+  String get roleOwner => 'مالك';
+
+  @override
+  String get roleLead => 'مسؤول رئيسي';
+
+  @override
+  String get roleTechnical => 'تقني';
+
+  @override
+  String get roleFinance => 'مالي';
+
+  @override
+  String get roleViewer => 'مشاهد';
 }

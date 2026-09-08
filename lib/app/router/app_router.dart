@@ -1,18 +1,24 @@
 /// الموجّه (§15) — go_router: إعادة توجيه مصادقة، روابط عميقة `/m/*` و`/app/*`،
-/// شاشة تحديث حاجبة، وخمس وجهات سفلية بملاحة متداخلة.
+/// شاشة تحديث حاجبة، وقشرتان بحسب نمط الحساب الخادمي (§10 §12):
+/// الداخلي خمس وجهات، والعميل قشرة بوابته — ولا يعبر أحدهما لقشرة الآخر.
 library;
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/activation/activation_screen.dart';
 import '../../features/approvals/approvals_screen.dart';
 import '../../features/auth/login_screen.dart';
 import '../../features/home/home_screen.dart';
 import '../../features/launch/launch_gate_screen.dart';
+import '../../features/members/client_members_screen.dart';
 import '../../features/messages/messages_screens.dart';
 import '../../features/modules/module_list_screen.dart';
 import '../../features/my_work/my_work_screen.dart';
 import '../../features/notifications/notifications_screen.dart';
+import '../../features/portal/client_home_screen.dart';
+import '../../features/portal/client_shell.dart';
+import '../../features/portal/portal_screens.dart';
 import '../../features/profile/account_screen.dart';
 import '../../features/profile/diagnostics_screen.dart';
 import '../../features/profile/sessions_screen.dart';
@@ -28,21 +34,34 @@ import '../di/app_scope.dart';
 
 GoRouter buildRouter(AppContainer c) => GoRouter(
   initialLocation: '/launch',
-  refreshListenable: Listenable.merge([c.launch, c.session]),
+  refreshListenable: Listenable.merge([c.launch, c.session, c.account]),
   redirect: (context, state) {
     final path = state.uri.path;
     final launchState = c.launch.state;
 
-    // روابط الويب العالمية `/app/...` تُطوى على نظيرتها `/m/...` (§76).
+    // روابط الويب العالمية `/app/...` تُطوى على نظيرتها المحلية (§76).
     if (path.startsWith('/app/')) {
-      return path.replaceFirst('/app/', '/m/');
+      return path.startsWith('/app/activate/')
+          ? path.replaceFirst('/app/', '/')
+          : path.replaceFirst('/app/', '/m/');
     }
+
+    // تفعيل الحساب (§13) نقطة عامة تسبق الدخول — تمرّ بأي حالة إقلاع.
+    if (path.startsWith('/activate/')) return null;
 
     final atGate = path == '/launch';
     final atLogin = path == '/login';
+    final isClient = c.account.isClient;
+    final atPortal = path == '/portal' || path.startsWith('/portal/');
+    // الإشعارات مشتركة بين القشرتين (مسموحة لحساب العميل خادمياً).
+    final shared = path == '/notifications';
 
     return switch (launchState) {
-      LaunchReady() when atGate || atLogin => '/home',
+      LaunchReady() when atGate || atLogin => isClient ? '/portal' : '/home',
+      // عزل القشرتين (§12): العميل لا يرى وجهة داخلية والداخلي لا يرى
+      // البوابة — عرضٌ متسق مع الحرس الخادمي (MobilePortalGuard) لا بديلاً عنه.
+      LaunchReady() when isClient && !atPortal && !shared => '/portal',
+      LaunchReady() when !isClient && atPortal => '/home',
       LaunchReady() => null,
       LaunchLoggedOut() when !atLogin => '/login',
       LaunchLoggedOut() => null,
@@ -55,7 +74,13 @@ GoRouter buildRouter(AppContainer c) => GoRouter(
       path: '/launch',
       builder: (context, state) => const LaunchGateScreen(),
     ),
-    GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
+    GoRoute(
+      path: '/login',
+      builder: (context, state) => LoginScreen(
+        initialEmail: state.uri.queryParameters['email'],
+        justActivated: state.uri.queryParameters['activated'] == '1',
+      ),
+    ),
     StatefulShellRoute.indexedStack(
       builder: (context, state, shell) => AppShell(shell: shell),
       branches: [
@@ -118,6 +143,113 @@ GoRouter buildRouter(AppContainer c) => GoRouter(
           ],
         ),
       ],
+    ),
+    // قشرة العميل (§12) — بيت البوابة ووجهاتها حصراً، لا وجهة داخلية.
+    StatefulShellRoute.indexedStack(
+      builder: (context, state, shell) => ClientShell(shell: shell),
+      branches: [
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: '/portal',
+              builder: (context, state) => const ClientHomeScreen(),
+            ),
+          ],
+        ),
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: '/portal/projects',
+              builder: (context, state) => const PortalProjectsScreen(),
+              routes: [
+                GoRoute(
+                  path: ':id',
+                  builder: (context, state) =>
+                      PortalProjectScreen(id: state.pathParameters['id']!),
+                ),
+              ],
+            ),
+          ],
+        ),
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: '/portal/invoices',
+              builder: (context, state) => const PortalInvoicesScreen(),
+              routes: [
+                GoRoute(
+                  path: ':id',
+                  builder: (context, state) =>
+                      PortalInvoiceScreen(id: state.pathParameters['id']!),
+                ),
+              ],
+            ),
+          ],
+        ),
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: '/portal/conversations',
+              builder: (context, state) => const PortalConversationsScreen(),
+              routes: [
+                GoRoute(
+                  path: ':id',
+                  builder: (context, state) =>
+                      PortalConversationScreen(id: state.pathParameters['id']!),
+                ),
+              ],
+            ),
+          ],
+        ),
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: '/portal/account',
+              builder: (context, state) => const AccountScreen(),
+              routes: [
+                GoRoute(
+                  path: 'sessions',
+                  builder: (context, state) => const SessionsScreen(),
+                ),
+                GoRoute(
+                  path: 'diagnostics',
+                  builder: (context, state) => const DiagnosticsScreen(),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ],
+    ),
+    // وجهتا بوابة تُدفعان من البيت (خارج الشريط السفلي).
+    GoRoute(
+      path: '/portal/engagements',
+      builder: (context, state) => const PortalEngagementsScreen(),
+    ),
+    GoRoute(
+      path: '/portal/documents',
+      builder: (context, state) => const PortalDocumentsScreen(),
+      routes: [
+        GoRoute(
+          path: ':id',
+          builder: (context, state) =>
+              PortalDocumentScreen(id: state.pathParameters['id']!),
+        ),
+      ],
+    ),
+    // تفعيل حساب العميل (§13) — رابط عميق عام يسبق الدخول.
+    GoRoute(
+      path: '/activate/:token',
+      builder: (context, state) =>
+          ActivationScreen(token: state.pathParameters['token']!),
+    ),
+    // إدارة أعضاء العميل (§15) — للمدير الداخلي من سجل العميل.
+    GoRoute(
+      path: '/clients/:id/members',
+      builder: (context, state) => ClientMembersScreen(
+        clientId: state.pathParameters['id']!,
+        clientName: state.uri.queryParameters['name'],
+      ),
     ),
     // الوجهات المدفوعة بالخادم — قائمة وحدة عامة وسجل عام (§19 §76).
     GoRoute(

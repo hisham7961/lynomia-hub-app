@@ -20,6 +20,7 @@ class IaDestination {
     required this.mobile,
     this.module,
     this.route,
+    this.portal,
     this.args = const [],
   });
 
@@ -30,6 +31,7 @@ class IaDestination {
     mobile: _fitOf(j['mobile']?.toString()),
     module: j['module']?.toString(),
     route: j['route']?.toString(),
+    portal: j['portal']?.toString(),
     args: (j['args'] as List? ?? const []).map((e) => e.toString()).toList(),
   );
 
@@ -45,6 +47,10 @@ class IaDestination {
   /// مفتاح منطقي لشاشة قائمة الوحدة — الوجهة الأساسية للجوال.
   final String? module;
   final String? route;
+
+  /// مفتاح وجهة بوابة العميل (`type: portal`) — home/engagements/projects/
+  /// documents/invoices/conversations.
+  final String? portal;
   final List<String> args;
 }
 

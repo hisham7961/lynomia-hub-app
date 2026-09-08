@@ -3,7 +3,7 @@
     "info": {
         "title": "Lynomia Business Hub — Mobile API",
         "version": "1",
-        "x-hub-version": "2.446.0",
+        "x-hub-version": "2.447.0",
         "description": "سطحُ الجوال الأصيل (first-party) لتطبيق iOS/Android — **مستقلٌّ عن `/api/v1`** (مفتاح التكامل) ولا يمسّه.\nالمصادقةُ جلسةٌ من زوجِ رمزَين: وصولٌ قصيرُ الأجل (Bearer) + تحديثٌ متجدّدٌ لمرّة، كلاهما مُجزّأٌ خادميّاً ومربوطٌ بالجهاز.\nكلُّ ردٍّ يحمل `X-Request-Id` و`X-API-Version`، وكلُّ خطأٍ يحمل `code` آليّاً (لا يُطالَب العميلُ بقراءة العربية) و`request_id`.\nالقفلُ التفاؤليّ عبر `If-Match` (نسخةُ السجل) ⇒ `VERSION_CONFLICT`، وعدمُ الأثرِ عبر `Idempotency-Key` على كلِّ جانبٍ قابلٍ للإعادة.\nترويساتُ السياق/التليمتري (X-Lynomia-*) **تضييقُ عرضٍ ووسمٌ لا تخويل** — راجع `x-context-headers`. المعرّفاتُ الخارجيّة (FCM/APNs/App-Attest/Play-Integrity/الروابط العالميّة/روابط المتجر) **NOT_CONFIGURED** — راجع `x-not-configured`."
     },
     "servers": [
@@ -95,6 +95,128 @@
         }
     ],
     "paths": {
+        "/api/mobile/v1/activation/{token}": {
+            "get": {
+                "tags": [
+                    "mobile"
+                ],
+                "summary": "get api/mobile/v1/activation/{token}",
+                "operationId": "mobile_activation_show",
+                "x-route-name": "mobile.activation.show",
+                "security": [],
+                "parameters": [
+                    {
+                        "name": "token",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": ""
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "نجاح",
+                        "headers": {
+                            "X-Request-Id": {
+                                "$ref": "#/components/headers/X-Request-Id"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "additionalProperties": true
+                                        },
+                                        "request_id": {
+                                            "type": "string",
+                                            "nullable": true
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/403"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/404"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/429"
+                    }
+                }
+            }
+        },
+        "/api/mobile/v1/activation/{token}/complete": {
+            "post": {
+                "tags": [
+                    "mobile"
+                ],
+                "summary": "post api/mobile/v1/activation/{token}/complete",
+                "operationId": "mobile_activation_complete",
+                "x-route-name": "mobile.activation.complete",
+                "security": [],
+                "parameters": [
+                    {
+                        "name": "token",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": ""
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "نجاح",
+                        "headers": {
+                            "X-Request-Id": {
+                                "$ref": "#/components/headers/X-Request-Id"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "additionalProperties": true
+                                        },
+                                        "request_id": {
+                                            "type": "string",
+                                            "nullable": true
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/403"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/404"
+                    },
+                    "409": {
+                        "$ref": "#/components/responses/409"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/422"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/429"
+                    }
+                }
+            }
+        },
         "/api/mobile/v1/app-config": {
             "get": {
                 "tags": [
@@ -1082,6 +1204,298 @@
                     },
                     "401": {
                         "$ref": "#/components/responses/401"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/429"
+                    }
+                }
+            }
+        },
+        "/api/mobile/v1/clients/{client}/members": {
+            "get": {
+                "tags": [
+                    "mobile"
+                ],
+                "summary": "get api/mobile/v1/clients/{client}/members",
+                "operationId": "mobile_clients_members_index",
+                "x-route-name": "mobile.clients.members.index",
+                "security": [
+                    {
+                        "mobileBearerAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "client",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": ""
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "نجاح",
+                        "headers": {
+                            "X-Request-Id": {
+                                "$ref": "#/components/headers/X-Request-Id"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "additionalProperties": true
+                                        },
+                                        "request_id": {
+                                            "type": "string",
+                                            "nullable": true
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/403"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/404"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/429"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "mobile"
+                ],
+                "summary": "post api/mobile/v1/clients/{client}/members",
+                "operationId": "mobile_clients_members_invite",
+                "x-route-name": "mobile.clients.members.invite",
+                "security": [
+                    {
+                        "mobileBearerAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "client",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": ""
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "نجاح",
+                        "headers": {
+                            "X-Request-Id": {
+                                "$ref": "#/components/headers/X-Request-Id"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "additionalProperties": true
+                                        },
+                                        "request_id": {
+                                            "type": "string",
+                                            "nullable": true
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/403"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/404"
+                    },
+                    "409": {
+                        "$ref": "#/components/responses/409"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/422"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/429"
+                    }
+                }
+            }
+        },
+        "/api/mobile/v1/clients/{client}/members/{membership}": {
+            "delete": {
+                "tags": [
+                    "mobile"
+                ],
+                "summary": "delete api/mobile/v1/clients/{client}/members/{membership}",
+                "operationId": "mobile_clients_members_revoke",
+                "x-route-name": "mobile.clients.members.revoke",
+                "security": [
+                    {
+                        "mobileBearerAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "client",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": ""
+                    },
+                    {
+                        "name": "membership",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": ""
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "نجاح",
+                        "headers": {
+                            "X-Request-Id": {
+                                "$ref": "#/components/headers/X-Request-Id"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "additionalProperties": true
+                                        },
+                                        "request_id": {
+                                            "type": "string",
+                                            "nullable": true
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/403"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/404"
+                    },
+                    "409": {
+                        "$ref": "#/components/responses/409"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/422"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/429"
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "mobile"
+                ],
+                "summary": "put api/mobile/v1/clients/{client}/members/{membership}",
+                "operationId": "mobile_clients_members_role",
+                "x-route-name": "mobile.clients.members.role",
+                "security": [
+                    {
+                        "mobileBearerAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "client",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": ""
+                    },
+                    {
+                        "name": "membership",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": ""
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "نجاح",
+                        "headers": {
+                            "X-Request-Id": {
+                                "$ref": "#/components/headers/X-Request-Id"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "additionalProperties": true
+                                        },
+                                        "request_id": {
+                                            "type": "string",
+                                            "nullable": true
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/403"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/404"
+                    },
+                    "409": {
+                        "$ref": "#/components/responses/409"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/422"
                     },
                     "429": {
                         "$ref": "#/components/responses/429"
@@ -2867,6 +3281,590 @@
                                 }
                             }
                         }
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/429"
+                    }
+                }
+            }
+        },
+        "/api/mobile/v1/portal/conversations": {
+            "get": {
+                "tags": [
+                    "mobile"
+                ],
+                "summary": "get api/mobile/v1/portal/conversations",
+                "operationId": "mobile_portal_conversations_index",
+                "x-route-name": "mobile.portal.conversations.index",
+                "security": [
+                    {
+                        "mobileBearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "نجاح",
+                        "headers": {
+                            "X-Request-Id": {
+                                "$ref": "#/components/headers/X-Request-Id"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "additionalProperties": true
+                                        },
+                                        "request_id": {
+                                            "type": "string",
+                                            "nullable": true
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/403"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/404"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/429"
+                    }
+                }
+            }
+        },
+        "/api/mobile/v1/portal/conversations/{id}": {
+            "get": {
+                "tags": [
+                    "mobile"
+                ],
+                "summary": "get api/mobile/v1/portal/conversations/{id}",
+                "operationId": "mobile_portal_conversations_show",
+                "x-route-name": "mobile.portal.conversations.show",
+                "security": [
+                    {
+                        "mobileBearerAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "معرّفُ السجل (UUID)"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "نجاح",
+                        "headers": {
+                            "X-Request-Id": {
+                                "$ref": "#/components/headers/X-Request-Id"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "additionalProperties": true
+                                        },
+                                        "request_id": {
+                                            "type": "string",
+                                            "nullable": true
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/403"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/404"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/429"
+                    }
+                }
+            }
+        },
+        "/api/mobile/v1/portal/documents": {
+            "get": {
+                "tags": [
+                    "mobile"
+                ],
+                "summary": "get api/mobile/v1/portal/documents",
+                "operationId": "mobile_portal_documents_index",
+                "x-route-name": "mobile.portal.documents.index",
+                "security": [
+                    {
+                        "mobileBearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "نجاح",
+                        "headers": {
+                            "X-Request-Id": {
+                                "$ref": "#/components/headers/X-Request-Id"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "additionalProperties": true
+                                        },
+                                        "request_id": {
+                                            "type": "string",
+                                            "nullable": true
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/403"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/404"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/429"
+                    }
+                }
+            }
+        },
+        "/api/mobile/v1/portal/documents/{id}": {
+            "get": {
+                "tags": [
+                    "mobile"
+                ],
+                "summary": "get api/mobile/v1/portal/documents/{id}",
+                "operationId": "mobile_portal_documents_show",
+                "x-route-name": "mobile.portal.documents.show",
+                "security": [
+                    {
+                        "mobileBearerAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "معرّفُ السجل (UUID)"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "نجاح",
+                        "headers": {
+                            "X-Request-Id": {
+                                "$ref": "#/components/headers/X-Request-Id"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "additionalProperties": true
+                                        },
+                                        "request_id": {
+                                            "type": "string",
+                                            "nullable": true
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/403"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/404"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/429"
+                    }
+                }
+            }
+        },
+        "/api/mobile/v1/portal/engagements": {
+            "get": {
+                "tags": [
+                    "mobile"
+                ],
+                "summary": "get api/mobile/v1/portal/engagements",
+                "operationId": "mobile_portal_engagements",
+                "x-route-name": "mobile.portal.engagements",
+                "security": [
+                    {
+                        "mobileBearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "نجاح",
+                        "headers": {
+                            "X-Request-Id": {
+                                "$ref": "#/components/headers/X-Request-Id"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "additionalProperties": true
+                                        },
+                                        "request_id": {
+                                            "type": "string",
+                                            "nullable": true
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/403"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/404"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/429"
+                    }
+                }
+            }
+        },
+        "/api/mobile/v1/portal/home": {
+            "get": {
+                "tags": [
+                    "mobile"
+                ],
+                "summary": "get api/mobile/v1/portal/home",
+                "operationId": "mobile_portal_home",
+                "x-route-name": "mobile.portal.home",
+                "security": [
+                    {
+                        "mobileBearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "نجاح",
+                        "headers": {
+                            "X-Request-Id": {
+                                "$ref": "#/components/headers/X-Request-Id"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "additionalProperties": true
+                                        },
+                                        "request_id": {
+                                            "type": "string",
+                                            "nullable": true
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/403"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/404"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/429"
+                    }
+                }
+            }
+        },
+        "/api/mobile/v1/portal/invoices": {
+            "get": {
+                "tags": [
+                    "mobile"
+                ],
+                "summary": "get api/mobile/v1/portal/invoices",
+                "operationId": "mobile_portal_invoices_index",
+                "x-route-name": "mobile.portal.invoices.index",
+                "security": [
+                    {
+                        "mobileBearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "نجاح",
+                        "headers": {
+                            "X-Request-Id": {
+                                "$ref": "#/components/headers/X-Request-Id"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "additionalProperties": true
+                                        },
+                                        "request_id": {
+                                            "type": "string",
+                                            "nullable": true
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/403"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/404"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/429"
+                    }
+                }
+            }
+        },
+        "/api/mobile/v1/portal/invoices/{id}": {
+            "get": {
+                "tags": [
+                    "mobile"
+                ],
+                "summary": "get api/mobile/v1/portal/invoices/{id}",
+                "operationId": "mobile_portal_invoices_show",
+                "x-route-name": "mobile.portal.invoices.show",
+                "security": [
+                    {
+                        "mobileBearerAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "معرّفُ السجل (UUID)"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "نجاح",
+                        "headers": {
+                            "X-Request-Id": {
+                                "$ref": "#/components/headers/X-Request-Id"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "additionalProperties": true
+                                        },
+                                        "request_id": {
+                                            "type": "string",
+                                            "nullable": true
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/403"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/404"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/429"
+                    }
+                }
+            }
+        },
+        "/api/mobile/v1/portal/projects": {
+            "get": {
+                "tags": [
+                    "mobile"
+                ],
+                "summary": "get api/mobile/v1/portal/projects",
+                "operationId": "mobile_portal_projects_index",
+                "x-route-name": "mobile.portal.projects.index",
+                "security": [
+                    {
+                        "mobileBearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "نجاح",
+                        "headers": {
+                            "X-Request-Id": {
+                                "$ref": "#/components/headers/X-Request-Id"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "additionalProperties": true
+                                        },
+                                        "request_id": {
+                                            "type": "string",
+                                            "nullable": true
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/403"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/404"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/429"
+                    }
+                }
+            }
+        },
+        "/api/mobile/v1/portal/projects/{id}": {
+            "get": {
+                "tags": [
+                    "mobile"
+                ],
+                "summary": "get api/mobile/v1/portal/projects/{id}",
+                "operationId": "mobile_portal_projects_show",
+                "x-route-name": "mobile.portal.projects.show",
+                "security": [
+                    {
+                        "mobileBearerAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "معرّفُ السجل (UUID)"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "نجاح",
+                        "headers": {
+                            "X-Request-Id": {
+                                "$ref": "#/components/headers/X-Request-Id"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "additionalProperties": true
+                                        },
+                                        "request_id": {
+                                            "type": "string",
+                                            "nullable": true
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/403"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/404"
                     },
                     "429": {
                         "$ref": "#/components/responses/429"

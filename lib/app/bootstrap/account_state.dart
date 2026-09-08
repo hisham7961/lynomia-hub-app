@@ -27,6 +27,12 @@ class AccountState extends ChangeNotifier {
   int get unreadNotifications => bootstrap?.unreadNotifications ?? 0;
   bool flag(String name) => bootstrap?.flag(name) ?? false;
 
+  /// نمط الحساب — يختار القشرة (بوابة العميل أو اللوحة الداخلية). عرضٌ من
+  /// المصنِّف الخادمي؛ الحرس الحقيقي `MobilePortalGuard` على الخادم (§10).
+  bool get isClient => user?.isClient ?? false;
+  List<ClientMembershipInfo> get memberships =>
+      bootstrap?.memberships ?? const [];
+
   Future<void> loadBootstrap({bool force = false}) async {
     bootstrap = await bootstrapRepo.fetch(force: force);
     user = bootstrap!.user;

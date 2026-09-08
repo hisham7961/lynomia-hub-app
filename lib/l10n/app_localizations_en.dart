@@ -568,4 +568,188 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get confirmLogoutAll => 'Sign out of all devices and sessions?';
+
+  @override
+  String get portalTitle => 'Client portal';
+
+  @override
+  String get portalYourSpace => 'Your space';
+
+  @override
+  String get portalEngagements => 'Engagements';
+
+  @override
+  String get portalProjects => 'Projects';
+
+  @override
+  String get portalDocuments => 'Shared documents';
+
+  @override
+  String get portalInvoices => 'Invoices';
+
+  @override
+  String get portalConversations => 'Conversations';
+
+  @override
+  String get portalYourOrgs => 'Your organizations';
+
+  @override
+  String get portalEmptyWorld =>
+      'Your account has no active access yet — contact your company representative';
+
+  @override
+  String get portalClientNote => 'Note for you';
+
+  @override
+  String get invoiceTotal => 'Total';
+
+  @override
+  String get invoicePaid => 'Paid';
+
+  @override
+  String get invoiceState => 'Status';
+
+  @override
+  String get invoiceDue => 'Due date';
+
+  @override
+  String get invoiceDate => 'Date';
+
+  @override
+  String get invoiceKind => 'Kind';
+
+  @override
+  String get projectProgress => 'Progress';
+
+  @override
+  String get projectStatus => 'Status';
+
+  @override
+  String get projectPriority => 'Priority';
+
+  @override
+  String get projectStart => 'Start date';
+
+  @override
+  String get projectLaunchExpected => 'Expected launch';
+
+  @override
+  String get projectLaunchActual => 'Actual launch';
+
+  @override
+  String get projectEngagement => 'Engagement';
+
+  @override
+  String get projectClient => 'Client';
+
+  @override
+  String get docCategory => 'Category';
+
+  @override
+  String get docNo => 'Document no.';
+
+  @override
+  String get docIssueDate => 'Issue date';
+
+  @override
+  String get docExpiry => 'Expiry date';
+
+  @override
+  String get docRenewal => 'Renewal';
+
+  @override
+  String get conversationWrite => 'Write a message…';
+
+  @override
+  String get conversationEmpty => 'No messages yet';
+
+  @override
+  String get activationTitle => 'Activate account';
+
+  @override
+  String activationIntro(String email) {
+    return 'Create your password for $email';
+  }
+
+  @override
+  String get activationOtp => 'Verification code (6 digits)';
+
+  @override
+  String get activationPassword => 'New password';
+
+  @override
+  String get activationPasswordConfirm => 'Confirm password';
+
+  @override
+  String get activationSubmit => 'Activate account';
+
+  @override
+  String get activationExpired =>
+      'This activation link has expired — ask your company representative for a new invitation';
+
+  @override
+  String get activationDone =>
+      'Your account is activated — sign in with your new password';
+
+  @override
+  String get activationPasswordMismatch => 'Passwords do not match';
+
+  @override
+  String get membersTitle => 'Client members';
+
+  @override
+  String get membersInvite => 'Invite member';
+
+  @override
+  String get membersEmail => 'Email';
+
+  @override
+  String get membersNameOptional => 'Name (optional)';
+
+  @override
+  String get membersRole => 'Role';
+
+  @override
+  String get membersRevoke => 'Revoke access';
+
+  @override
+  String get membersRevokeConfirm =>
+      'Revoke this member\'s access? Suspension takes effect immediately.';
+
+  @override
+  String get membersChangeRole => 'Change role';
+
+  @override
+  String get membersInviteSent =>
+      'Invitation sent as an activation message — no password is ever sent';
+
+  @override
+  String get membersStatusInvited => 'Invited';
+
+  @override
+  String get membersStatusActive => 'Active';
+
+  @override
+  String get membersStatusSuspended => 'Suspended';
+
+  @override
+  String get membersActivatedYes => 'Account activated';
+
+  @override
+  String get membersActivatedNo => 'Not activated yet';
+
+  @override
+  String get roleOwner => 'Owner';
+
+  @override
+  String get roleLead => 'Lead';
+
+  @override
+  String get roleTechnical => 'Technical';
+
+  @override
+  String get roleFinance => 'Finance';
+
+  @override
+  String get roleViewer => 'Viewer';
 }

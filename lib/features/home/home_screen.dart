@@ -83,6 +83,22 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ],
               ),
+              // «اسأل Hub» — يظهر حين يقول الخادمُ إنّه متاحٌ لهذا المستخدم الآن
+              // (`feature_flags.can_ask`: الصلاحيّة والبوّابة معاً) — لا بابَ ميّتاً.
+              if (account.flag('can_ask'))
+                Padding(
+                  padding: const EdgeInsets.only(top: 12),
+                  child: Card(
+                    child: ListTile(
+                      key: const Key('home-ask'),
+                      leading: const Icon(Icons.question_answer_outlined),
+                      title: Text(l.askTitle),
+                      subtitle: Text(l.askHint),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: () => context.push('/ask'),
+                    ),
+                  ),
+                ),
               if (snap.attention.isNotEmpty)
                 _Section(
                   title: l.homeAttention,

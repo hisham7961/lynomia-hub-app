@@ -1501,6 +1501,150 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'مشاهد'**
   String get roleViewer;
+
+  /// No description provided for @askTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'اسأل Hub'**
+  String get askTitle;
+
+  /// No description provided for @askHint.
+  ///
+  /// In ar, this message translates to:
+  /// **'اسأل عن مشاريعك ومهامّك…'**
+  String get askHint;
+
+  /// No description provided for @askSend.
+  ///
+  /// In ar, this message translates to:
+  /// **'إرسال'**
+  String get askSend;
+
+  /// No description provided for @askWorking.
+  ///
+  /// In ar, this message translates to:
+  /// **'يقرأ بياناتك ويجيب — قد يستغرق دقيقة…'**
+  String get askWorking;
+
+  /// No description provided for @askEmpty.
+  ///
+  /// In ar, this message translates to:
+  /// **'اسأل سؤالاً عن بياناتك — يجيب ممّا تراه أنت فقط، ويذكر مصادره.'**
+  String get askEmpty;
+
+  /// No description provided for @askSources.
+  ///
+  /// In ar, this message translates to:
+  /// **'المصادر'**
+  String get askSources;
+
+  /// No description provided for @askSourceRows.
+  ///
+  /// In ar, this message translates to:
+  /// **'{label} — {rows} صفّاً'**
+  String askSourceRows(String label, int rows);
+
+  /// No description provided for @askPartial.
+  ///
+  /// In ar, this message translates to:
+  /// **'جوابٌ جزئيّ — لم تُقرأ كلُّ البيانات'**
+  String get askPartial;
+
+  /// No description provided for @askHiddenTurn.
+  ///
+  /// In ar, this message translates to:
+  /// **'لم يعد هذا الجواب متاحاً لك — تغيّرت صلاحيّاتك أو البيانات التي بُني عليها'**
+  String get askHiddenTurn;
+
+  /// No description provided for @askThreads.
+  ///
+  /// In ar, this message translates to:
+  /// **'محادثاتك'**
+  String get askThreads;
+
+  /// No description provided for @askNewThread.
+  ///
+  /// In ar, this message translates to:
+  /// **'محادثة جديدة'**
+  String get askNewThread;
+
+  /// No description provided for @askNoThreads.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا محادثات محفوظة'**
+  String get askNoThreads;
+
+  /// No description provided for @askMemoryOff.
+  ///
+  /// In ar, this message translates to:
+  /// **'حفظُ المحادثات مطفأ على الخادم'**
+  String get askMemoryOff;
+
+  /// No description provided for @askRetention.
+  ///
+  /// In ar, this message translates to:
+  /// **'تُمحى المحادثة بعد {days} يوماً بلا نشاط'**
+  String askRetention(int days);
+
+  /// No description provided for @askDeleteAll.
+  ///
+  /// In ar, this message translates to:
+  /// **'حذف كل المحادثات'**
+  String get askDeleteAll;
+
+  /// No description provided for @askDeleteAllConfirm.
+  ///
+  /// In ar, this message translates to:
+  /// **'حذف كل محادثاتك؟ لا يمكن التراجع.'**
+  String get askDeleteAllConfirm;
+
+  /// No description provided for @askDeleteConfirm.
+  ///
+  /// In ar, this message translates to:
+  /// **'حذف هذه المحادثة؟'**
+  String get askDeleteConfirm;
+
+  /// No description provided for @askErrUnavailable.
+  ///
+  /// In ar, this message translates to:
+  /// **'المساعد غير متاح الآن — حاول لاحقاً'**
+  String get askErrUnavailable;
+
+  /// No description provided for @askErrLimit.
+  ///
+  /// In ar, this message translates to:
+  /// **'بلغتَ حدّ الاستخدام — حاول لاحقاً'**
+  String get askErrLimit;
+
+  /// No description provided for @askErrDenied.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا صلاحية لك لاستعمال المساعد'**
+  String get askErrDenied;
+
+  /// No description provided for @askErrNoData.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا بيانات متاحة لك للإجابة عن هذا السؤال'**
+  String get askErrNoData;
+
+  /// No description provided for @askErrQuestion.
+  ///
+  /// In ar, this message translates to:
+  /// **'صِغ السؤال بشكلٍ أوضح'**
+  String get askErrQuestion;
+
+  /// No description provided for @askErrTooBig.
+  ///
+  /// In ar, this message translates to:
+  /// **'السؤال واسعٌ جداً — ضيّقه'**
+  String get askErrTooBig;
+
+  /// No description provided for @askErrGeneric.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعذّر الجواب'**
+  String get askErrGeneric;
 }
 
 class _AppLocalizationsDelegate

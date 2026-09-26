@@ -745,4 +745,82 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get roleViewer => 'مشاهد';
+
+  @override
+  String get askTitle => 'اسأل Hub';
+
+  @override
+  String get askHint => 'اسأل عن مشاريعك ومهامّك…';
+
+  @override
+  String get askSend => 'إرسال';
+
+  @override
+  String get askWorking => 'يقرأ بياناتك ويجيب — قد يستغرق دقيقة…';
+
+  @override
+  String get askEmpty =>
+      'اسأل سؤالاً عن بياناتك — يجيب ممّا تراه أنت فقط، ويذكر مصادره.';
+
+  @override
+  String get askSources => 'المصادر';
+
+  @override
+  String askSourceRows(String label, int rows) {
+    return '$label — $rows صفّاً';
+  }
+
+  @override
+  String get askPartial => 'جوابٌ جزئيّ — لم تُقرأ كلُّ البيانات';
+
+  @override
+  String get askHiddenTurn =>
+      'لم يعد هذا الجواب متاحاً لك — تغيّرت صلاحيّاتك أو البيانات التي بُني عليها';
+
+  @override
+  String get askThreads => 'محادثاتك';
+
+  @override
+  String get askNewThread => 'محادثة جديدة';
+
+  @override
+  String get askNoThreads => 'لا محادثات محفوظة';
+
+  @override
+  String get askMemoryOff => 'حفظُ المحادثات مطفأ على الخادم';
+
+  @override
+  String askRetention(int days) {
+    return 'تُمحى المحادثة بعد $days يوماً بلا نشاط';
+  }
+
+  @override
+  String get askDeleteAll => 'حذف كل المحادثات';
+
+  @override
+  String get askDeleteAllConfirm => 'حذف كل محادثاتك؟ لا يمكن التراجع.';
+
+  @override
+  String get askDeleteConfirm => 'حذف هذه المحادثة؟';
+
+  @override
+  String get askErrUnavailable => 'المساعد غير متاح الآن — حاول لاحقاً';
+
+  @override
+  String get askErrLimit => 'بلغتَ حدّ الاستخدام — حاول لاحقاً';
+
+  @override
+  String get askErrDenied => 'لا صلاحية لك لاستعمال المساعد';
+
+  @override
+  String get askErrNoData => 'لا بيانات متاحة لك للإجابة عن هذا السؤال';
+
+  @override
+  String get askErrQuestion => 'صِغ السؤال بشكلٍ أوضح';
+
+  @override
+  String get askErrTooBig => 'السؤال واسعٌ جداً — ضيّقه';
+
+  @override
+  String get askErrGeneric => 'تعذّر الجواب';
 }

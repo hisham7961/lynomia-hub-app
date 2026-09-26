@@ -37,6 +37,7 @@ import '../../features/notifications/notification_repository.dart';
 import '../../features/portal/portal_repository.dart';
 import '../../features/profile/prefs_repository.dart';
 import '../../features/scanner/identity_repository.dart';
+import '../../features/ask/ask_repository.dart';
 import '../../features/search/search_repository.dart';
 import '../../features/tracking/tracking_repository.dart';
 import '../bootstrap/account_state.dart';
@@ -66,6 +67,7 @@ class AppContainer {
     modules = ModuleRepository(api);
     home = HomeRepository(api);
     search = SearchRepository(api);
+    ask = AskRepository(api);
     approvals = ApprovalRepository(api);
     notifications = NotificationRepository(api);
     dm = DmRepository(api);
@@ -210,6 +212,7 @@ class AppContainer {
   late final ModuleRepository modules;
   late final HomeRepository home;
   late final SearchRepository search;
+  late final AskRepository ask;
   late final ApprovalRepository approvals;
   late final NotificationRepository notifications;
   late final DmRepository dm;

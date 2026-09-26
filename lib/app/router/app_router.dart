@@ -25,6 +25,7 @@ import '../../features/profile/sessions_screen.dart';
 import '../../features/records/record_form_screen.dart';
 import '../../features/records/record_screen.dart';
 import '../../features/scanner/scanner_screen.dart';
+import '../../features/ask/ask_screen.dart';
 import '../../features/search/search_screen.dart';
 import '../../features/shell/app_shell.dart';
 import '../../features/tracking/tracking_screen.dart';
@@ -316,6 +317,21 @@ GoRouter buildRouter(AppContainer c) => GoRouter(
           path: ':id',
           builder: (context, state) =>
               ApprovalDetailScreen(id: state.pathParameters['id']!),
+        ),
+      ],
+    ),
+    GoRoute(
+      path: '/ask',
+      builder: (context, state) => const AskScreen(),
+      routes: [
+        GoRoute(
+          path: 'threads',
+          builder: (context, state) => const AskThreadsScreen(),
+        ),
+        GoRoute(
+          path: 't/:id',
+          builder: (context, state) =>
+              AskScreen(threadId: state.pathParameters['id']!),
         ),
       ],
     ),

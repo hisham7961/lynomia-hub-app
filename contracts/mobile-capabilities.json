@@ -1,12 +1,12 @@
 {
-    "_generator": "App\\Support\\MobileOpenApi::capabilities() — مُشتقٌّ من المسارات الحيّة (php artisan tinker / اختبار الانحراف)",
+    "_generator": "App\\Support\\Mobile\\MobileOpenApi::capabilities() — مُشتقٌّ من المسارات الحيّة (php artisan tinker / اختبار الانحراف)",
     "_note": "بيانٌ آليّ — لا يُحرَّر يدويّاً؛ يُعاد توليدُه من المسارات فلا يصف قدرةً غيرَ مبنيّة",
     "namespace": "/api/mobile/v1",
     "mobile_api_version": "1",
-    "schema_version": "4a9f8b3a502e",
+    "schema_version": "8e9f8dd5bb93",
     "openapi": {
         "live": "/api/mobile/v1/openapi.json",
-        "generator": "App\\Support\\MobileOpenApi::spec()"
+        "generator": "App\\Support\\Mobile\\MobileOpenApi::spec()"
     },
     "auth": {
         "type": "first_party_session",
@@ -45,7 +45,7 @@
         "biometrics": "جانبُ التطبيق فقط — الخادمُ لا يستقبل قوالبَ حيويّة قط"
     },
     "error_codes": {
-        "contract": "App\\Support\\Api::CODES (موحَّدٌ مع /api/v1 — لا يُعاد تسميةُ كودٍ قائم)",
+        "contract": "App\\Support\\Platform\\Api::CODES (موحَّدٌ مع /api/v1 — لا يُعاد تسميةُ كودٍ قائم)",
         "reused": [
             "UNAUTHENTICATED",
             "ACCOUNT_RESTRICTED",
@@ -114,7 +114,7 @@
             "id": "string (UUID)",
             "action": "show"
         },
-        "source_of_truth": "App\\Support\\NotificationLink::target() — نفسُها التي تصدرها notifications/{id}/target والبحثُ واللوحة",
+        "source_of_truth": "App\\Support\\Collaboration\\NotificationLink::target() — نفسُها التي تصدرها notifications/{id}/target والبحثُ واللوحة",
         "null_semantics": "target=null ⇒ لا وجهةَ سجلٍّ (يعود التطبيقُ لقائمة الإشعارات) — نظيرُ الويب",
         "no_hardcoded_screens": true,
         "universal_link_encoding": {
@@ -146,9 +146,9 @@
             "NOT_APPLICABLE"
         ],
         "coverage": {
-            "CACHEABLE_INCREMENTAL": 81,
+            "CACHEABLE_INCREMENTAL": 77,
             "CACHEABLE_READ_ONLY": 0,
-            "ONLINE_ONLY": 0,
+            "ONLINE_ONLY": 4,
             "SENSITIVE_NO_PERSIST": 3,
             "NOT_APPLICABLE": 1
         },
@@ -164,7 +164,7 @@
             "apps": "CACHEABLE_INCREMENTAL",
             "assetlog": "CACHEABLE_INCREMENTAL",
             "assets": "CACHEABLE_INCREMENTAL",
-            "attend": "CACHEABLE_INCREMENTAL",
+            "attend": "ONLINE_ONLY",
             "autos": "CACHEABLE_INCREMENTAL",
             "banks": "CACHEABLE_INCREMENTAL",
             "brands": "CACHEABLE_INCREMENTAL",
@@ -196,8 +196,8 @@
             "files": "CACHEABLE_INCREMENTAL",
             "fin": "CACHEABLE_INCREMENTAL",
             "hcps": "CACHEABLE_INCREMENTAL",
-            "hr": "CACHEABLE_INCREMENTAL",
-            "hrlog": "CACHEABLE_INCREMENTAL",
+            "hr": "ONLINE_ONLY",
+            "hrlog": "ONLINE_ONLY",
             "ideas": "CACHEABLE_INCREMENTAL",
             "incidents": "CACHEABLE_INCREMENTAL",
             "ip": "CACHEABLE_INCREMENTAL",
@@ -209,7 +209,7 @@
             "meetings": "CACHEABLE_INCREMENTAL",
             "obligations": "CACHEABLE_INCREMENTAL",
             "okrs": "CACHEABLE_INCREMENTAL",
-            "payroll": "CACHEABLE_INCREMENTAL",
+            "payroll": "ONLINE_ONLY",
             "phones": "SENSITIVE_NO_PERSIST",
             "plans": "CACHEABLE_INCREMENTAL",
             "policies": "CACHEABLE_INCREMENTAL",
@@ -385,6 +385,41 @@
             ],
             "count": 4
         },
+        "ask": {
+            "endpoints": [
+                {
+                    "method": "POST",
+                    "path": "/api/mobile/v1/ask",
+                    "name": "mobile.ask.run",
+                    "auth": "mobile.session"
+                },
+                {
+                    "method": "DELETE",
+                    "path": "/api/mobile/v1/ask/threads",
+                    "name": "mobile.ask.threads.destroy_all",
+                    "auth": "mobile.session"
+                },
+                {
+                    "method": "GET",
+                    "path": "/api/mobile/v1/ask/threads",
+                    "name": "mobile.ask.threads.index",
+                    "auth": "mobile.session"
+                },
+                {
+                    "method": "DELETE",
+                    "path": "/api/mobile/v1/ask/threads/{id}",
+                    "name": "mobile.ask.threads.destroy",
+                    "auth": "mobile.session"
+                },
+                {
+                    "method": "GET",
+                    "path": "/api/mobile/v1/ask/threads/{id}",
+                    "name": "mobile.ask.threads.show",
+                    "auth": "mobile.session"
+                }
+            ],
+            "count": 5
+        },
         "auth": {
             "endpoints": [
                 {
@@ -486,9 +521,15 @@
                     "path": "/api/mobile/v1/comments",
                     "name": "mobile.comments.store",
                     "auth": "mobile.session"
+                },
+                {
+                    "method": "POST",
+                    "path": "/api/mobile/v1/comments/{id}/react",
+                    "name": "mobile.comments.react",
+                    "auth": "mobile.session"
                 }
             ],
-            "count": 2
+            "count": 3
         },
         "context": {
             "endpoints": [
@@ -508,6 +549,29 @@
                     "method": "GET",
                     "path": "/api/mobile/v1/navigation",
                     "name": "mobile.navigation",
+                    "auth": "mobile.session"
+                }
+            ],
+            "count": 3
+        },
+        "conversations": {
+            "endpoints": [
+                {
+                    "method": "GET",
+                    "path": "/api/mobile/v1/conversations",
+                    "name": "mobile.conversations.index",
+                    "auth": "mobile.session"
+                },
+                {
+                    "method": "GET",
+                    "path": "/api/mobile/v1/conversations/{id}/since",
+                    "name": "mobile.conversations.since",
+                    "auth": "mobile.session"
+                },
+                {
+                    "method": "POST",
+                    "path": "/api/mobile/v1/conversations/{id}/typing",
+                    "name": "mobile.conversations.typing",
                     "auth": "mobile.session"
                 }
             ],
@@ -557,6 +621,12 @@
         "dm": {
             "endpoints": [
                 {
+                    "method": "POST",
+                    "path": "/api/mobile/v1/dm/messages/{id}/react",
+                    "name": "mobile.dm.react",
+                    "auth": "mobile.session"
+                },
+                {
                     "method": "GET",
                     "path": "/api/mobile/v1/dm/threads",
                     "name": "mobile.dm.threads",
@@ -579,9 +649,21 @@
                     "path": "/api/mobile/v1/dm/threads/{user}/send",
                     "name": "mobile.dm.send",
                     "auth": "mobile.session"
+                },
+                {
+                    "method": "GET",
+                    "path": "/api/mobile/v1/dm/threads/{user}/since",
+                    "name": "mobile.dm.since",
+                    "auth": "mobile.session"
+                },
+                {
+                    "method": "POST",
+                    "path": "/api/mobile/v1/dm/threads/{user}/typing",
+                    "name": "mobile.dm.typing",
+                    "auth": "mobile.session"
                 }
             ],
-            "count": 4
+            "count": 7
         },
         "files": {
             "endpoints": [
@@ -645,6 +727,23 @@
                 }
             ],
             "count": 1
+        },
+        "me": {
+            "endpoints": [
+                {
+                    "method": "GET",
+                    "path": "/api/mobile/v1/me/documents",
+                    "name": "mobile.me.documents.index",
+                    "auth": "mobile.session"
+                },
+                {
+                    "method": "GET",
+                    "path": "/api/mobile/v1/me/documents/{id}/file",
+                    "name": "mobile.me.documents.file",
+                    "auth": "mobile.session"
+                }
+            ],
+            "count": 2
         },
         "meta": {
             "endpoints": [
@@ -780,6 +879,17 @@
             ],
             "count": 3
         },
+        "presence": {
+            "endpoints": [
+                {
+                    "method": "GET",
+                    "path": "/api/mobile/v1/presence",
+                    "name": "mobile.presence",
+                    "auth": "mobile.session"
+                }
+            ],
+            "count": 1
+        },
         "push": {
             "endpoints": [
                 {
@@ -808,6 +918,17 @@
                 }
             ],
             "count": 4
+        },
+        "saved": {
+            "endpoints": [
+                {
+                    "method": "GET",
+                    "path": "/api/mobile/v1/saved",
+                    "name": "mobile.saved.index",
+                    "auth": "mobile.session"
+                }
+            ],
+            "count": 1
         },
         "scanner": {
             "endpoints": [
@@ -881,6 +1002,23 @@
                 }
             ],
             "count": 3
+        },
+        "work": {
+            "endpoints": [
+                {
+                    "method": "GET",
+                    "path": "/api/mobile/v1/work/daily-report",
+                    "name": "mobile.work.daily_report",
+                    "auth": "mobile.session"
+                },
+                {
+                    "method": "GET",
+                    "path": "/api/mobile/v1/work/today",
+                    "name": "mobile.work.today",
+                    "auth": "mobile.session"
+                }
+            ],
+            "count": 2
         }
     }
 }

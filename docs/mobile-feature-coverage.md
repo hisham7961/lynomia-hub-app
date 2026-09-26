@@ -1,8 +1,9 @@
 # مصفوفة تغطية القدرات (§124)
 
-المصدر: `contracts/mobile-capabilities.json` (٧٥ نقطة · خلفية v2.447.0). الحالة:
+المصدر: `contracts/mobile-capabilities.json` (٩٣ نقطة · ٢٨ مجالاً · خلفية v2.614.0). الحالة:
 `IMPLEMENTED` مبنية ومختبرة · `NOT_APPLICABLE` ليست شاشة جوال بطبيعتها ·
-`BLOCKED_EXTERNAL_CONFIG` تنتظر اعتماداً خارجياً فقط · `BACKEND_GAP` فجوة عقد.
+`BLOCKED_EXTERNAL_CONFIG` تنتظر اعتماداً خارجياً فقط · `BACKEND_GAP` فجوة عقد ·
+`PENDING_APP` قدرةٌ خلفيّةٌ قائمةٌ لم تُبنَ في التطبيق بعد (لا زرَّ لها — لا واجهة ميتة).
 
 **القدرات الجوالية غير المفسرة الغائبة = 0.**
 
@@ -19,6 +20,13 @@
 | المزامنة | `sync/{module}` | `SyncEngine` | سقوط خبيئة القوائم | حسب `sync_class` | sync_engine | IMPLEMENTED |
 | البيت | `home` | `HomeRepository` | الرئيسية + مهامي | ONLINE | widget | IMPLEMENTED |
 | البحث | `search` | `SearchRepository` | وجهة البحث | ONLINE | comm + widget | IMPLEMENTED |
+| تفاعلات التعليقات وDM (٢) | `comments/{id}/react`, `dm/messages/{id}/react` | — | — | — | contract (العدد) | PENDING_APP |
+| مؤشر الكتابة و«منذ» في DM والمحادثات (٥) | `dm/threads/{user}/typing,since`, `conversations`, `conversations/{id}/since,typing` | — | — | — | contract | PENDING_APP |
+| الحضور (١) | `presence` | — | — | — | contract | PENDING_APP |
+| المحفوظات (١) | `saved` | — | — | — | contract | PENDING_APP |
+| عملي اليوم والتقرير اليومي (٢) | `work/today`, `work/daily-report` | — | — | — | contract | PENDING_APP |
+| وثائقي (٢) | `me/documents[,/{id}/file]` | — | — | — | contract | PENDING_APP |
+| «اسأل Hub» (سؤال · متابعة · محادثات · حذف) | `ask`, `ask/threads[,/{id}]` | `AskRepository` | بطاقة الرئيسية (بعلَم `can_ask`) ← المحادثة + محادثاتك | ONLINE (لا إعادة تلقائية — نداءٌ مدفوع) | ask_test + contract | IMPLEMENTED |
 | الإشعارات (٥) | `notifications…` | `NotificationRepository` | شاشة الإشعارات + شارات | ONLINE (مؤشر) | comm + widget | IMPLEMENTED |
 | التعليقات (٢) | `comments` | `CommentRepository` | تبويب تعليقات السجل | ONLINE | comm | IMPLEMENTED |
 | DM (٤) | `dm/threads…` | `DmRepository` | الرسائل | ONLINE | comm | IMPLEMENTED |
@@ -36,9 +44,10 @@
 
 ## الحصيلة
 
-- قدرات الخلفية الجوالية: **75 نقطة / 25 مجموعة** (خلفية v2.447.0 — تجربة العميل §10–§18)
-- IMPLEMENTED: **23 مجموعة**
+- قدرات الخلفية الجوالية: **93 نقطة / 28 مجالاً** (خلفية v2.614.0)
+- IMPLEMENTED: **24 مجموعة**
 - NOT_APPLICABLE: **1** (إدارة الدفع للمالك — سطح ويب إداري)
 - BLOCKED_EXTERNAL_CONFIG: **1** (تفعيل مزود الدفع الحقيقي)
 - BACKEND_GAP: بند فرعي واحد (سرد مرفقات سجل) — موثق
+- PENDING_APP: **6 مجموعات / 13 نقطة** أُضيفت في الخلفية بعد v2.447 — مسجّلةٌ لا مخفيّة
 - **غير مفسر: 0**

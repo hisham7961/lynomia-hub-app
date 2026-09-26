@@ -3,12 +3,12 @@
     "info": {
         "title": "Lynomia Business Hub — Mobile API",
         "version": "1",
-        "x-hub-version": "2.447.0",
+        "x-hub-version": "2.614.0",
         "description": "سطحُ الجوال الأصيل (first-party) لتطبيق iOS/Android — **مستقلٌّ عن `/api/v1`** (مفتاح التكامل) ولا يمسّه.\nالمصادقةُ جلسةٌ من زوجِ رمزَين: وصولٌ قصيرُ الأجل (Bearer) + تحديثٌ متجدّدٌ لمرّة، كلاهما مُجزّأٌ خادميّاً ومربوطٌ بالجهاز.\nكلُّ ردٍّ يحمل `X-Request-Id` و`X-API-Version`، وكلُّ خطأٍ يحمل `code` آليّاً (لا يُطالَب العميلُ بقراءة العربية) و`request_id`.\nالقفلُ التفاؤليّ عبر `If-Match` (نسخةُ السجل) ⇒ `VERSION_CONFLICT`، وعدمُ الأثرِ عبر `Idempotency-Key` على كلِّ جانبٍ قابلٍ للإعادة.\nترويساتُ السياق/التليمتري (X-Lynomia-*) **تضييقُ عرضٍ ووسمٌ لا تخويل** — راجع `x-context-headers`. المعرّفاتُ الخارجيّة (FCM/APNs/App-Attest/Play-Integrity/الروابط العالميّة/روابط المتجر) **NOT_CONFIGURED** — راجع `x-not-configured`."
     },
     "servers": [
         {
-            "url": "https://hub.lynomia.com"
+            "url": "http://127.0.0.1:8098"
         }
     ],
     "security": [
@@ -52,6 +52,10 @@
         {
             "name": "search",
             "description": "البحث"
+        },
+        {
+            "name": "ask",
+            "description": "«اسأل Hub» — المساعدُ القارئ وذاكرةُ محادثاته"
         },
         {
             "name": "prefs",
@@ -553,6 +557,438 @@
                     },
                     "422": {
                         "$ref": "#/components/responses/422"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/429"
+                    }
+                }
+            }
+        },
+        "/api/mobile/v1/ask": {
+            "post": {
+                "tags": [
+                    "ask"
+                ],
+                "summary": "«اسأل Hub»: سؤالٌ بلغتك يُجاب من بياناتك المُنطَّقة وحدَها — ومتابعةٌ في خيطٍ بـthread",
+                "operationId": "mobile_ask_run",
+                "x-route-name": "mobile.ask.run",
+                "security": [
+                    {
+                        "mobileBearerAuth": []
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "q"
+                                ],
+                                "properties": {
+                                    "q": {
+                                        "type": "string"
+                                    },
+                                    "thread": {
+                                        "type": "string",
+                                        "nullable": true
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "نجاح",
+                        "headers": {
+                            "X-Request-Id": {
+                                "$ref": "#/components/headers/X-Request-Id"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "ok": {
+                                                    "type": "boolean"
+                                                },
+                                                "answer": {
+                                                    "type": "string",
+                                                    "nullable": true
+                                                },
+                                                "partial": {
+                                                    "type": "boolean"
+                                                },
+                                                "failure": {
+                                                    "type": "string",
+                                                    "nullable": true
+                                                },
+                                                "message": {
+                                                    "type": "string"
+                                                },
+                                                "sources": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "n": {
+                                                                "type": "integer"
+                                                            },
+                                                            "module": {
+                                                                "type": "string",
+                                                                "nullable": true
+                                                            },
+                                                            "label": {
+                                                                "type": "string",
+                                                                "nullable": true
+                                                            },
+                                                            "rows": {
+                                                                "type": "integer"
+                                                            },
+                                                            "ids": {
+                                                                "type": "array",
+                                                                "items": {
+                                                                    "type": "string"
+                                                                }
+                                                            },
+                                                            "complete": {
+                                                                "type": "boolean"
+                                                            }
+                                                        }
+                                                    }
+                                                },
+                                                "thread": {
+                                                    "type": "string",
+                                                    "nullable": true
+                                                },
+                                                "request": {
+                                                    "type": "string"
+                                                }
+                                            }
+                                        },
+                                        "request_id": {
+                                            "type": "string",
+                                            "nullable": true
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/403"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/404"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/422"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/429"
+                    }
+                }
+            }
+        },
+        "/api/mobile/v1/ask/threads": {
+            "delete": {
+                "tags": [
+                    "ask"
+                ],
+                "summary": "محوُ كلِّ خيوطي نهائيّاً",
+                "operationId": "mobile_ask_threads_destroy_all",
+                "x-route-name": "mobile.ask.threads.destroy_all",
+                "security": [
+                    {
+                        "mobileBearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "نجاح",
+                        "headers": {
+                            "X-Request-Id": {
+                                "$ref": "#/components/headers/X-Request-Id"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "deleted": {
+                                                    "type": "integer"
+                                                }
+                                            }
+                                        },
+                                        "request_id": {
+                                            "type": "string",
+                                            "nullable": true
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/403"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/429"
+                    }
+                }
+            },
+            "get": {
+                "tags": [
+                    "ask"
+                ],
+                "summary": "خيوطُ محادثاتي (لي وحدي · مشفَّرة · تُمحى بعد مدّة الاحتفاظ)",
+                "operationId": "mobile_ask_threads_index",
+                "x-route-name": "mobile.ask.threads.index",
+                "security": [
+                    {
+                        "mobileBearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "نجاح",
+                        "headers": {
+                            "X-Request-Id": {
+                                "$ref": "#/components/headers/X-Request-Id"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "memory": {
+                                                    "type": "boolean"
+                                                },
+                                                "retention_days": {
+                                                    "type": "integer"
+                                                },
+                                                "threads": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "string"
+                                                            },
+                                                            "title": {
+                                                                "type": "string"
+                                                            },
+                                                            "last_at": {
+                                                                "type": "string",
+                                                                "nullable": true
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        },
+                                        "request_id": {
+                                            "type": "string",
+                                            "nullable": true
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/403"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/429"
+                    }
+                }
+            }
+        },
+        "/api/mobile/v1/ask/threads/{id}": {
+            "delete": {
+                "tags": [
+                    "ask"
+                ],
+                "summary": "محوُ خيطي نهائيّاً",
+                "operationId": "mobile_ask_threads_destroy",
+                "x-route-name": "mobile.ask.threads.destroy",
+                "security": [
+                    {
+                        "mobileBearerAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "معرّفُ السجل (UUID)"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "نجاح",
+                        "headers": {
+                            "X-Request-Id": {
+                                "$ref": "#/components/headers/X-Request-Id"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "deleted": {
+                                                    "type": "integer"
+                                                }
+                                            }
+                                        },
+                                        "request_id": {
+                                            "type": "string",
+                                            "nullable": true
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/403"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/404"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/429"
+                    }
+                }
+            },
+            "get": {
+                "tags": [
+                    "ask"
+                ],
+                "summary": "أدوارُ خيطي — والجوابُ المحفوظُ يُعاد تحقّقُه (hidden حين خرجت مصادرُه من نطاقي)",
+                "operationId": "mobile_ask_threads_show",
+                "x-route-name": "mobile.ask.threads.show",
+                "security": [
+                    {
+                        "mobileBearerAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "معرّفُ السجل (UUID)"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "نجاح",
+                        "headers": {
+                            "X-Request-Id": {
+                                "$ref": "#/components/headers/X-Request-Id"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "string"
+                                                },
+                                                "title": {
+                                                    "type": "string"
+                                                },
+                                                "turns": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "question": {
+                                                                "type": "string"
+                                                            },
+                                                            "answer": {
+                                                                "type": "string",
+                                                                "nullable": true
+                                                            },
+                                                            "ok": {
+                                                                "type": "boolean"
+                                                            },
+                                                            "hidden": {
+                                                                "type": "boolean"
+                                                            },
+                                                            "failure": {
+                                                                "type": "string",
+                                                                "nullable": true
+                                                            },
+                                                            "at": {
+                                                                "type": "string",
+                                                                "nullable": true
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        },
+                                        "request_id": {
+                                            "type": "string",
+                                            "nullable": true
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/403"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/404"
                     },
                     "429": {
                         "$ref": "#/components/responses/429"
@@ -1695,6 +2131,77 @@
                 }
             }
         },
+        "/api/mobile/v1/comments/{id}/react": {
+            "post": {
+                "tags": [
+                    "mobile"
+                ],
+                "summary": "post api/mobile/v1/comments/{id}/react",
+                "operationId": "mobile_comments_react",
+                "x-route-name": "mobile.comments.react",
+                "security": [
+                    {
+                        "mobileBearerAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "معرّفُ السجل (UUID)"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "نجاح",
+                        "headers": {
+                            "X-Request-Id": {
+                                "$ref": "#/components/headers/X-Request-Id"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "additionalProperties": true
+                                        },
+                                        "request_id": {
+                                            "type": "string",
+                                            "nullable": true
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/403"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/404"
+                    },
+                    "409": {
+                        "$ref": "#/components/responses/409"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/422"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/429"
+                    }
+                }
+            }
+        },
         "/api/mobile/v1/context": {
             "get": {
                 "tags": [
@@ -1754,6 +2261,267 @@
                     },
                     "401": {
                         "$ref": "#/components/responses/401"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/429"
+                    }
+                }
+            }
+        },
+        "/api/mobile/v1/conversations": {
+            "get": {
+                "tags": [
+                    "mobile"
+                ],
+                "summary": "get api/mobile/v1/conversations",
+                "operationId": "mobile_conversations_index",
+                "x-route-name": "mobile.conversations.index",
+                "security": [
+                    {
+                        "mobileBearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "نجاح",
+                        "headers": {
+                            "X-Request-Id": {
+                                "$ref": "#/components/headers/X-Request-Id"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "additionalProperties": true
+                                        },
+                                        "request_id": {
+                                            "type": "string",
+                                            "nullable": true
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/403"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/404"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/429"
+                    }
+                }
+            }
+        },
+        "/api/mobile/v1/conversations/{id}/since": {
+            "get": {
+                "tags": [
+                    "mobile"
+                ],
+                "summary": "get api/mobile/v1/conversations/{id}/since",
+                "operationId": "mobile_conversations_since",
+                "x-route-name": "mobile.conversations.since",
+                "security": [
+                    {
+                        "mobileBearerAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "معرّفُ السجل (UUID)"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "نجاح",
+                        "headers": {
+                            "X-Request-Id": {
+                                "$ref": "#/components/headers/X-Request-Id"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "additionalProperties": true
+                                        },
+                                        "request_id": {
+                                            "type": "string",
+                                            "nullable": true
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/403"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/404"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/429"
+                    }
+                }
+            }
+        },
+        "/api/mobile/v1/conversations/{id}/typing": {
+            "post": {
+                "tags": [
+                    "mobile"
+                ],
+                "summary": "post api/mobile/v1/conversations/{id}/typing",
+                "operationId": "mobile_conversations_typing",
+                "x-route-name": "mobile.conversations.typing",
+                "security": [
+                    {
+                        "mobileBearerAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "معرّفُ السجل (UUID)"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "نجاح",
+                        "headers": {
+                            "X-Request-Id": {
+                                "$ref": "#/components/headers/X-Request-Id"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "additionalProperties": true
+                                        },
+                                        "request_id": {
+                                            "type": "string",
+                                            "nullable": true
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/403"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/404"
+                    },
+                    "409": {
+                        "$ref": "#/components/responses/409"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/422"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/429"
+                    }
+                }
+            }
+        },
+        "/api/mobile/v1/dm/messages/{id}/react": {
+            "post": {
+                "tags": [
+                    "mobile"
+                ],
+                "summary": "post api/mobile/v1/dm/messages/{id}/react",
+                "operationId": "mobile_dm_react",
+                "x-route-name": "mobile.dm.react",
+                "security": [
+                    {
+                        "mobileBearerAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "معرّفُ السجل (UUID)"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "نجاح",
+                        "headers": {
+                            "X-Request-Id": {
+                                "$ref": "#/components/headers/X-Request-Id"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "additionalProperties": true
+                                        },
+                                        "request_id": {
+                                            "type": "string",
+                                            "nullable": true
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/403"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/404"
+                    },
+                    "409": {
+                        "$ref": "#/components/responses/409"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/422"
                     },
                     "429": {
                         "$ref": "#/components/responses/429"
@@ -2059,6 +2827,142 @@
                     },
                     "404": {
                         "$ref": "#/components/responses/404"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/422"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/429"
+                    }
+                }
+            }
+        },
+        "/api/mobile/v1/dm/threads/{user}/since": {
+            "get": {
+                "tags": [
+                    "mobile"
+                ],
+                "summary": "get api/mobile/v1/dm/threads/{user}/since",
+                "operationId": "mobile_dm_since",
+                "x-route-name": "mobile.dm.since",
+                "security": [
+                    {
+                        "mobileBearerAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "user",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "معرّفُ الطرفِ الآخر في المحادثة — المفتاحُ يُبنى خادميّاً من هويّتك+هذا (F8)"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "نجاح",
+                        "headers": {
+                            "X-Request-Id": {
+                                "$ref": "#/components/headers/X-Request-Id"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "additionalProperties": true
+                                        },
+                                        "request_id": {
+                                            "type": "string",
+                                            "nullable": true
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/403"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/404"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/429"
+                    }
+                }
+            }
+        },
+        "/api/mobile/v1/dm/threads/{user}/typing": {
+            "post": {
+                "tags": [
+                    "mobile"
+                ],
+                "summary": "post api/mobile/v1/dm/threads/{user}/typing",
+                "operationId": "mobile_dm_typing",
+                "x-route-name": "mobile.dm.typing",
+                "security": [
+                    {
+                        "mobileBearerAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "user",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "معرّفُ الطرفِ الآخر في المحادثة — المفتاحُ يُبنى خادميّاً من هويّتك+هذا (F8)"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "نجاح",
+                        "headers": {
+                            "X-Request-Id": {
+                                "$ref": "#/components/headers/X-Request-Id"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "additionalProperties": true
+                                        },
+                                        "request_id": {
+                                            "type": "string",
+                                            "nullable": true
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/403"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/404"
+                    },
+                    "409": {
+                        "$ref": "#/components/responses/409"
                     },
                     "422": {
                         "$ref": "#/components/responses/422"
@@ -2789,6 +3693,125 @@
                 }
             }
         },
+        "/api/mobile/v1/me/documents": {
+            "get": {
+                "tags": [
+                    "mobile"
+                ],
+                "summary": "get api/mobile/v1/me/documents",
+                "operationId": "mobile_me_documents_index",
+                "x-route-name": "mobile.me.documents.index",
+                "security": [
+                    {
+                        "mobileBearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "نجاح",
+                        "headers": {
+                            "X-Request-Id": {
+                                "$ref": "#/components/headers/X-Request-Id"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "additionalProperties": true
+                                        },
+                                        "request_id": {
+                                            "type": "string",
+                                            "nullable": true
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/403"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/404"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/429"
+                    }
+                }
+            }
+        },
+        "/api/mobile/v1/me/documents/{id}/file": {
+            "get": {
+                "tags": [
+                    "mobile"
+                ],
+                "summary": "get api/mobile/v1/me/documents/{id}/file",
+                "operationId": "mobile_me_documents_file",
+                "x-route-name": "mobile.me.documents.file",
+                "security": [
+                    {
+                        "mobileBearerAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "معرّفُ السجل (UUID)"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "نجاح",
+                        "headers": {
+                            "X-Request-Id": {
+                                "$ref": "#/components/headers/X-Request-Id"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "additionalProperties": true
+                                        },
+                                        "request_id": {
+                                            "type": "string",
+                                            "nullable": true
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/403"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/404"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/429"
+                    }
+                }
+            }
+        },
         "/api/mobile/v1/navigation": {
             "get": {
                 "tags": [
@@ -2848,6 +3871,12 @@
                                                             "type": "boolean"
                                                         },
                                                         "restricted_client": {
+                                                            "type": "boolean"
+                                                        },
+                                                        "is_client": {
+                                                            "type": "boolean"
+                                                        },
+                                                        "can_ask": {
                                                             "type": "boolean"
                                                         }
                                                     }
@@ -4088,6 +5117,60 @@
                 }
             }
         },
+        "/api/mobile/v1/presence": {
+            "get": {
+                "tags": [
+                    "mobile"
+                ],
+                "summary": "get api/mobile/v1/presence",
+                "operationId": "mobile_presence",
+                "x-route-name": "mobile.presence",
+                "security": [
+                    {
+                        "mobileBearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "نجاح",
+                        "headers": {
+                            "X-Request-Id": {
+                                "$ref": "#/components/headers/X-Request-Id"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "additionalProperties": true
+                                        },
+                                        "request_id": {
+                                            "type": "string",
+                                            "nullable": true
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/403"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/404"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/429"
+                    }
+                }
+            }
+        },
         "/api/mobile/v1/push/admin/status": {
             "get": {
                 "tags": [
@@ -4404,6 +5487,60 @@
                     },
                     "422": {
                         "$ref": "#/components/responses/422"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/429"
+                    }
+                }
+            }
+        },
+        "/api/mobile/v1/saved": {
+            "get": {
+                "tags": [
+                    "mobile"
+                ],
+                "summary": "get api/mobile/v1/saved",
+                "operationId": "mobile_saved_index",
+                "x-route-name": "mobile.saved.index",
+                "security": [
+                    {
+                        "mobileBearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "نجاح",
+                        "headers": {
+                            "X-Request-Id": {
+                                "$ref": "#/components/headers/X-Request-Id"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "additionalProperties": true
+                                        },
+                                        "request_id": {
+                                            "type": "string",
+                                            "nullable": true
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/403"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/404"
                     },
                     "429": {
                         "$ref": "#/components/responses/429"
@@ -4958,6 +6095,114 @@
                     },
                     "422": {
                         "$ref": "#/components/responses/422"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/429"
+                    }
+                }
+            }
+        },
+        "/api/mobile/v1/work/daily-report": {
+            "get": {
+                "tags": [
+                    "mobile"
+                ],
+                "summary": "get api/mobile/v1/work/daily-report",
+                "operationId": "mobile_work_daily_report",
+                "x-route-name": "mobile.work.daily_report",
+                "security": [
+                    {
+                        "mobileBearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "نجاح",
+                        "headers": {
+                            "X-Request-Id": {
+                                "$ref": "#/components/headers/X-Request-Id"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "additionalProperties": true
+                                        },
+                                        "request_id": {
+                                            "type": "string",
+                                            "nullable": true
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/403"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/404"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/429"
+                    }
+                }
+            }
+        },
+        "/api/mobile/v1/work/today": {
+            "get": {
+                "tags": [
+                    "mobile"
+                ],
+                "summary": "get api/mobile/v1/work/today",
+                "operationId": "mobile_work_today",
+                "x-route-name": "mobile.work.today",
+                "security": [
+                    {
+                        "mobileBearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "نجاح",
+                        "headers": {
+                            "X-Request-Id": {
+                                "$ref": "#/components/headers/X-Request-Id"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "additionalProperties": true
+                                        },
+                                        "request_id": {
+                                            "type": "string",
+                                            "nullable": true
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/403"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/404"
                     },
                     "429": {
                         "$ref": "#/components/responses/429"
@@ -7241,7 +8486,7 @@
             "id": "string (UUID)",
             "action": "show"
         },
-        "source_of_truth": "App\\Support\\NotificationLink::target() — نفسُها التي تصدرها notifications/{id}/target والبحثُ واللوحة",
+        "source_of_truth": "App\\Support\\Collaboration\\NotificationLink::target() — نفسُها التي تصدرها notifications/{id}/target والبحثُ واللوحة",
         "null_semantics": "target=null ⇒ لا وجهةَ سجلٍّ (يعود التطبيقُ لقائمة الإشعارات) — نظيرُ الويب",
         "no_hardcoded_screens": true,
         "universal_link_encoding": {

@@ -752,4 +752,85 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get roleViewer => 'Viewer';
+
+  @override
+  String get askTitle => 'Ask Hub';
+
+  @override
+  String get askHint => 'Ask about your projects and tasks…';
+
+  @override
+  String get askSend => 'Send';
+
+  @override
+  String get askWorking =>
+      'Reading your data and answering — this may take a minute…';
+
+  @override
+  String get askEmpty =>
+      'Ask a question about your data — answers come only from what you can see, with sources.';
+
+  @override
+  String get askSources => 'Sources';
+
+  @override
+  String askSourceRows(String label, int rows) {
+    return '$label — $rows rows';
+  }
+
+  @override
+  String get askPartial => 'Partial answer — not all data was read';
+
+  @override
+  String get askHiddenTurn =>
+      'This answer is no longer available to you — your access or its data changed';
+
+  @override
+  String get askThreads => 'Your conversations';
+
+  @override
+  String get askNewThread => 'New conversation';
+
+  @override
+  String get askNoThreads => 'No saved conversations';
+
+  @override
+  String get askMemoryOff => 'Conversation saving is turned off on the server';
+
+  @override
+  String askRetention(int days) {
+    return 'A conversation is deleted after $days days of inactivity';
+  }
+
+  @override
+  String get askDeleteAll => 'Delete all conversations';
+
+  @override
+  String get askDeleteAllConfirm =>
+      'Delete all your conversations? This cannot be undone.';
+
+  @override
+  String get askDeleteConfirm => 'Delete this conversation?';
+
+  @override
+  String get askErrUnavailable =>
+      'The assistant is unavailable right now — try later';
+
+  @override
+  String get askErrLimit => 'You have reached the usage limit — try later';
+
+  @override
+  String get askErrDenied => 'You are not allowed to use the assistant';
+
+  @override
+  String get askErrNoData => 'No data available to you answers this question';
+
+  @override
+  String get askErrQuestion => 'Please phrase the question more clearly';
+
+  @override
+  String get askErrTooBig => 'The question is too broad — narrow it down';
+
+  @override
+  String get askErrGeneric => 'Could not answer';
 }

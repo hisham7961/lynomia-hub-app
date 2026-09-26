@@ -88,10 +88,24 @@ void main() {
 
   test('التعاون: إشعارات/تعليقات/DM/اعتمادات/بحث/بيت', () {
     expect(endpointsOf('notifications'), hasLength(5));
-    expect(endpointsOf('comments'), hasLength(2));
-    expect(endpointsOf('dm'), hasLength(4));
+    // العددُ مثبَّتٌ عمداً: نقطةٌ جديدةٌ تُكشف هنا فتُسجَّل في مصفوفة التغطية.
+    // (خلفية v2.614: التفاعلُ على التعليق، والتفاعلُ والكتابةُ و«منذ» في DM —
+    // مسجَّلةٌ PENDING_APP في docs/mobile-feature-coverage.md)
+    expect(endpointsOf('comments'), hasLength(3));
+    expect(endpointsOf('dm'), hasLength(7));
     expect(endpointsOf('approvals'), hasLength(4));
     expect(endpointsOf('search'), contains('GET /api/mobile/v1/search'));
+    // «اسأل Hub» — كلُّ ما يناديه AskRepository في سجلّ القدرات
+    expect(
+      endpointsOf('ask'),
+      containsAll([
+        'POST /api/mobile/v1/ask',
+        'GET /api/mobile/v1/ask/threads',
+        'GET /api/mobile/v1/ask/threads/{id}',
+        'DELETE /api/mobile/v1/ask/threads/{id}',
+        'DELETE /api/mobile/v1/ask/threads',
+      ]),
+    );
     expect(endpointsOf('home'), contains('GET /api/mobile/v1/home'));
   });
 

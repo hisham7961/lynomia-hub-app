@@ -1,11 +1,11 @@
 {
   "backend_repository": "hisham7961/lynomia-hub",
-  "backend_ref": "claude/project-review-code-organization-uj0mco",
-  "backend_commit_sha": "d02525cb32b269b83baa9e6dc98d1a06ed11cdfc",
-  "backend_version": "2.617.0",
+  "backend_ref": "work/dev",
+  "backend_commit_sha": "044ccca56fc09946a8f303dd268bac1dc1d756db",
+  "backend_version": "2.618.0",
   "mobile_api_version": "1",
   "schema_version": "8e9f8dd5bb93",
-  "snapshot_taken_at": "2026-09-27T13:55:57Z",
+  "snapshot_taken_at": "2026-09-27T17:24:50Z",
   "snapshot_sources": {
     "mobile_capabilities": "docs/mobile-readiness/mobile-capabilities.json @ backend_commit_sha",
     "mobile_openapi": "GET /api/mobile/v1/openapi.json (مولَّدة حيّاً — راجع contracts/README.md لحالة اللقطة)"

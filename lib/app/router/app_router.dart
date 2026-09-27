@@ -10,6 +10,13 @@ import '../../core/links/deep_link.dart';
 import '../../features/activation/activation_screen.dart';
 import '../../features/approvals/approvals_screen.dart';
 import '../../features/auth/login_screen.dart';
+import '../../features/calendar/calendar_screens.dart';
+import '../../features/custody/custody_screens.dart';
+import '../../features/inventory/inventory_screens.dart';
+import '../../features/messages/channels_screens.dart';
+import '../../features/my_work/team_reports_screen.dart';
+import '../../features/portal/portal_tickets_screens.dart';
+import '../../features/records/versions_screen.dart';
 import '../../features/home/home_screen.dart';
 import '../../features/launch/launch_gate_screen.dart';
 import '../../features/members/client_members_screen.dart';
@@ -232,6 +239,18 @@ GoRouter buildRouter(AppContainer c) => GoRouter(
       path: '/portal/engagements',
       builder: (context, state) => const PortalEngagementsScreen(),
     ),
+    // «تذاكري» (المرحلة ٤.١) — تُدفع من بيت البوابة.
+    GoRoute(
+      path: '/portal/tickets',
+      builder: (context, state) => const PortalTicketsScreen(),
+      routes: [
+        GoRoute(
+          path: ':id',
+          builder: (context, state) =>
+              PortalTicketScreen(id: state.pathParameters['id']!),
+        ),
+      ],
+    ),
     GoRoute(
       path: '/portal/documents',
       builder: (context, state) => const PortalDocumentsScreen(),
@@ -295,6 +314,14 @@ GoRouter buildRouter(AppContainer c) => GoRouter(
             recordId: state.pathParameters['id'],
           ),
         ),
+        // نسخ السجل (المرحلة ٣.٦) — تفعّل إجراء restore-version.
+        GoRoute(
+          path: 'versions',
+          builder: (context, state) => RecordVersionsScreen(
+            module: state.pathParameters['module']!,
+            id: state.pathParameters['id']!,
+          ),
+        ),
       ],
     ),
     GoRoute(
@@ -305,6 +332,11 @@ GoRouter buildRouter(AppContainer c) => GoRouter(
       path: '/messages',
       builder: (context, state) => const DmThreadsScreen(),
       routes: [
+        // بحث الرسائل (٤.٢) — قبل `:userId` كي لا يُبتلع.
+        GoRoute(
+          path: 'search',
+          builder: (context, state) => const MessageSearchScreen(),
+        ),
         GoRoute(
           path: ':userId',
           builder: (context, state) => DmChatScreen(
@@ -315,12 +347,31 @@ GoRouter buildRouter(AppContainer c) => GoRouter(
       ],
     ),
     // مركز التواصل (§106): قناة/غرفة/مجموعة، والمحفوظات.
+    // إدارة القنوات (٤.٢) — الحرفيّات قبل `/conversations/:id`.
+    GoRoute(
+      path: '/conversations/directory',
+      builder: (context, state) => const ChannelDirectoryScreen(),
+    ),
+    GoRoute(
+      path: '/conversations/new-group',
+      builder: (context, state) => const NewGroupScreen(),
+    ),
     GoRoute(
       path: '/conversations/:id',
       builder: (context, state) => ConversationScreen(
         conversationId: state.pathParameters['id']!,
         title: state.uri.queryParameters['title'] ?? '',
+        kind: state.uri.queryParameters['kind'] ?? '',
       ),
+      routes: [
+        GoRoute(
+          path: 'members',
+          builder: (context, state) => ConversationMembersScreen(
+            conversationId: state.pathParameters['id']!,
+            kind: state.uri.queryParameters['kind'] ?? '',
+          ),
+        ),
+      ],
     ),
     GoRoute(path: '/saved', builder: (context, state) => const SavedScreen()),
     // عملي اليوم والتقرير اليومي (§93).
@@ -333,6 +384,39 @@ GoRouter buildRouter(AppContainer c) => GoRouter(
       path: '/me/documents',
       builder: (context, state) => const MyDocumentsScreen(),
     ),
+    // المرحلة ٣: عهدتي، وجلسات الجرد.
+    GoRoute(
+      path: '/me/custody',
+      builder: (context, state) => const MyCustodyScreen(),
+    ),
+    GoRoute(
+      path: '/inventory',
+      builder: (context, state) => const InventorySessionsScreen(),
+      routes: [
+        GoRoute(
+          path: ':id',
+          builder: (context, state) =>
+              InventorySessionScreen(sessionId: state.pathParameters['id']!),
+          routes: [
+            GoRoute(
+              path: 'scan',
+              builder: (context, state) =>
+                  InventoryScanScreen(sessionId: state.pathParameters['id']!),
+            ),
+          ],
+        ),
+      ],
+    ),
+    // المرحلة ٤: تقارير الفريق، والتقويم، والتنبيهات.
+    GoRoute(
+      path: '/reports/daily',
+      builder: (context, state) => const TeamReportsScreen(),
+    ),
+    GoRoute(
+      path: '/calendar',
+      builder: (context, state) => const CalendarScreen(),
+    ),
+    GoRoute(path: '/alerts', builder: (context, state) => const AlertsScreen()),
     GoRoute(
       path: '/approvals',
       builder: (context, state) => const ApprovalsScreen(),

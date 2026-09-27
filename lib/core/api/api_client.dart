@@ -113,6 +113,21 @@ class ApiRawResponse {
       json is Map ? (json as Map).cast<String, dynamic>() : const {};
 }
 
+/// ردٌّ مبثوث مفتوح — البايتات تُستهلك مرةً واحدة.
+class ApiStreamResponse {
+  const ApiStreamResponse({
+    required this.status,
+    required this.headers,
+    required this.body,
+  });
+
+  final int status;
+  final Map<String, String> headers;
+  final Stream<List<int>> body;
+
+  String? get requestId => headers['x-request-id'];
+}
+
 class ApiClient {
   ApiClient({
     required this.env,
@@ -269,6 +284,63 @@ class ApiClient {
           attempt < _maxAttempts) {
         await _backoff(attempt);
         continue;
+      }
+      throw error;
+    }
+  }
+
+  /// فتح ردٍّ **مبثوث** (SSE مثل `ask/stream`) — الترويسات والمصادقة نفسها،
+  /// وتدوير واحد عند 401. **لا إعادة محاولة أبداً**: البثّ جانبٌ غير عديم
+  /// الأثر (سؤالٌ مدفوع). ردٌّ غير 2xx أو غلاف خطأ JSON ⇒ [ApiException] مكتوب.
+  /// المهلة على وصول الترويسات وحدها (البثّ نفسه يطول بطبيعته).
+  Future<ApiStreamResponse> openStream(ApiRequest r) async {
+    var refreshedOnce = false;
+    while (true) {
+      final http.StreamedResponse resp;
+      try {
+        final headers = await _headers(r, refreshed: refreshedOnce);
+        final uri = _uri(r);
+        _log.info('${r.method} ${uri.path} (stream)');
+        final req = http.Request(r.method, uri)
+          ..headers.addAll(headers)
+          ..headers['Accept'] = 'text/event-stream, application/json';
+        if (r.jsonBody != null) req.body = jsonEncode(r.jsonBody);
+        resp = await _transport.send(req).timeout(r.timeout);
+      } on TimeoutException catch (e) {
+        throw NetworkException('مهلة الطلب', cause: e);
+      } on http.ClientException catch (e) {
+        throw NetworkException('تعذر الاتصال', cause: e);
+      }
+      final type = resp.headers['content-type'] ?? '';
+      final ok = resp.statusCode >= 200 && resp.statusCode < 300;
+      if (ok && type.contains('event-stream')) {
+        return ApiStreamResponse(
+          status: resp.statusCode,
+          headers: resp.headers,
+          body: resp.stream,
+        );
+      }
+      // ليس بثّاً: يُقرأ كاملاً ويُعامل معاملة الرد العادي (خطأ مكتوب).
+      final full = await http.Response.fromStream(resp);
+      final error = _asException(full);
+      if (error.code == ApiErrorCode.unauthenticated &&
+          r.auth == AuthMode.required &&
+          !refreshedOnce) {
+        refreshedOnce = true;
+        await session.refreshNow();
+        continue;
+      }
+      if (error.code == ApiErrorCode.sessionRevoked) {
+        await session.end(SessionEndReason.revoked);
+      }
+      if (ok) {
+        // 2xx بلا بثّ (وسيطٌ خزّن الرد) — لا شكل معروفاً له هنا.
+        throw ApiException(
+          code: ApiErrorCode.unknown,
+          rawCode: 'NOT_A_STREAM',
+          httpStatus: full.statusCode,
+          requestId: full.headers['x-request-id'],
+        );
       }
       throw error;
     }

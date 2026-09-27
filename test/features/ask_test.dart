@@ -181,6 +181,12 @@ void main() {
         await tester.pumpAndSettle();
         expect(find.text('اسأل Hub'), findsWidgets);
 
+        // خادمٌ أقدم بلا البثّ (٤٠٤) ⇒ الارتداد لـ`POST ask` (اختبار البثّ في
+        // phase4_test).
+        h.transport.on(
+          'POST ask/stream',
+          (_) => apiError('RESOURCE_NOT_FOUND', 404),
+        );
         h.transport.onData('POST ask', _answer());
         await tester.enterText(
           find.byKey(const Key('ask-input')),

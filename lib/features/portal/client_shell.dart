@@ -88,10 +88,17 @@ class ClientShell extends StatelessWidget {
   }
 }
 
-/// أيقونات رأس بوابة العميل — إشعارات فقط (مسموحة لحساب العميل خادمياً).
+/// أيقونات رأس بوابة العميل — «تذاكري» والإشعارات (مسموحتان لحساب العميل
+/// خادمياً: `mobile.portal.tickets.*` و`notifications`).
 List<Widget> clientHeaderActions(BuildContext context) {
   final account = AppScope.of(context).account;
   return [
+    IconButton(
+      key: const Key('client-tickets'),
+      tooltip: AppLocalizations.of(context)!.ticketsTitle,
+      icon: const Icon(Icons.support_agent),
+      onPressed: () => context.push('/portal/tickets'),
+    ),
     ListenableBuilder(
       listenable: account,
       builder: (context, _) => IconButton(

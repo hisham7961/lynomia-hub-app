@@ -3,7 +3,10 @@
 /// والتطبيق يعرض ما يُعاد فقط. المركز داخلي: حساب العميل يُردّ ٤٠٤.
 library;
 
+import 'package:uuid/uuid.dart';
+
 import '../../core/api/api_client.dart';
+import '../../core/api/json_read.dart';
 import 'live_events.dart';
 
 /// حالات الحضور الخشنة (`Presence::*`) — للتواصل لا للمراقبة.
@@ -200,6 +203,158 @@ class SavedItem {
   final SavedTarget? target;
 }
 
+/// قناةٌ في الدليل (قابلة للاكتشاف ولستُ عضواً فيها).
+class DirectoryChannel {
+  const DirectoryChannel({
+    required this.id,
+    required this.title,
+    required this.visibility,
+    required this.members,
+    this.updatedAt,
+  });
+
+  factory DirectoryChannel.fromJson(Map<String, dynamic> j) => DirectoryChannel(
+    id: j['id']?.toString() ?? '',
+    title: j['title']?.toString() ?? '',
+    visibility: j['visibility']?.toString() ?? '',
+    members: jsonInt(j['members']),
+    updatedAt: jsonDate(j['updated_at']),
+  );
+
+  final String id;
+  final String title;
+  final String visibility;
+  final int members;
+  final DateTime? updatedAt;
+}
+
+/// بطاقة الحاوية بعد إنشاء/انضمام (`ConversationCard`).
+class ConversationCard {
+  const ConversationCard({
+    required this.id,
+    required this.kind,
+    required this.title,
+    required this.myRole,
+    this.archived = false,
+  });
+
+  factory ConversationCard.fromJson(Map<String, dynamic> j) => ConversationCard(
+    id: j['id']?.toString() ?? '',
+    kind: j['kind']?.toString() ?? '',
+    title: j['title']?.toString() ?? '',
+    myRole: j['my_role']?.toString() ?? '',
+    archived: j['archived'] == true,
+  );
+
+  final String id;
+  final String kind;
+  final String title;
+  final String myRole;
+  final bool archived;
+}
+
+/// أدوار العضوية كما يعلنها العقد.
+abstract final class ConversationRoles {
+  static const owner = 'owner';
+  static const moderator = 'moderator';
+  static const member = 'member';
+  static const guest = 'guest';
+  static const all = [owner, moderator, member, guest];
+}
+
+/// تفضيلات إشعار الحاوية (`Collaboration::NOTIFY_PREFS`).
+const kNotifyPrefs = ['all', 'mentions', 'muted'];
+
+class ConversationMember {
+  const ConversationMember({
+    required this.userId,
+    required this.name,
+    required this.role,
+  });
+
+  factory ConversationMember.fromJson(Map<String, dynamic> j) {
+    final u = UserRef.fromJson(j['user']);
+    return ConversationMember(
+      userId: u?.id ?? '',
+      name: u?.name ?? '',
+      role: j['role']?.toString() ?? ConversationRoles.member,
+    );
+  }
+
+  final String userId;
+  final String name;
+  final String role;
+}
+
+class ConversationMembers {
+  const ConversationMembers({
+    required this.myRole,
+    required this.canPost,
+    required this.canManage,
+    required this.members,
+  });
+
+  factory ConversationMembers.fromJson(Map<String, dynamic> j) =>
+      ConversationMembers(
+        myRole: j['my_role']?.toString() ?? '',
+        canPost: j['can_post'] == true,
+        canManage: j['can_manage'] == true,
+        members: jsonMaps(j['members'])
+            .map(ConversationMember.fromJson)
+            .toList(),
+      );
+
+  final String myRole;
+  final bool canPost;
+
+  /// إدارة الأعضاء (مشرف فأعلى) — عرضٌ يعيد الخادم فحصه.
+  final bool canManage;
+  final List<ConversationMember> members;
+
+  bool get isOwner => myRole == ConversationRoles.owner;
+}
+
+/// نتيجة بحث الرسائل بوجهةٍ قانونية (شكل وجهة المحفوظة نفسه).
+class MessageSearchHit {
+  const MessageSearchHit({
+    required this.type,
+    required this.id,
+    required this.excerpt,
+    this.author,
+    this.createdAt,
+    this.target,
+  });
+
+  factory MessageSearchHit.fromJson(Map<String, dynamic> j) => MessageSearchHit(
+    type: j['type']?.toString() ?? '',
+    id: j['id']?.toString() ?? '',
+    excerpt: j['excerpt']?.toString() ?? '',
+    author: jsonStr(j['author']),
+    createdAt: jsonDate(j['created_at']),
+    target: SavedTarget.fromJson(j['target']),
+  );
+
+  /// `feed` · `channel` · `dm`.
+  final String type;
+  final String id;
+  final String excerpt;
+  final String? author;
+  final DateTime? createdAt;
+  final SavedTarget? target;
+}
+
+class MessageSearchResult {
+  const MessageSearchResult({
+    required this.minChars,
+    required this.total,
+    required this.hits,
+  });
+
+  final int minChars;
+  final int total;
+  final List<MessageSearchHit> hits;
+}
+
 class CollabRepository {
   CollabRepository(this.api);
 
@@ -297,5 +452,154 @@ class CollabRepository {
   /// `DELETE saved/{id}` — إزالة محفوظتي (غيرها ٤٠٤). لا إعادة تلقائية.
   Future<void> unsave(String id) async {
     await api.send(ApiRequest('DELETE', 'saved/$id'));
+  }
+
+  // ── إدارة القنوات والمجموعات (المرحلة ٤.٢) — الحرّاس خادمية
+  // (ChannelService/GroupService). التبديلات والإضافات ليست عديمة الأثر ⇒ لا
+  // إعادة تلقائية؛ والإنشاء بمفتاح Idempotency للفعل الواحد.
+
+  /// `GET conversations/directory`.
+  Future<List<DirectoryChannel>> directory() async =>
+      jsonMaps((await api.getData('conversations/directory'))['channels'])
+          .map(DirectoryChannel.fromJson)
+          .toList();
+
+  /// `POST conversations` — قناةٌ أنا مالكها.
+  Future<ConversationCard> createChannel({
+    required String title,
+    String? audience,
+    String? visibility,
+    String? body,
+    String? idempotencyKey,
+  }) async => ConversationCard.fromJson(
+    jsonMap(
+      (await api.sendData(
+        'POST',
+        'conversations',
+        body: {
+          'title': title,
+          'audience': ?audience,
+          'visibility': ?visibility,
+          if (body != null && body.trim().isNotEmpty) 'body': body.trim(),
+        },
+        idempotencyKey: idempotencyKey ?? const Uuid().v4(),
+      ))['conversation'],
+    ),
+  );
+
+  /// `POST conversations/{id}/join` — `joined=false` إن كنت عضواً.
+  Future<({ConversationCard conversation, bool joined})> join(String id) async {
+    final d = await api.sendData(
+      'POST',
+      'conversations/${Uri.encodeComponent(id)}/join',
+      body: const {},
+    );
+    return (
+      conversation: ConversationCard.fromJson(jsonMap(d['conversation'])),
+      joined: d['joined'] == true,
+    );
+  }
+
+  Future<ConversationMembers> members(String id) async =>
+      ConversationMembers.fromJson(
+        await api.getData('conversations/${Uri.encodeComponent(id)}/members'),
+      );
+
+  Future<ConversationMember> addMember(
+    String id,
+    String userId, {
+    String? role,
+  }) async => ConversationMember.fromJson(
+    jsonMap(
+      (await api.sendData(
+        'POST',
+        'conversations/${Uri.encodeComponent(id)}/members',
+        body: {'user_id': userId, 'role': ?role},
+      ))['member'],
+    ),
+  );
+
+  Future<ConversationMember> setMemberRole(
+    String id,
+    String userId,
+    String role,
+  ) async => ConversationMember.fromJson(
+    jsonMap(
+      (await api.sendData(
+        'PUT',
+        'conversations/${Uri.encodeComponent(id)}/members/${Uri.encodeComponent(userId)}',
+        body: {'role': role},
+      ))['member'],
+    ),
+  );
+
+  Future<void> removeMember(String id, String userId) => api.sendData(
+    'DELETE',
+    'conversations/${Uri.encodeComponent(id)}/members/${Uri.encodeComponent(userId)}',
+  );
+
+  /// تبديل نجمة المفضّلة — يعيد الحالة الخادمية.
+  Future<bool> toggleFavorite(String id) async =>
+      (await api.sendData(
+        'POST',
+        'conversations/${Uri.encodeComponent(id)}/favorite',
+        body: const {},
+      ))['favorite'] ==
+      true;
+
+  /// أرشفة/إعادة — لمالك القناة وحده (403).
+  Future<bool> toggleArchive(String id) async =>
+      (await api.sendData(
+        'POST',
+        'conversations/${Uri.encodeComponent(id)}/archive',
+        body: const {},
+      ))['archived'] ==
+      true;
+
+  /// `PUT conversations/{id}/notify` — `all|mentions|muted`.
+  Future<String> setNotifyPref(String id, String pref) async =>
+      (await api.sendData(
+        'PUT',
+        'conversations/${Uri.encodeComponent(id)}/notify',
+        body: {'pref': pref},
+      ))['pref']?.toString() ??
+      pref;
+
+  /// `POST groups` — مجموعة رسائل بمشاركين داخليين ضمن نطاقي.
+  Future<ConversationCard> createGroup(
+    List<String> participants, {
+    String? title,
+    String? body,
+    String? idempotencyKey,
+  }) async => ConversationCard.fromJson(
+    jsonMap(
+      (await api.sendData(
+        'POST',
+        'groups',
+        body: {
+          'participants': participants,
+          if (title != null && title.trim().isNotEmpty) 'title': title.trim(),
+          if (body != null && body.trim().isNotEmpty) 'body': body.trim(),
+        },
+        idempotencyKey: idempotencyKey ?? const Uuid().v4(),
+      ))['conversation'],
+    ),
+  );
+
+  /// `POST groups/{id}/leave` — عضويتي وحدها.
+  Future<void> leaveGroup(String id) => api.sendData(
+    'POST',
+    'groups/${Uri.encodeComponent(id)}/leave',
+    body: const {},
+  );
+
+  /// `GET search/messages?q=` — ما يراه القارئ وحده (≤50 مع العدد الكلي).
+  Future<MessageSearchResult> searchMessages(String q) async {
+    final d = await api.getData('search/messages', query: {'q': q});
+    return MessageSearchResult(
+      minChars: jsonInt(d['min_chars'], 2),
+      total: jsonInt(d['total']),
+      hits: jsonMaps(d['results']).map(MessageSearchHit.fromJson).toList(),
+    );
   }
 }

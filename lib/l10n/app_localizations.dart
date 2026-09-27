@@ -2203,6 +2203,1302 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'permission denied (الإذن مرفوض)'**
   String get diagnosticsPushPermissionDenied;
+
+  /// No description provided for @fieldValueRequired.
+  ///
+  /// In ar, this message translates to:
+  /// **'هذا الحقل مطلوب'**
+  String get fieldValueRequired;
+
+  /// No description provided for @attendanceTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'الحضور والانصراف'**
+  String get attendanceTitle;
+
+  /// No description provided for @attendanceAlreadyIn.
+  ///
+  /// In ar, this message translates to:
+  /// **'سُجّل حضورك اليوم مسبقاً'**
+  String get attendanceAlreadyIn;
+
+  /// No description provided for @attendanceOpenShift.
+  ///
+  /// In ar, this message translates to:
+  /// **'لديك ورديةٌ مفتوحة من يومٍ سابق — سجّل انصرافك منها أولاً'**
+  String get attendanceOpenShift;
+
+  /// No description provided for @attendanceNotIn.
+  ///
+  /// In ar, this message translates to:
+  /// **'لم تسجّل حضوراً بعد'**
+  String get attendanceNotIn;
+
+  /// No description provided for @attendanceAlreadyOut.
+  ///
+  /// In ar, this message translates to:
+  /// **'سُجّل انصرافك مسبقاً'**
+  String get attendanceAlreadyOut;
+
+  /// No description provided for @attendanceConsentRequired.
+  ///
+  /// In ar, this message translates to:
+  /// **'إرسال الموقع يتطلّب موافقتك الصريحة'**
+  String get attendanceConsentRequired;
+
+  /// No description provided for @attendanceNoProfile.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا ملف موظفٍ مربوطاً بحسابك'**
+  String get attendanceNoProfile;
+
+  /// No description provided for @attendanceLocationUnavailable.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعذّر تحديد الموقع — يُسجَّل بلا موقع'**
+  String get attendanceLocationUnavailable;
+
+  /// No description provided for @attendanceCheckedIn.
+  ///
+  /// In ar, this message translates to:
+  /// **'سُجّل الحضور'**
+  String get attendanceCheckedIn;
+
+  /// No description provided for @attendanceCheckedOut.
+  ///
+  /// In ar, this message translates to:
+  /// **'سُجّل الانصراف'**
+  String get attendanceCheckedOut;
+
+  /// No description provided for @attendanceStateNotIn.
+  ///
+  /// In ar, this message translates to:
+  /// **'لم تسجّل حضورك اليوم'**
+  String get attendanceStateNotIn;
+
+  /// No description provided for @attendanceStateIn.
+  ///
+  /// In ar, this message translates to:
+  /// **'حاضر منذ {time}'**
+  String attendanceStateIn(String time);
+
+  /// No description provided for @attendanceStateOut.
+  ///
+  /// In ar, this message translates to:
+  /// **'حضور {timeIn} · انصراف {timeOut}'**
+  String attendanceStateOut(String timeIn, String timeOut);
+
+  /// No description provided for @attendanceHours.
+  ///
+  /// In ar, this message translates to:
+  /// **'{hours} ساعة'**
+  String attendanceHours(String hours);
+
+  /// No description provided for @attendanceOvernight.
+  ///
+  /// In ar, this message translates to:
+  /// **'وردية ليلية ممتدة من اليوم السابق'**
+  String get attendanceOvernight;
+
+  /// No description provided for @attendanceMode.
+  ///
+  /// In ar, this message translates to:
+  /// **'وضع العمل'**
+  String get attendanceMode;
+
+  /// No description provided for @attendanceShareLocation.
+  ///
+  /// In ar, this message translates to:
+  /// **'إرفاق موقعي لهذه المرة'**
+  String get attendanceShareLocation;
+
+  /// No description provided for @attendanceShareLocationHint.
+  ///
+  /// In ar, this message translates to:
+  /// **'قراءةٌ واحدة لحظة الضغط بموافقتك — لا تتبّع'**
+  String get attendanceShareLocationHint;
+
+  /// No description provided for @attendanceCheckIn.
+  ///
+  /// In ar, this message translates to:
+  /// **'تسجيل الحضور'**
+  String get attendanceCheckIn;
+
+  /// No description provided for @attendanceCheckOut.
+  ///
+  /// In ar, this message translates to:
+  /// **'تسجيل الانصراف'**
+  String get attendanceCheckOut;
+
+  /// No description provided for @leaveRejectReasonTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'سبب الرفض'**
+  String get leaveRejectReasonTitle;
+
+  /// No description provided for @leaveRejectReasonHint.
+  ///
+  /// In ar, this message translates to:
+  /// **'يقرؤه صاحب الطلب'**
+  String get leaveRejectReasonHint;
+
+  /// No description provided for @leaveApproveConfirm.
+  ///
+  /// In ar, this message translates to:
+  /// **'اعتماد طلب الإجازة؟ يحسم الخادم مرحلته (موافقة المدير أو الاعتماد النهائي).'**
+  String get leaveApproveConfirm;
+
+  /// No description provided for @leaveAlreadyDecided.
+  ///
+  /// In ar, this message translates to:
+  /// **'هذا الطلب محسومٌ مسبقاً'**
+  String get leaveAlreadyDecided;
+
+  /// No description provided for @leaveSelfRequest.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا تقرّر في طلبك أنت — يقرّر مديرك أو الموارد البشرية'**
+  String get leaveSelfRequest;
+
+  /// No description provided for @leaveNotDecider.
+  ///
+  /// In ar, this message translates to:
+  /// **'قرار هذا الطلب لمدير الموظف أو الموارد البشرية'**
+  String get leaveNotDecider;
+
+  /// No description provided for @leaveReasonRequired.
+  ///
+  /// In ar, this message translates to:
+  /// **'سبب الرفض مطلوب'**
+  String get leaveReasonRequired;
+
+  /// No description provided for @leaveDecisionTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'قرار الطلب'**
+  String get leaveDecisionTitle;
+
+  /// No description provided for @custodyTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'عهدتي'**
+  String get custodyTitle;
+
+  /// No description provided for @custodyEmpty.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا عهدة بيدك ولا حركات'**
+  String get custodyEmpty;
+
+  /// No description provided for @custodyAcked.
+  ///
+  /// In ar, this message translates to:
+  /// **'سُجّل إقرار الاستلام'**
+  String get custodyAcked;
+
+  /// No description provided for @custodyPendingReceipts.
+  ///
+  /// In ar, this message translates to:
+  /// **'إقرارات استلام معلّقة'**
+  String get custodyPendingReceipts;
+
+  /// No description provided for @custodyAck.
+  ///
+  /// In ar, this message translates to:
+  /// **'أُقرّ بالاستلام'**
+  String get custodyAck;
+
+  /// No description provided for @custodyAssets.
+  ///
+  /// In ar, this message translates to:
+  /// **'ما بيدي ({count})'**
+  String custodyAssets(int count);
+
+  /// No description provided for @custodyNoAssets.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا أصول بيدك الآن'**
+  String get custodyNoAssets;
+
+  /// No description provided for @custodyReceiptPending.
+  ///
+  /// In ar, this message translates to:
+  /// **'بانتظار إقرارك'**
+  String get custodyReceiptPending;
+
+  /// No description provided for @custodyMoves.
+  ///
+  /// In ar, this message translates to:
+  /// **'حركات عهدتي'**
+  String get custodyMoves;
+
+  /// No description provided for @custodyHandoverTo.
+  ///
+  /// In ar, this message translates to:
+  /// **'تسليم العهدة إلى {name}'**
+  String custodyHandoverTo(String name);
+
+  /// No description provided for @custodyNoteHint.
+  ///
+  /// In ar, this message translates to:
+  /// **'ملاحظة (اختيارية)'**
+  String get custodyNoteHint;
+
+  /// No description provided for @custodyRecover.
+  ///
+  /// In ar, this message translates to:
+  /// **'استرداد العهدة'**
+  String get custodyRecover;
+
+  /// No description provided for @custodyHandover.
+  ///
+  /// In ar, this message translates to:
+  /// **'تسليم العهدة'**
+  String get custodyHandover;
+
+  /// No description provided for @custodyActionsTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'العهدة'**
+  String get custodyActionsTitle;
+
+  /// No description provided for @inventoryTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'جلسات الجرد'**
+  String get inventoryTitle;
+
+  /// No description provided for @inventoryFreezeConfirm.
+  ///
+  /// In ar, this message translates to:
+  /// **'فتح جلسة جردٍ جديدة بتجميد لقطة أصولك الآن؟'**
+  String get inventoryFreezeConfirm;
+
+  /// No description provided for @inventoryFrozen.
+  ///
+  /// In ar, this message translates to:
+  /// **'جُمِّد {count} أصلاً في الجلسة'**
+  String inventoryFrozen(int count);
+
+  /// No description provided for @inventoryFreeze.
+  ///
+  /// In ar, this message translates to:
+  /// **'جلسة جديدة'**
+  String get inventoryFreeze;
+
+  /// No description provided for @inventoryEmpty.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا جلسات جرد'**
+  String get inventoryEmpty;
+
+  /// No description provided for @inventorySessionMeta.
+  ///
+  /// In ar, this message translates to:
+  /// **'{items} صنفاً · {scans} مسحة · {by}'**
+  String inventorySessionMeta(int items, int scans, String by);
+
+  /// No description provided for @inventorySession.
+  ///
+  /// In ar, this message translates to:
+  /// **'جلسة الجرد'**
+  String get inventorySession;
+
+  /// No description provided for @inventoryReconcile.
+  ///
+  /// In ar, this message translates to:
+  /// **'المصالحة'**
+  String get inventoryReconcile;
+
+  /// No description provided for @inventoryReconcileConfirm.
+  ///
+  /// In ar, this message translates to:
+  /// **'مصالحة الجلسة كتابياً (موجود/مفقود/انتقل/غير متوقع)؟ يتطلّب تأكيد الهوية.'**
+  String get inventoryReconcileConfirm;
+
+  /// No description provided for @inventoryReconciled.
+  ///
+  /// In ar, this message translates to:
+  /// **'تمت المصالحة'**
+  String get inventoryReconciled;
+
+  /// No description provided for @inventoryClose.
+  ///
+  /// In ar, this message translates to:
+  /// **'إغلاق الجلسة'**
+  String get inventoryClose;
+
+  /// No description provided for @inventoryCloseConfirm.
+  ///
+  /// In ar, this message translates to:
+  /// **'إغلاق الجلسة؟ لا مسح بعد الإغلاق. يتطلّب تأكيد الهوية.'**
+  String get inventoryCloseConfirm;
+
+  /// No description provided for @inventoryClosed.
+  ///
+  /// In ar, this message translates to:
+  /// **'أُغلقت الجلسة'**
+  String get inventoryClosed;
+
+  /// No description provided for @inventoryScan.
+  ///
+  /// In ar, this message translates to:
+  /// **'مسح'**
+  String get inventoryScan;
+
+  /// No description provided for @inventoryItems.
+  ///
+  /// In ar, this message translates to:
+  /// **'الأصناف ({count})'**
+  String inventoryItems(int count);
+
+  /// No description provided for @inventoryRecentScans.
+  ///
+  /// In ar, this message translates to:
+  /// **'أحدث المسحات'**
+  String get inventoryRecentScans;
+
+  /// No description provided for @inventoryUnknownCode.
+  ///
+  /// In ar, this message translates to:
+  /// **'رمز غير معروف (لا يُخزَّن)'**
+  String get inventoryUnknownCode;
+
+  /// No description provided for @inventorySessionClosed.
+  ///
+  /// In ar, this message translates to:
+  /// **'الجلسة مغلقة — لا مسح بعد الإغلاق'**
+  String get inventorySessionClosed;
+
+  /// No description provided for @inventoryScanHint.
+  ///
+  /// In ar, this message translates to:
+  /// **'وجّه الكاميرا إلى رمز الأصل'**
+  String get inventoryScanHint;
+
+  /// No description provided for @inventoryScanKnown.
+  ///
+  /// In ar, this message translates to:
+  /// **'✓ معروف: {name}'**
+  String inventoryScanKnown(String name);
+
+  /// No description provided for @inventoryScanUnexpected.
+  ///
+  /// In ar, this message translates to:
+  /// **'⚠ غير متوقع: {name}'**
+  String inventoryScanUnexpected(String name);
+
+  /// No description provided for @inventoryScanUnknown.
+  ///
+  /// In ar, this message translates to:
+  /// **'✗ رمز غير معروف في نطاقك'**
+  String get inventoryScanUnknown;
+
+  /// No description provided for @inventoryScanCount.
+  ///
+  /// In ar, this message translates to:
+  /// **'المسح ({count})'**
+  String inventoryScanCount(int count);
+
+  /// No description provided for @pageOf.
+  ///
+  /// In ar, this message translates to:
+  /// **'{page} من {pages}'**
+  String pageOf(int page, int pages);
+
+  /// No description provided for @filesDeleteConfirm.
+  ///
+  /// In ar, this message translates to:
+  /// **'حذف المرفق «{name}»؟'**
+  String filesDeleteConfirm(String name);
+
+  /// No description provided for @filesDeleted.
+  ///
+  /// In ar, this message translates to:
+  /// **'حُذف المرفق'**
+  String get filesDeleted;
+
+  /// No description provided for @filesExpires.
+  ///
+  /// In ar, this message translates to:
+  /// **'ينتهي {date}'**
+  String filesExpires(String date);
+
+  /// No description provided for @filesMessageNoPreview.
+  ///
+  /// In ar, this message translates to:
+  /// **'المعاينة داخل التطبيق للصور فقط (من الذاكرة) — افتح هذا المرفق من المنصة على الويب'**
+  String get filesMessageNoPreview;
+
+  /// No description provided for @inventoryUnknownCompany.
+  ///
+  /// In ar, this message translates to:
+  /// **'الشركة المختارة في السياق غير معروفة — اختر شركةً أخرى أو ألغِ التضييق'**
+  String get inventoryUnknownCompany;
+
+  /// No description provided for @versionsRestoreConfirm.
+  ///
+  /// In ar, this message translates to:
+  /// **'استعادة السجل إلى النسخة {version}؟ تُنشأ نسخةٌ جديدة بقيمها.'**
+  String versionsRestoreConfirm(int version);
+
+  /// No description provided for @versionsRestore.
+  ///
+  /// In ar, this message translates to:
+  /// **'استعادة'**
+  String get versionsRestore;
+
+  /// No description provided for @versionsRestored.
+  ///
+  /// In ar, this message translates to:
+  /// **'استُعيدت النسخة {version}'**
+  String versionsRestored(int version);
+
+  /// No description provided for @versionsTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'نسخ السجل'**
+  String get versionsTitle;
+
+  /// No description provided for @versionsEmpty.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا نسخ محفوظة لهذا السجل'**
+  String get versionsEmpty;
+
+  /// No description provided for @versionsCurrent.
+  ///
+  /// In ar, this message translates to:
+  /// **'النسخة الحالية'**
+  String get versionsCurrent;
+
+  /// No description provided for @versionsOldest.
+  ///
+  /// In ar, this message translates to:
+  /// **'أقدم نسخة معروضة'**
+  String get versionsOldest;
+
+  /// No description provided for @versionsNoVisibleChange.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا تغيير في الحقول الظاهرة لك'**
+  String get versionsNoVisibleChange;
+
+  /// No description provided for @versionsChanged.
+  ///
+  /// In ar, this message translates to:
+  /// **'تغيّر: {fields}'**
+  String versionsChanged(String fields);
+
+  /// No description provided for @financeQueuedBlocked.
+  ///
+  /// In ar, this message translates to:
+  /// **'الوحدة بانتظار اعتمادٍ معلّق — لا تنفيذ الآن'**
+  String get financeQueuedBlocked;
+
+  /// No description provided for @financePaid.
+  ///
+  /// In ar, this message translates to:
+  /// **'سُجّلت دفعة {amount}'**
+  String financePaid(String amount);
+
+  /// No description provided for @financePaidRemaining.
+  ///
+  /// In ar, this message translates to:
+  /// **'سُجّلت دفعة {amount} — المتبقي {remaining} {currency}'**
+  String financePaidRemaining(String amount, String remaining, String currency);
+
+  /// No description provided for @financeQuoteSendConfirm.
+  ///
+  /// In ar, this message translates to:
+  /// **'إرسال عرض السعر؟ قد يُحال للمراجعة الداخلية بحسب عتبة الاعتماد.'**
+  String get financeQuoteSendConfirm;
+
+  /// No description provided for @financeQuoteEscalated.
+  ///
+  /// In ar, this message translates to:
+  /// **'أُحيل العرض للمراجعة الداخلية قبل الإرسال'**
+  String get financeQuoteEscalated;
+
+  /// No description provided for @financeQuoteSent.
+  ///
+  /// In ar, this message translates to:
+  /// **'أُرسل عرض السعر'**
+  String get financeQuoteSent;
+
+  /// No description provided for @financeQuoteAcceptConfirm.
+  ///
+  /// In ar, this message translates to:
+  /// **'تسجيل قبول عرض السعر؟'**
+  String get financeQuoteAcceptConfirm;
+
+  /// No description provided for @financeQuoteAccepted.
+  ///
+  /// In ar, this message translates to:
+  /// **'قُبل عرض السعر'**
+  String get financeQuoteAccepted;
+
+  /// No description provided for @financeQuoteAlreadyAccepted.
+  ///
+  /// In ar, this message translates to:
+  /// **'العرض مقبولٌ مسبقاً — لا أثر جديد'**
+  String get financeQuoteAlreadyAccepted;
+
+  /// No description provided for @financeReceiveConfirm.
+  ///
+  /// In ar, this message translates to:
+  /// **'استلام أمر الشراء وإنشاء حركات المخزون؟'**
+  String get financeReceiveConfirm;
+
+  /// No description provided for @financeAlreadyReceived.
+  ///
+  /// In ar, this message translates to:
+  /// **'الأمر مستلمٌ مسبقاً'**
+  String get financeAlreadyReceived;
+
+  /// No description provided for @financeReceived.
+  ///
+  /// In ar, this message translates to:
+  /// **'اُستلم الأمر: {moves} حركة مخزون · {skipped} متخطّى'**
+  String financeReceived(int moves, int skipped);
+
+  /// No description provided for @financePay.
+  ///
+  /// In ar, this message translates to:
+  /// **'تسجيل دفعة'**
+  String get financePay;
+
+  /// No description provided for @financeQuoteSend.
+  ///
+  /// In ar, this message translates to:
+  /// **'إرسال العرض'**
+  String get financeQuoteSend;
+
+  /// No description provided for @financeQuoteAccept.
+  ///
+  /// In ar, this message translates to:
+  /// **'قبول العرض'**
+  String get financeQuoteAccept;
+
+  /// No description provided for @financeReceive.
+  ///
+  /// In ar, this message translates to:
+  /// **'استلام الأمر'**
+  String get financeReceive;
+
+  /// No description provided for @financeAmountInvalid.
+  ///
+  /// In ar, this message translates to:
+  /// **'اكتب مبلغاً موجباً بصيغة عشرية صريحة (مثل 2500.000) بلا فواصل آلاف'**
+  String get financeAmountInvalid;
+
+  /// No description provided for @financeAmount.
+  ///
+  /// In ar, this message translates to:
+  /// **'المبلغ'**
+  String get financeAmount;
+
+  /// No description provided for @financePayRef.
+  ///
+  /// In ar, this message translates to:
+  /// **'المرجع (اختياري)'**
+  String get financePayRef;
+
+  /// No description provided for @financePayNote.
+  ///
+  /// In ar, this message translates to:
+  /// **'ملاحظة (اختيارية)'**
+  String get financePayNote;
+
+  /// No description provided for @commentEdit.
+  ///
+  /// In ar, this message translates to:
+  /// **'تحرير'**
+  String get commentEdit;
+
+  /// No description provided for @commentEdited.
+  ///
+  /// In ar, this message translates to:
+  /// **'حُرِّر التعليق'**
+  String get commentEdited;
+
+  /// No description provided for @commentDeleteConfirm.
+  ///
+  /// In ar, this message translates to:
+  /// **'حذف هذا التعليق؟'**
+  String get commentDeleteConfirm;
+
+  /// No description provided for @commentDeleted.
+  ///
+  /// In ar, this message translates to:
+  /// **'حُذف التعليق'**
+  String get commentDeleted;
+
+  /// No description provided for @commentPinnedDone.
+  ///
+  /// In ar, this message translates to:
+  /// **'ثُبِّت التعليق'**
+  String get commentPinnedDone;
+
+  /// No description provided for @commentUnpinned.
+  ///
+  /// In ar, this message translates to:
+  /// **'أُلغي التثبيت'**
+  String get commentUnpinned;
+
+  /// No description provided for @commentResolvedDone.
+  ///
+  /// In ar, this message translates to:
+  /// **'عُلِّم محلولاً'**
+  String get commentResolvedDone;
+
+  /// No description provided for @commentReopened.
+  ///
+  /// In ar, this message translates to:
+  /// **'أُعيد فتحه'**
+  String get commentReopened;
+
+  /// No description provided for @commentToTaskDone.
+  ///
+  /// In ar, this message translates to:
+  /// **'حُوِّل التعليق إلى مهمة'**
+  String get commentToTaskDone;
+
+  /// No description provided for @commentUnpin.
+  ///
+  /// In ar, this message translates to:
+  /// **'إلغاء التثبيت'**
+  String get commentUnpin;
+
+  /// No description provided for @commentPin.
+  ///
+  /// In ar, this message translates to:
+  /// **'تثبيت'**
+  String get commentPin;
+
+  /// No description provided for @commentReopen.
+  ///
+  /// In ar, this message translates to:
+  /// **'إعادة فتح'**
+  String get commentReopen;
+
+  /// No description provided for @commentResolve.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعليم محلولاً'**
+  String get commentResolve;
+
+  /// No description provided for @commentToTask.
+  ///
+  /// In ar, this message translates to:
+  /// **'تحويل لمهمة'**
+  String get commentToTask;
+
+  /// No description provided for @ticketsTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'تذاكري'**
+  String get ticketsTitle;
+
+  /// No description provided for @ticketsNew.
+  ///
+  /// In ar, this message translates to:
+  /// **'بلاغ جديد'**
+  String get ticketsNew;
+
+  /// No description provided for @ticketsEmpty.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا تذاكر بعد'**
+  String get ticketsEmpty;
+
+  /// No description provided for @ticketsCreated.
+  ///
+  /// In ar, this message translates to:
+  /// **'فُتح البلاغ'**
+  String get ticketsCreated;
+
+  /// No description provided for @ticketsDuplicateTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'بلاغ مشابه مفتوح'**
+  String get ticketsDuplicateTitle;
+
+  /// No description provided for @ticketsDuplicateBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'لديك بلاغٌ مطابق ما زال مفتوحاً: «{subject}». أضِف ردّك عليه، أو أرسل هذا إن كان بلاغاً مختلفاً.'**
+  String ticketsDuplicateBody(String subject);
+
+  /// No description provided for @ticketsOpenExisting.
+  ///
+  /// In ar, this message translates to:
+  /// **'فتح القائم'**
+  String get ticketsOpenExisting;
+
+  /// No description provided for @ticketsSubmitAnyway.
+  ///
+  /// In ar, this message translates to:
+  /// **'إرسال كبلاغٍ مختلف'**
+  String get ticketsSubmitAnyway;
+
+  /// No description provided for @ticketsSubject.
+  ///
+  /// In ar, this message translates to:
+  /// **'الموضوع'**
+  String get ticketsSubject;
+
+  /// No description provided for @ticketsBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'الوصف'**
+  String get ticketsBody;
+
+  /// No description provided for @ticketsPriority.
+  ///
+  /// In ar, this message translates to:
+  /// **'الأولوية'**
+  String get ticketsPriority;
+
+  /// No description provided for @ticketsProject.
+  ///
+  /// In ar, this message translates to:
+  /// **'المشروع'**
+  String get ticketsProject;
+
+  /// No description provided for @ticketsNone.
+  ///
+  /// In ar, this message translates to:
+  /// **'—'**
+  String get ticketsNone;
+
+  /// No description provided for @ticketsOrg.
+  ///
+  /// In ar, this message translates to:
+  /// **'المنظمة'**
+  String get ticketsOrg;
+
+  /// No description provided for @ticketsNoReplies.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا ردود بعد'**
+  String get ticketsNoReplies;
+
+  /// No description provided for @ticketsYou.
+  ///
+  /// In ar, this message translates to:
+  /// **'أنت'**
+  String get ticketsYou;
+
+  /// No description provided for @ticketsReplyHint.
+  ///
+  /// In ar, this message translates to:
+  /// **'اكتب ردّك…'**
+  String get ticketsReplyHint;
+
+  /// No description provided for @channelVisPrivate.
+  ///
+  /// In ar, this message translates to:
+  /// **'خاصة'**
+  String get channelVisPrivate;
+
+  /// No description provided for @channelVisMembers.
+  ///
+  /// In ar, this message translates to:
+  /// **'للأعضاء'**
+  String get channelVisMembers;
+
+  /// No description provided for @channelVisCompany.
+  ///
+  /// In ar, this message translates to:
+  /// **'للشركة'**
+  String get channelVisCompany;
+
+  /// No description provided for @channelVisPublic.
+  ///
+  /// In ar, this message translates to:
+  /// **'عامة'**
+  String get channelVisPublic;
+
+  /// No description provided for @channelVisDefault.
+  ///
+  /// In ar, this message translates to:
+  /// **'الافتراضي'**
+  String get channelVisDefault;
+
+  /// No description provided for @channelRoleOwner.
+  ///
+  /// In ar, this message translates to:
+  /// **'مالك'**
+  String get channelRoleOwner;
+
+  /// No description provided for @channelRoleModerator.
+  ///
+  /// In ar, this message translates to:
+  /// **'مشرف'**
+  String get channelRoleModerator;
+
+  /// No description provided for @channelRoleMember.
+  ///
+  /// In ar, this message translates to:
+  /// **'عضو'**
+  String get channelRoleMember;
+
+  /// No description provided for @channelRoleGuest.
+  ///
+  /// In ar, this message translates to:
+  /// **'ضيف'**
+  String get channelRoleGuest;
+
+  /// No description provided for @channelNotifyAll.
+  ///
+  /// In ar, this message translates to:
+  /// **'كل الرسائل'**
+  String get channelNotifyAll;
+
+  /// No description provided for @channelNotifyMentions.
+  ///
+  /// In ar, this message translates to:
+  /// **'الإشارات فقط'**
+  String get channelNotifyMentions;
+
+  /// No description provided for @channelNotifyMuted.
+  ///
+  /// In ar, this message translates to:
+  /// **'مكتومة'**
+  String get channelNotifyMuted;
+
+  /// No description provided for @channelCreated.
+  ///
+  /// In ar, this message translates to:
+  /// **'أُنشئت القناة'**
+  String get channelCreated;
+
+  /// No description provided for @channelNew.
+  ///
+  /// In ar, this message translates to:
+  /// **'قناة جديدة'**
+  String get channelNew;
+
+  /// No description provided for @channelName.
+  ///
+  /// In ar, this message translates to:
+  /// **'اسم القناة'**
+  String get channelName;
+
+  /// No description provided for @channelVisibility.
+  ///
+  /// In ar, this message translates to:
+  /// **'الظهور'**
+  String get channelVisibility;
+
+  /// No description provided for @channelJoined.
+  ///
+  /// In ar, this message translates to:
+  /// **'انضممت إلى القناة'**
+  String get channelJoined;
+
+  /// No description provided for @channelAlreadyMember.
+  ///
+  /// In ar, this message translates to:
+  /// **'أنت عضوٌ فيها مسبقاً'**
+  String get channelAlreadyMember;
+
+  /// No description provided for @channelDirectory.
+  ///
+  /// In ar, this message translates to:
+  /// **'دليل القنوات'**
+  String get channelDirectory;
+
+  /// No description provided for @channelDirectoryEmpty.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا قنوات متاحة للانضمام'**
+  String get channelDirectoryEmpty;
+
+  /// No description provided for @channelMembersCount.
+  ///
+  /// In ar, this message translates to:
+  /// **'{count} عضواً'**
+  String channelMembersCount(int count);
+
+  /// No description provided for @channelJoin.
+  ///
+  /// In ar, this message translates to:
+  /// **'انضمام'**
+  String get channelJoin;
+
+  /// No description provided for @groupCreated.
+  ///
+  /// In ar, this message translates to:
+  /// **'أُنشئت المجموعة'**
+  String get groupCreated;
+
+  /// No description provided for @groupNew.
+  ///
+  /// In ar, this message translates to:
+  /// **'مجموعة جديدة'**
+  String get groupNew;
+
+  /// No description provided for @groupTitleOptional.
+  ///
+  /// In ar, this message translates to:
+  /// **'اسم المجموعة (اختياري)'**
+  String get groupTitleOptional;
+
+  /// No description provided for @groupNoContacts.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا جهات في رسائلك المباشرة بعد — راسل زملاءك أولاً'**
+  String get groupNoContacts;
+
+  /// No description provided for @channelRemoveConfirm.
+  ///
+  /// In ar, this message translates to:
+  /// **'إزالة {name} من الحاوية؟'**
+  String channelRemoveConfirm(String name);
+
+  /// No description provided for @channelRemove.
+  ///
+  /// In ar, this message translates to:
+  /// **'إزالة'**
+  String get channelRemove;
+
+  /// No description provided for @channelMembers.
+  ///
+  /// In ar, this message translates to:
+  /// **'الأعضاء'**
+  String get channelMembers;
+
+  /// No description provided for @channelAddMember.
+  ///
+  /// In ar, this message translates to:
+  /// **'إضافة عضو'**
+  String get channelAddMember;
+
+  /// No description provided for @channelMakeRole.
+  ///
+  /// In ar, this message translates to:
+  /// **'اجعله {role}'**
+  String channelMakeRole(String role);
+
+  /// No description provided for @messageSearchHint.
+  ///
+  /// In ar, this message translates to:
+  /// **'ابحث في نص الرسائل…'**
+  String get messageSearchHint;
+
+  /// No description provided for @messageSearchMin.
+  ///
+  /// In ar, this message translates to:
+  /// **'اكتب {count} أحرف على الأقل'**
+  String messageSearchMin(int count);
+
+  /// No description provided for @messageSearchNone.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا نتائج'**
+  String get messageSearchNone;
+
+  /// No description provided for @messageSearchTotal.
+  ///
+  /// In ar, this message translates to:
+  /// **'{count} نتيجة'**
+  String messageSearchTotal(int count);
+
+  /// No description provided for @channelFavorited.
+  ///
+  /// In ar, this message translates to:
+  /// **'أُضيفت للمفضّلة'**
+  String get channelFavorited;
+
+  /// No description provided for @channelUnfavorited.
+  ///
+  /// In ar, this message translates to:
+  /// **'أُزيلت من المفضّلة'**
+  String get channelUnfavorited;
+
+  /// No description provided for @channelNotifySaved.
+  ///
+  /// In ar, this message translates to:
+  /// **'الإشعار: {pref}'**
+  String channelNotifySaved(String pref);
+
+  /// No description provided for @channelArchived.
+  ///
+  /// In ar, this message translates to:
+  /// **'أُرشفت القناة'**
+  String get channelArchived;
+
+  /// No description provided for @channelUnarchived.
+  ///
+  /// In ar, this message translates to:
+  /// **'أُعيدت القناة من الأرشيف'**
+  String get channelUnarchived;
+
+  /// No description provided for @groupLeaveConfirm.
+  ///
+  /// In ar, this message translates to:
+  /// **'مغادرة هذه المجموعة؟ لن تصلك رسائلها بعد.'**
+  String get groupLeaveConfirm;
+
+  /// No description provided for @groupLeave.
+  ///
+  /// In ar, this message translates to:
+  /// **'مغادرة المجموعة'**
+  String get groupLeave;
+
+  /// No description provided for @groupLeft.
+  ///
+  /// In ar, this message translates to:
+  /// **'غادرت المجموعة'**
+  String get groupLeft;
+
+  /// No description provided for @channelFavorite.
+  ///
+  /// In ar, this message translates to:
+  /// **'المفضّلة (تبديل)'**
+  String get channelFavorite;
+
+  /// No description provided for @channelNotify.
+  ///
+  /// In ar, this message translates to:
+  /// **'تفضيل الإشعار'**
+  String get channelNotify;
+
+  /// No description provided for @channelArchive.
+  ///
+  /// In ar, this message translates to:
+  /// **'أرشفة/إعادة'**
+  String get channelArchive;
+
+  /// No description provided for @dmEdit.
+  ///
+  /// In ar, this message translates to:
+  /// **'تحرير'**
+  String get dmEdit;
+
+  /// No description provided for @dmDelete.
+  ///
+  /// In ar, this message translates to:
+  /// **'سحب الرسالة'**
+  String get dmDelete;
+
+  /// No description provided for @dmDeleteConfirm.
+  ///
+  /// In ar, this message translates to:
+  /// **'سحب هذه الرسالة؟ يبقى أثرها «حُذفت».'**
+  String get dmDeleteConfirm;
+
+  /// No description provided for @dmEdited.
+  ///
+  /// In ar, this message translates to:
+  /// **'(معدّلة)'**
+  String get dmEdited;
+
+  /// No description provided for @reviewAccepted.
+  ///
+  /// In ar, this message translates to:
+  /// **'مقبول'**
+  String get reviewAccepted;
+
+  /// No description provided for @reviewNeedsRevision.
+  ///
+  /// In ar, this message translates to:
+  /// **'يحتاج تنقيحاً'**
+  String get reviewNeedsRevision;
+
+  /// No description provided for @reviewPending.
+  ///
+  /// In ar, this message translates to:
+  /// **'بانتظار المراجعة'**
+  String get reviewPending;
+
+  /// No description provided for @reviewFeedbackTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'ملاحظة التنقيح'**
+  String get reviewFeedbackTitle;
+
+  /// No description provided for @reviewFeedbackHint.
+  ///
+  /// In ar, this message translates to:
+  /// **'ما المطلوب تحسينه؟ يقرؤها الموظف'**
+  String get reviewFeedbackHint;
+
+  /// No description provided for @teamReportsTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'تقارير الفريق اليومية'**
+  String get teamReportsTitle;
+
+  /// No description provided for @previousDay.
+  ///
+  /// In ar, this message translates to:
+  /// **'اليوم السابق'**
+  String get previousDay;
+
+  /// No description provided for @nextDay.
+  ///
+  /// In ar, this message translates to:
+  /// **'اليوم التالي'**
+  String get nextDay;
+
+  /// No description provided for @reviewScopeTeam.
+  ///
+  /// In ar, this message translates to:
+  /// **'فريقي'**
+  String get reviewScopeTeam;
+
+  /// No description provided for @reviewScopeMine.
+  ///
+  /// In ar, this message translates to:
+  /// **'مشاريعي'**
+  String get reviewScopeMine;
+
+  /// No description provided for @reviewAll.
+  ///
+  /// In ar, this message translates to:
+  /// **'الكل'**
+  String get reviewAll;
+
+  /// No description provided for @reviewSummary.
+  ///
+  /// In ar, this message translates to:
+  /// **'{total} بنداً · {pending} بانتظار · {accepted} مقبول · {revision} للتنقيح'**
+  String reviewSummary(int total, int pending, int accepted, int revision);
+
+  /// No description provided for @reviewEmpty.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا بنود لهذا اليوم'**
+  String get reviewEmpty;
+
+  /// No description provided for @reviewTruncated.
+  ///
+  /// In ar, this message translates to:
+  /// **'عُرض أول ٢٠٠ بند — ضيّق التصفية'**
+  String get reviewTruncated;
+
+  /// No description provided for @reviewHours.
+  ///
+  /// In ar, this message translates to:
+  /// **'{hours} ساعة'**
+  String reviewHours(String hours);
+
+  /// No description provided for @reviewProgress.
+  ///
+  /// In ar, this message translates to:
+  /// **'تقدّم {progress}٪'**
+  String reviewProgress(String progress);
+
+  /// No description provided for @reviewProblems.
+  ///
+  /// In ar, this message translates to:
+  /// **'عوائق: {text}'**
+  String reviewProblems(String text);
+
+  /// No description provided for @reviewNext.
+  ///
+  /// In ar, this message translates to:
+  /// **'التالي: {text}'**
+  String reviewNext(String text);
+
+  /// No description provided for @reviewFeedback.
+  ///
+  /// In ar, this message translates to:
+  /// **'ملاحظة المراجع: {text}'**
+  String reviewFeedback(String text);
+
+  /// No description provided for @reviewAccept.
+  ///
+  /// In ar, this message translates to:
+  /// **'قبول'**
+  String get reviewAccept;
+
+  /// No description provided for @reviewRequestRevision.
+  ///
+  /// In ar, this message translates to:
+  /// **'طلب تنقيح'**
+  String get reviewRequestRevision;
+
+  /// No description provided for @reviewReopen.
+  ///
+  /// In ar, this message translates to:
+  /// **'إعادة فتح'**
+  String get reviewReopen;
+
+  /// No description provided for @calendarTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'التقويم'**
+  String get calendarTitle;
+
+  /// No description provided for @calendarPrev.
+  ///
+  /// In ar, this message translates to:
+  /// **'النافذة السابقة'**
+  String get calendarPrev;
+
+  /// No description provided for @calendarNext.
+  ///
+  /// In ar, this message translates to:
+  /// **'النافذة التالية'**
+  String get calendarNext;
+
+  /// No description provided for @calendarEmpty.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا مواعيد في هذه النافذة'**
+  String get calendarEmpty;
+
+  /// No description provided for @calendarOverflow.
+  ///
+  /// In ar, this message translates to:
+  /// **'{count} عنصراً إضافياً لم يُعرض — افتح التقويم على الويب للاطلاع عليها'**
+  String calendarOverflow(int count);
+
+  /// No description provided for @alertsTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'التنبيهات'**
+  String get alertsTitle;
+
+  /// No description provided for @alertsEmpty.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا شيء ينتهي قريباً'**
+  String get alertsEmpty;
+
+  /// No description provided for @alertsLate.
+  ///
+  /// In ar, this message translates to:
+  /// **'متأخر'**
+  String get alertsLate;
+
+  /// No description provided for @alertsWeek.
+  ///
+  /// In ar, this message translates to:
+  /// **'خلال أسبوع'**
+  String get alertsWeek;
+
+  /// No description provided for @alertsWindow.
+  ///
+  /// In ar, this message translates to:
+  /// **'خلال {days} يوماً'**
+  String alertsWindow(int days);
+
+  /// No description provided for @alertsDaysLate.
+  ///
+  /// In ar, this message translates to:
+  /// **'متأخر {days} يوماً'**
+  String alertsDaysLate(int days);
+
+  /// No description provided for @alertsDaysLeft.
+  ///
+  /// In ar, this message translates to:
+  /// **'بعد {days} يوماً'**
+  String alertsDaysLeft(int days);
 }
 
 class _AppLocalizationsDelegate

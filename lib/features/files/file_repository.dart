@@ -8,6 +8,7 @@ import 'dart:typed_data';
 import 'package:uuid/uuid.dart';
 
 import '../../core/api/api_client.dart';
+import '../../core/api/json_read.dart';
 
 class UploadSession {
   const UploadSession({
@@ -66,6 +67,92 @@ class AttachmentInfo {
     final ext = name.split('.').last.toLowerCase();
     return const {'png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp'}.contains(ext);
   }
+}
+
+/// مرفقُ سجلٍّ كما يسرده الخادم بقواعد شاشة الويب (`GET attachments`) مع ما
+/// يجوز للقارئ الآن (`can`) — عرضٌ يعيد الخادم فحصه عند الفعل.
+class RecordFile {
+  const RecordFile({
+    required this.info,
+    this.kindLabel,
+    this.avStatus,
+    this.expiresAt,
+    this.uploadedBy,
+    this.createdAt,
+    this.canDownload = false,
+    this.canPreview = false,
+    this.canDelete = false,
+  });
+
+  factory RecordFile.fromJson(Map<String, dynamic> j) {
+    final can = jsonMap(j['can']);
+    return RecordFile(
+      info: AttachmentInfo.fromJson(j),
+      kindLabel: jsonStr(j['kind_label']),
+      avStatus: jsonStr(j['av_status']),
+      expiresAt: jsonStr(j['expires_at']),
+      uploadedBy: UserRef.fromJson(j['uploaded_by']),
+      createdAt: jsonDate(j['created_at']),
+      canDownload: can['download'] == true,
+      canPreview: can['preview'] == true,
+      canDelete: can['delete'] == true,
+    );
+  }
+
+  final AttachmentInfo info;
+  final String? kindLabel;
+
+  /// حالة الفحص كما يبثّها الخادم (`infected` ⇒ لا تنزيل).
+  final String? avStatus;
+  final String? expiresAt;
+  final UserRef? uploadedBy;
+  final DateTime? createdAt;
+  final bool canDownload;
+  final bool canPreview;
+  final bool canDelete;
+
+  String get id => info.id;
+  bool get infected => avStatus == 'infected';
+}
+
+/// مقبض مرفق رسالة/تعليق `{id, name, size, mime, download}` — `id` معرّف
+/// صاحبه (الرسالة/التعليق) والتنزيل عبر `download` المصادَق.
+class MessageAttachmentRef {
+  const MessageAttachmentRef({
+    required this.ownerId,
+    required this.name,
+    required this.downloadPath,
+    this.size,
+    this.mime,
+  });
+
+  static MessageAttachmentRef? fromJson(Object? raw) {
+    if (raw is! Map) return null;
+    final j = raw.cast<String, dynamic>();
+    final path = jsonStr(j['download']);
+    if (path == null) return null;
+    return MessageAttachmentRef(
+      ownerId: j['id']?.toString() ?? '',
+      name: j['name']?.toString() ?? '',
+      downloadPath: path,
+      size: jsonIntOrNull(j['size']),
+      mime: jsonStr(j['mime']),
+    );
+  }
+
+  final String ownerId;
+  final String name;
+  final String downloadPath;
+  final int? size;
+  final String? mime;
+
+  AttachmentInfo get asInfo => AttachmentInfo(
+    id: ownerId,
+    name: name,
+    size: size,
+    mime: mime,
+    downloadPath: downloadPath,
+  );
 }
 
 class FileRepository {
@@ -136,6 +223,36 @@ class FileRepository {
       ApiRequest(
         'GET',
         'files/$attachmentId/download',
+        timeout: const Duration(minutes: 3),
+      ),
+    );
+    return Uint8List.fromList(resp.bodyBytes ?? const []);
+  }
+
+  /// `GET attachments?module=&record_id=` — مرفقات السجل بقواعد الويب (الممنوع
+  /// صراحةً لا يُعرض). (مسارٌ منفصل عن CRUD وحدة `files` كي لا يلتبس بها.)
+  Future<List<RecordFile>> recordFiles(String module, String recordId) async {
+    final d = await api.getData(
+      'attachments',
+      query: {'module': module, 'record_id': recordId},
+    );
+    return jsonMaps(d['files']).map(RecordFile.fromJson).toList();
+  }
+
+  /// `DELETE attachments/{id}` — حذفٌ ناعم بحارس الويب (رافعه/المالك/محرّر
+  /// الوحدة). لا إعادة تلقائية.
+  Future<void> deleteFile(String attachmentId) => api.sendData(
+    'DELETE',
+    'attachments/${Uri.encodeComponent(attachmentId)}',
+  );
+
+  /// تنزيل مصادَق إلى الذاكرة عبر مسارٍ يبثّه الخادم (مرفق تعليق/رسالة:
+  /// `comments/{id}/attachment` · `dm/messages/{id}/attachment`).
+  Future<Uint8List> downloadPath(String serverPath) async {
+    final resp = await api.send(
+      ApiRequest(
+        'GET',
+        mobileRelativePath(serverPath),
         timeout: const Duration(minutes: 3),
       ),
     );

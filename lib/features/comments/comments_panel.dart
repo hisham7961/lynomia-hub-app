@@ -4,12 +4,16 @@
 library;
 
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:uuid/uuid.dart';
 
 import '../../app/di/app_scope.dart';
 import '../../core/errors/api_exception.dart';
 import '../../core/ui/async_view.dart';
+import '../../core/ui/feedback.dart';
 import '../../core/ui/visible_poller.dart';
 import '../../l10n/app_localizations.dart';
+import '../files/attachments_panel.dart';
 import '../messages/live_events.dart';
 import '../messages/save_action.dart';
 import 'comment_repository.dart';
@@ -24,10 +28,15 @@ class CommentsPanel extends StatefulWidget {
     required this.module,
     required this.recordId,
     this.liveConversationId,
+    this.canModerate = false,
   });
 
   final String module;
   final String recordId;
+
+  /// عرضٌ لإظهار التثبيت/الحلّ على تعليقات الغير: تعديل الوحدة (سجل) أو
+  /// إدارة الحاوية (قناة). الخادم يعيد الفحص عند كل فعل.
+  final bool canModerate;
 
   /// حين تكون اللوحة لقناةٍ/مجموعة: معرّفها لاستطلاع «منذ» والكتابة.
   final String? liveConversationId;
@@ -45,6 +54,9 @@ class _CommentsPanelState extends State<CommentsPanel> {
   String? _replyTo;
   String? _replyToName;
   List<String> _typing = const [];
+
+  /// «حوّل لمهمة» حين يسمح المخطط بإنشاء مهام (`tasks.can.a`).
+  bool _canTask = false;
 
   SinceFeed<ChannelLiveEvent>? _feed;
   VisiblePoller? _poller;
@@ -80,6 +92,7 @@ class _CommentsPanelState extends State<CommentsPanel> {
         });
       }
     }
+    _loadCaps();
     _load().then((_) async {
       if (!mounted || _poller == null || _comments == null) return;
       await _poll();
@@ -111,6 +124,102 @@ class _CommentsPanelState extends State<CommentsPanel> {
       if (mounted && !quiet) setState(() => _error = e);
     } finally {
       if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  Future<void> _loadCaps() async {
+    final c = AppScope.of(context);
+    if (c.account.isClient) return;
+    try {
+      final snap = c.modules.lastSchema ?? await c.modules.schema();
+      if (mounted) {
+        setState(() => _canTask = snap.modules['tasks']?.can.a ?? false);
+      }
+    } on Object {
+      // ثانوي — بلا مخطط لا «حوّل لمهمة».
+    }
+  }
+
+  /// الأفعال المعروضة لتعليقٍ — عرضٌ بحسب ملكيته وإشارات الخادم؛ والخادم يحسم.
+  List<_CommentAction> _actionsFor(RecordComment c) {
+    final app = AppScope.of(context);
+    if (app.account.isClient) return const [];
+    final me = app.account.user;
+    final mine = me != null && c.userId == me.id;
+    final owner = me?.isOwner ?? false;
+    return [
+      if (mine) _CommentAction.edit,
+      if (mine || owner) _CommentAction.delete,
+      if (widget.canModerate || owner) _CommentAction.pin,
+      if (mine || widget.canModerate || owner) _CommentAction.resolve,
+      if (_canTask && c.parentId == null) _CommentAction.toTask,
+    ];
+  }
+
+  Future<void> _runCommentAction(RecordComment c, _CommentAction a) async {
+    final l = AppLocalizations.of(context)!;
+    final repo = AppScope.of(context).comments;
+    try {
+      switch (a) {
+        case _CommentAction.edit:
+          final body = await promptTextDialog(
+            context,
+            title: l.commentEdit,
+            initial: c.body,
+            required: true,
+            maxLines: 6,
+            maxLength: 4000,
+          );
+          if (body == null || body == c.body) return;
+          await repo.edit(c.id, body);
+          if (mounted) showSnack(context, l.commentEdited);
+        case _CommentAction.delete:
+          if (!await confirmDialog(
+            context,
+            message: l.commentDeleteConfirm,
+            confirmLabel: l.actionDelete,
+          )) {
+            return;
+          }
+          await repo.delete(c.id);
+          if (mounted) showSnack(context, l.commentDeleted);
+        case _CommentAction.pin:
+          final card = await repo.togglePin(c.id);
+          if (mounted) {
+            showSnack(
+              context,
+              card.pinned ? l.commentPinnedDone : l.commentUnpinned,
+            );
+          }
+        case _CommentAction.resolve:
+          final card = await repo.toggleResolve(c.id);
+          if (mounted) {
+            showSnack(
+              context,
+              card.resolved ? l.commentResolvedDone : l.commentReopened,
+            );
+          }
+        case _CommentAction.toTask:
+          final taskId = await repo.toTask(
+            c.id,
+            idempotencyKey: const Uuid().v4(),
+          );
+          if (mounted) {
+            showSnack(
+              context,
+              l.commentToTaskDone,
+              action: taskId.isEmpty
+                  ? null
+                  : SnackBarAction(
+                      label: l.actionOpen,
+                      onPressed: () => context.push('/r/tasks/$taskId'),
+                    ),
+            );
+          }
+      }
+      await _load(quiet: true);
+    } on Object catch (e) {
+      if (mounted) showErrorSnack(context, e);
     }
   }
 
@@ -207,6 +316,8 @@ class _CommentsPanelState extends State<CommentsPanel> {
                   for (final c in comments) ...[
                     _CommentTile(
                       comment: c,
+                      actions: _actionsFor(c),
+                      onAction: (a) => _runCommentAction(c, a),
                       onReact: (emoji) => _react(c, emoji),
                       onSave: () => saveWithUndo(
                         context,
@@ -223,6 +334,8 @@ class _CommentsPanelState extends State<CommentsPanel> {
                         padding: const EdgeInsetsDirectional.only(start: 32),
                         child: _CommentTile(
                           comment: r,
+                          actions: _actionsFor(r),
+                          onAction: (a) => _runCommentAction(r, a),
                           onReact: (emoji) => _react(r, emoji),
                           onSave: () => saveWithUndo(
                             context,
@@ -313,15 +426,21 @@ class _CommentsPanelState extends State<CommentsPanel> {
   }
 }
 
+enum _CommentAction { edit, delete, pin, resolve, toTask }
+
 class _CommentTile extends StatelessWidget {
   const _CommentTile({
     required this.comment,
     required this.onReact,
     required this.onSave,
     this.onReply,
+    this.actions = const [],
+    this.onAction,
   });
 
   final RecordComment comment;
+  final List<_CommentAction> actions;
+  final void Function(_CommentAction)? onAction;
 
   /// null ⇒ ورقة الاختيار؛ رمزٌ ⇒ تبديله مباشرة.
   final void Function(String? emoji) onReact;
@@ -378,11 +497,49 @@ class _CommentTile extends StatelessWidget {
                     message: l.commentResolved,
                     child: const Icon(Icons.check_circle_outline, size: 14),
                   ),
+                if (actions.isNotEmpty)
+                  PopupMenuButton<_CommentAction>(
+                    key: Key('comment-menu-${comment.id}'),
+                    iconSize: 18,
+                    onSelected: onAction,
+                    itemBuilder: (_) => [
+                      for (final a in actions)
+                        PopupMenuItem(
+                          value: a,
+                          child: Text(switch (a) {
+                            _CommentAction.edit => l.commentEdit,
+                            _CommentAction.delete => l.actionDelete,
+                            _CommentAction.pin =>
+                              comment.pinned ? l.commentUnpin : l.commentPin,
+                            _CommentAction.resolve =>
+                              comment.resolved
+                                  ? l.commentReopen
+                                  : l.commentResolve,
+                            _CommentAction.toTask => l.commentToTask,
+                          }),
+                        ),
+                    ],
+                  ),
               ],
             ),
             const SizedBox(height: 8),
             Text(comment.body),
-            if (comment.hasAttachment)
+            if (comment.attachment != null)
+              Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: TextButton.icon(
+                  key: Key('comment-attachment-${comment.id}'),
+                  onPressed: () =>
+                      openMessageAttachment(context, comment.attachment!),
+                  icon: const Icon(Icons.attach_file, size: 16),
+                  label: Text(
+                    comment.attachment!.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              )
+            else if (comment.hasAttachment)
               Padding(
                 padding: const EdgeInsets.only(top: 4),
                 child: Icon(

@@ -6,8 +6,10 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../app/di/app_scope.dart';
+import '../../core/errors/api_exception.dart';
 import '../../core/ui/async_view.dart';
 import '../../l10n/app_localizations.dart';
+import '../attendance/attendance_card.dart';
 import '../home/home_repository.dart';
 import '../shell/app_shell.dart';
 import 'daily_report_screen.dart';
@@ -24,6 +26,11 @@ class _MyWorkScreenState extends State<MyWorkScreen> {
   HomeSnapshot? _snapshot;
   int _dmUnread = 0;
   WorkDay? _workDay;
+
+  /// مداخل المرحلتين ٣/٤ — تظهر بما يعيده الخادم لهذا الدور (لا زرّ ميت).
+  bool _canInventory = false;
+  bool _canReview = false;
+  int? _alertsTotal;
   Object? _error;
   bool _loading = true;
 
@@ -54,11 +61,38 @@ class _MyWorkScreenState extends State<MyWorkScreen> {
       } on Object {
         workDay = null;
       }
+      // جلسات الجرد لمن يرى الأصول في مخططه.
+      var canInventory = false;
+      try {
+        final schema = c.modules.lastSchema ?? await c.modules.schema();
+        canInventory = schema.modules['assets']?.can.v ?? false;
+      } on Object {
+        canInventory = false;
+      }
+      // مراجعة تقارير الفريق: الخادم يحسم الأهلية (403 لغير المراجِع).
+      var canReview = false;
+      try {
+        await c.teamReports.daily();
+        canReview = true;
+      } on ApiException {
+        canReview = false;
+      } on Object {
+        canReview = false;
+      }
+      int? alertsTotal;
+      try {
+        alertsTotal = (await c.calendar.alerts()).total;
+      } on Object {
+        alertsTotal = null;
+      }
       if (mounted) {
         setState(() {
           _snapshot = snap;
           _dmUnread = dmUnread;
           _workDay = workDay;
+          _canInventory = canInventory;
+          _canReview = canReview;
+          _alertsTotal = alertsTotal;
         });
       }
     } on Object catch (e) {
@@ -86,6 +120,10 @@ class _MyWorkScreenState extends State<MyWorkScreen> {
           child: ListView(
             padding: const EdgeInsets.all(16),
             children: [
+              AttendanceCard(
+                key: const Key('mywork-attendance'),
+                onChanged: _load,
+              ),
               if (_workDay?.compliance != null && !_workDay!.noEmployeeProfile)
                 WorkDayCard(
                   key: const Key('mywork-today'),
@@ -113,6 +151,44 @@ class _MyWorkScreenState extends State<MyWorkScreen> {
                 count: _dmUnread,
                 onTap: () => context.push('/messages'),
               ),
+              if (_alertsTotal != null)
+                _EntryTile(
+                  key: const Key('mywork-alerts'),
+                  icon: Icons.notification_important_outlined,
+                  title: l.alertsTitle,
+                  count: _alertsTotal!,
+                  onTap: () => context.push('/alerts'),
+                ),
+              _EntryTile(
+                key: const Key('mywork-calendar'),
+                icon: Icons.calendar_month_outlined,
+                title: l.calendarTitle,
+                count: 0,
+                onTap: () => context.push('/calendar'),
+              ),
+              _EntryTile(
+                key: const Key('mywork-custody'),
+                icon: Icons.devices_other_outlined,
+                title: l.custodyTitle,
+                count: 0,
+                onTap: () => context.push('/me/custody'),
+              ),
+              if (_canInventory)
+                _EntryTile(
+                  key: const Key('mywork-inventory'),
+                  icon: Icons.inventory_outlined,
+                  title: l.inventoryTitle,
+                  count: 0,
+                  onTap: () => context.push('/inventory'),
+                ),
+              if (_canReview)
+                _EntryTile(
+                  key: const Key('mywork-team-reports'),
+                  icon: Icons.fact_check_outlined,
+                  title: l.teamReportsTitle,
+                  count: 0,
+                  onTap: () => context.push('/reports/daily'),
+                ),
               Padding(
                 padding: const EdgeInsets.only(top: 20, bottom: 8),
                 child: Text(
@@ -163,6 +239,7 @@ class _MyWorkScreenState extends State<MyWorkScreen> {
 
 class _EntryTile extends StatelessWidget {
   const _EntryTile({
+    super.key,
     required this.icon,
     required this.title,
     required this.count,

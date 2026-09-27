@@ -29,6 +29,9 @@ class _Turn {
 
   final String question;
   bool pending = true;
+
+  /// تقدّمٌ نصّي من البثّ (عرضٌ فقط) — null قبل أول حدث.
+  String? progress;
   String? answer;
   bool partial = false;
   bool hidden = false;
@@ -109,7 +112,14 @@ class _AskScreenState extends State<AskScreen> {
       _input.clear();
     });
     try {
-      final a = await AppScope.of(context).ask.ask(q, thread: _thread);
+      // البثّ بتقدّمٍ نصّي، والارتداد لـ`POST ask` حين لا يُفتح البثّ (المستودع).
+      final a = await AppScope.of(context).ask.askWithProgress(
+        q,
+        thread: _thread,
+        onProgress: (text) {
+          if (mounted) setState(() => turn.progress = text);
+        },
+      );
       turn
         ..answer = a.ok ? a.answer : null
         ..partial = a.partial
@@ -117,9 +127,11 @@ class _AskScreenState extends State<AskScreen> {
         ..failure = a.ok ? null : a.failureKind;
       _thread = a.thread ?? _thread;
     } on ApiException catch (e) {
-      turn.failure = e.code == ApiErrorCode.forbidden
-          ? AskFailureKind.denied
-          : AskFailureKind.other;
+      turn.failure = switch (e.code) {
+        ApiErrorCode.forbidden => AskFailureKind.denied,
+        ApiErrorCode.rateLimited => AskFailureKind.limit,
+        _ => AskFailureKind.other,
+      };
     } on Object {
       turn.failure = AskFailureKind.other;
     } finally {
@@ -253,7 +265,12 @@ class _TurnView extends StatelessWidget {
                         child: CircularProgressIndicator(strokeWidth: 2),
                       ),
                       const SizedBox(width: 8),
-                      Expanded(child: Text(l.askWorking)),
+                      Expanded(
+                        child: Text(
+                          turn.progress ?? l.askWorking,
+                          key: const Key('ask-progress'),
+                        ),
+                      ),
                     ],
                   )
                 else if (turn.hidden)

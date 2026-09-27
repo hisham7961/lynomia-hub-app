@@ -5,7 +5,9 @@ library;
 import 'package:uuid/uuid.dart';
 
 import '../../core/api/api_client.dart';
+import '../../core/api/json_read.dart';
 import '../comments/reactions.dart';
+import '../files/file_repository.dart';
 import 'live_events.dart';
 
 class DmThread {
@@ -46,6 +48,8 @@ class DmMessage {
     this.body,
     this.deleted = false,
     this.hasAttachment = false,
+    this.attachment,
+    this.edited = false,
     this.read = false,
     this.createdAt,
     this.reactions = const [],
@@ -57,6 +61,10 @@ class DmMessage {
     body: j['body']?.toString(),
     deleted: j['deleted'] == true,
     hasAttachment: j['has_attachment'] == true,
+    attachment: j['deleted'] == true
+        ? null
+        : MessageAttachmentRef.fromJson(j['attachment']),
+    edited: j['edited'] == true,
     read: j['read'] == true,
     createdAt: DateTime.tryParse(j['created_at']?.toString() ?? ''),
     reactions: j['deleted'] == true ? const [] : parseReactions(j['reactions']),
@@ -67,20 +75,33 @@ class DmMessage {
   final String? body;
   final bool deleted;
   final bool hasAttachment;
+
+  /// مقبض تنزيل المرفق (خلفية ≥ v2.618).
+  final MessageAttachmentRef? attachment;
+
+  /// حُرِّرت بعد إرسالها (يعيده الخادم بعد التحرير).
+  final bool edited;
   final bool read;
   final DateTime? createdAt;
 
   /// ملخّص التفاعلات من الخادم (خلفية ≥ v2.617؛ فارغ لما قبلها وللمحذوفة).
   final List<CommentReaction> reactions;
 
-  DmMessage copyWith({bool? deleted, List<CommentReaction>? reactions}) {
+  DmMessage copyWith({
+    bool? deleted,
+    List<CommentReaction>? reactions,
+    String? body,
+    bool? edited,
+  }) {
     final gone = deleted ?? this.deleted;
     return DmMessage(
       id: id,
       mine: mine,
-      body: gone ? null : body,
+      body: gone ? null : (body ?? this.body),
       deleted: gone,
       hasAttachment: gone ? false : hasAttachment,
+      attachment: gone ? null : attachment,
+      edited: edited ?? this.edited,
       read: read,
       createdAt: createdAt,
       reactions: gone ? const [] : (reactions ?? this.reactions),
@@ -183,4 +204,26 @@ class DmRepository {
         ),
         'dm_message_id',
       );
+
+  /// `PATCH dm/messages/{id}` — تحرير رسالتي (لصاحبها؛ المحذوفة ٤٢٢).
+  Future<DmMessage> editMessage(String messageId, String body) async =>
+      DmMessage.fromJson(
+        jsonMap(
+          (await api.sendData(
+            'PATCH',
+            'dm/messages/${Uri.encodeComponent(messageId)}',
+            body: {'body': body},
+          ))['message'],
+        ),
+      );
+
+  /// `DELETE dm/messages/{id}` — سحب رسالتي (حذفٌ ناعم يبقى أثره).
+  Future<DmMessage> deleteMessage(String messageId) async => DmMessage.fromJson(
+    jsonMap(
+      (await api.sendData(
+        'DELETE',
+        'dm/messages/${Uri.encodeComponent(messageId)}',
+      ))['message'],
+    ),
+  );
 }

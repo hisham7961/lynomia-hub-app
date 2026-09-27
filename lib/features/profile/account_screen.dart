@@ -310,6 +310,15 @@ class _AccountScreenState extends State<AccountScreen> {
                           trailing: const Icon(Icons.chevron_right),
                           onTap: () => context.push('/me/documents'),
                         ),
+                      // عهدتي (٣.٣) — داخلية؛ الخادم يحجبها عن حساب العميل.
+                      if (!isClient)
+                        ListTile(
+                          key: const Key('account-my-custody'),
+                          leading: const Icon(Icons.devices_other_outlined),
+                          title: Text(l.custodyTitle),
+                          trailing: const Icon(Icons.chevron_right),
+                          onTap: () => context.push('/me/custody'),
+                        ),
                       if (!isClient)
                         ListTile(
                           leading: const Icon(Icons.location_on_outlined),

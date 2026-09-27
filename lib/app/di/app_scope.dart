@@ -25,6 +25,14 @@ import '../../core/storage/secure_store.dart';
 import '../../core/sync/sync_engine.dart';
 import '../../core/telemetry/app_info.dart';
 import '../../features/approvals/approval_repository.dart';
+import '../../features/attendance/attendance_repository.dart';
+import '../../features/calendar/calendar_repository.dart';
+import '../../features/custody/custody_repository.dart';
+import '../../features/finance/finance_repository.dart';
+import '../../features/inventory/inventory_repository.dart';
+import '../../features/leaves/leave_repository.dart';
+import '../../features/my_work/team_reports_repository.dart';
+import '../../features/portal/portal_tickets_repository.dart';
 import '../../features/comments/comment_repository.dart';
 import '../../features/files/file_repository.dart';
 import '../../features/home/home_repository.dart';
@@ -93,6 +101,14 @@ class AppContainer {
     identity = IdentityRepository(api);
     tracking = TrackingRepository(api);
     serverPrefs = PrefsRepository(api);
+    attendance = AttendanceRepository(api);
+    leaves = LeaveRepository(api);
+    custody = CustodyRepository(api);
+    inventory = InventoryRepository(api);
+    portalTickets = PortalTicketsRepository(api);
+    teamReports = TeamReportsRepository(api);
+    calendar = CalendarRepository(api);
+    finance = FinanceRepository(api);
     push = PushRegistrar(api: api, provider: pushProvider);
     account = AccountState(
       bootstrapRepo: bootstrap,
@@ -273,6 +289,14 @@ class AppContainer {
   late final IdentityRepository identity;
   late final TrackingRepository tracking;
   late final PrefsRepository serverPrefs;
+  late final AttendanceRepository attendance;
+  late final LeaveRepository leaves;
+  late final CustodyRepository custody;
+  late final InventoryRepository inventory;
+  late final PortalTicketsRepository portalTickets;
+  late final TeamReportsRepository teamReports;
+  late final CalendarRepository calendar;
+  late final FinanceRepository finance;
   late final PushRegistrar push;
   late final AccountState account;
   late final SyncEngine sync;

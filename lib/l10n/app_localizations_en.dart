@@ -1166,4 +1166,755 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get diagnosticsPushPermissionDenied => 'permission denied';
+
+  @override
+  String get fieldValueRequired => 'This field is required';
+
+  @override
+  String get attendanceTitle => 'Attendance';
+
+  @override
+  String get attendanceAlreadyIn => 'You have already checked in today';
+
+  @override
+  String get attendanceOpenShift =>
+      'You have an open shift from a previous day — check out of it first';
+
+  @override
+  String get attendanceNotIn => 'You have not checked in yet';
+
+  @override
+  String get attendanceAlreadyOut => 'You have already checked out';
+
+  @override
+  String get attendanceConsentRequired =>
+      'Sending your location requires your explicit consent';
+
+  @override
+  String get attendanceNoProfile =>
+      'No employee profile is linked to your account';
+
+  @override
+  String get attendanceLocationUnavailable =>
+      'Location unavailable — recording without location';
+
+  @override
+  String get attendanceCheckedIn => 'Checked in';
+
+  @override
+  String get attendanceCheckedOut => 'Checked out';
+
+  @override
+  String get attendanceStateNotIn => 'You haven\'t checked in today';
+
+  @override
+  String attendanceStateIn(String time) {
+    return 'Checked in since $time';
+  }
+
+  @override
+  String attendanceStateOut(String timeIn, String timeOut) {
+    return 'In $timeIn · Out $timeOut';
+  }
+
+  @override
+  String attendanceHours(String hours) {
+    return '$hours h';
+  }
+
+  @override
+  String get attendanceOvernight => 'Overnight shift from the previous day';
+
+  @override
+  String get attendanceMode => 'Work mode';
+
+  @override
+  String get attendanceShareLocation => 'Attach my location this time';
+
+  @override
+  String get attendanceShareLocationHint =>
+      'One reading at the moment you tap, with your consent — no tracking';
+
+  @override
+  String get attendanceCheckIn => 'Check in';
+
+  @override
+  String get attendanceCheckOut => 'Check out';
+
+  @override
+  String get leaveRejectReasonTitle => 'Rejection reason';
+
+  @override
+  String get leaveRejectReasonHint => 'The requester will read it';
+
+  @override
+  String get leaveApproveConfirm =>
+      'Approve this leave request? The server decides the stage (manager approval or final approval).';
+
+  @override
+  String get leaveAlreadyDecided => 'This request has already been decided';
+
+  @override
+  String get leaveSelfRequest =>
+      'You can\'t decide your own request — your manager or HR decides';
+
+  @override
+  String get leaveNotDecider =>
+      'This request is decided by the employee\'s manager or HR';
+
+  @override
+  String get leaveReasonRequired => 'A rejection reason is required';
+
+  @override
+  String get leaveDecisionTitle => 'Decision';
+
+  @override
+  String get custodyTitle => 'My custody';
+
+  @override
+  String get custodyEmpty => 'No assets in your custody and no movements';
+
+  @override
+  String get custodyAcked => 'Receipt acknowledged';
+
+  @override
+  String get custodyPendingReceipts => 'Pending receipt acknowledgements';
+
+  @override
+  String get custodyAck => 'Acknowledge';
+
+  @override
+  String custodyAssets(int count) {
+    return 'In my hands ($count)';
+  }
+
+  @override
+  String get custodyNoAssets => 'No assets in your hands now';
+
+  @override
+  String get custodyReceiptPending => 'Awaiting your acknowledgement';
+
+  @override
+  String get custodyMoves => 'My custody movements';
+
+  @override
+  String custodyHandoverTo(String name) {
+    return 'Hand over to $name';
+  }
+
+  @override
+  String get custodyNoteHint => 'Note (optional)';
+
+  @override
+  String get custodyRecover => 'Recover custody';
+
+  @override
+  String get custodyHandover => 'Hand over';
+
+  @override
+  String get custodyActionsTitle => 'Custody';
+
+  @override
+  String get inventoryTitle => 'Inventory sessions';
+
+  @override
+  String get inventoryFreezeConfirm =>
+      'Open a new inventory session by freezing a snapshot of your assets now?';
+
+  @override
+  String inventoryFrozen(int count) {
+    return '$count assets frozen into the session';
+  }
+
+  @override
+  String get inventoryFreeze => 'New session';
+
+  @override
+  String get inventoryEmpty => 'No inventory sessions';
+
+  @override
+  String inventorySessionMeta(int items, int scans, String by) {
+    return '$items items · $scans scans · $by';
+  }
+
+  @override
+  String get inventorySession => 'Inventory session';
+
+  @override
+  String get inventoryReconcile => 'Reconcile';
+
+  @override
+  String get inventoryReconcileConfirm =>
+      'Reconcile the session (present/missing/moved/unexpected)? Requires identity confirmation.';
+
+  @override
+  String get inventoryReconciled => 'Reconciled';
+
+  @override
+  String get inventoryClose => 'Close session';
+
+  @override
+  String get inventoryCloseConfirm =>
+      'Close the session? No scanning after closing. Requires identity confirmation.';
+
+  @override
+  String get inventoryClosed => 'Session closed';
+
+  @override
+  String get inventoryScan => 'Scan';
+
+  @override
+  String inventoryItems(int count) {
+    return 'Items ($count)';
+  }
+
+  @override
+  String get inventoryRecentScans => 'Recent scans';
+
+  @override
+  String get inventoryUnknownCode => 'Unknown code (not stored)';
+
+  @override
+  String get inventorySessionClosed =>
+      'The session is closed — no scanning after closing';
+
+  @override
+  String get inventoryScanHint => 'Point the camera at the asset code';
+
+  @override
+  String inventoryScanKnown(String name) {
+    return '✓ Known: $name';
+  }
+
+  @override
+  String inventoryScanUnexpected(String name) {
+    return '⚠ Unexpected: $name';
+  }
+
+  @override
+  String get inventoryScanUnknown => '✗ Code not known in your scope';
+
+  @override
+  String inventoryScanCount(int count) {
+    return 'Scanning ($count)';
+  }
+
+  @override
+  String pageOf(int page, int pages) {
+    return '$page of $pages';
+  }
+
+  @override
+  String filesDeleteConfirm(String name) {
+    return 'Delete attachment “$name”?';
+  }
+
+  @override
+  String get filesDeleted => 'Attachment deleted';
+
+  @override
+  String filesExpires(String date) {
+    return 'Expires $date';
+  }
+
+  @override
+  String get filesMessageNoPreview =>
+      'In-app preview is for images only (in memory) — open this attachment on the web platform';
+
+  @override
+  String get inventoryUnknownCompany =>
+      'The company selected in context is unknown — choose another or clear the filter';
+
+  @override
+  String versionsRestoreConfirm(int version) {
+    return 'Restore the record to version $version? A new version is created with its values.';
+  }
+
+  @override
+  String get versionsRestore => 'Restore';
+
+  @override
+  String versionsRestored(int version) {
+    return 'Version $version restored';
+  }
+
+  @override
+  String get versionsTitle => 'Record versions';
+
+  @override
+  String get versionsEmpty => 'No saved versions for this record';
+
+  @override
+  String get versionsCurrent => 'Current version';
+
+  @override
+  String get versionsOldest => 'Oldest listed version';
+
+  @override
+  String get versionsNoVisibleChange => 'No change in fields visible to you';
+
+  @override
+  String versionsChanged(String fields) {
+    return 'Changed: $fields';
+  }
+
+  @override
+  String get financeQueuedBlocked =>
+      'A pending approval is queued for this module — not executed now';
+
+  @override
+  String financePaid(String amount) {
+    return 'Payment of $amount recorded';
+  }
+
+  @override
+  String financePaidRemaining(
+    String amount,
+    String remaining,
+    String currency,
+  ) {
+    return 'Payment of $amount recorded — remaining $remaining $currency';
+  }
+
+  @override
+  String get financeQuoteSendConfirm =>
+      'Send the quote? It may be escalated for internal review by the approval threshold.';
+
+  @override
+  String get financeQuoteEscalated =>
+      'The quote was escalated for internal review before sending';
+
+  @override
+  String get financeQuoteSent => 'Quote sent';
+
+  @override
+  String get financeQuoteAcceptConfirm => 'Record acceptance of the quote?';
+
+  @override
+  String get financeQuoteAccepted => 'Quote accepted';
+
+  @override
+  String get financeQuoteAlreadyAccepted =>
+      'The quote was already accepted — no new effect';
+
+  @override
+  String get financeReceiveConfirm =>
+      'Receive the purchase order and create stock movements?';
+
+  @override
+  String get financeAlreadyReceived => 'The order was already received';
+
+  @override
+  String financeReceived(int moves, int skipped) {
+    return 'Received: $moves stock movements · $skipped skipped';
+  }
+
+  @override
+  String get financePay => 'Record payment';
+
+  @override
+  String get financeQuoteSend => 'Send quote';
+
+  @override
+  String get financeQuoteAccept => 'Accept quote';
+
+  @override
+  String get financeReceive => 'Receive order';
+
+  @override
+  String get financeAmountInvalid =>
+      'Enter a positive decimal amount (e.g. 2500.000) without thousands separators';
+
+  @override
+  String get financeAmount => 'Amount';
+
+  @override
+  String get financePayRef => 'Reference (optional)';
+
+  @override
+  String get financePayNote => 'Note (optional)';
+
+  @override
+  String get commentEdit => 'Edit';
+
+  @override
+  String get commentEdited => 'Comment edited';
+
+  @override
+  String get commentDeleteConfirm => 'Delete this comment?';
+
+  @override
+  String get commentDeleted => 'Comment deleted';
+
+  @override
+  String get commentPinnedDone => 'Comment pinned';
+
+  @override
+  String get commentUnpinned => 'Unpinned';
+
+  @override
+  String get commentResolvedDone => 'Marked resolved';
+
+  @override
+  String get commentReopened => 'Reopened';
+
+  @override
+  String get commentToTaskDone => 'Comment converted to a task';
+
+  @override
+  String get commentUnpin => 'Unpin';
+
+  @override
+  String get commentPin => 'Pin';
+
+  @override
+  String get commentReopen => 'Reopen';
+
+  @override
+  String get commentResolve => 'Resolve';
+
+  @override
+  String get commentToTask => 'Convert to task';
+
+  @override
+  String get ticketsTitle => 'My tickets';
+
+  @override
+  String get ticketsNew => 'New ticket';
+
+  @override
+  String get ticketsEmpty => 'No tickets yet';
+
+  @override
+  String get ticketsCreated => 'Ticket opened';
+
+  @override
+  String get ticketsDuplicateTitle => 'A similar ticket is open';
+
+  @override
+  String ticketsDuplicateBody(String subject) {
+    return 'You have a matching ticket still open: “$subject”. Reply on it, or submit this one if it\'s a different issue.';
+  }
+
+  @override
+  String get ticketsOpenExisting => 'Open existing';
+
+  @override
+  String get ticketsSubmitAnyway => 'Submit as a different ticket';
+
+  @override
+  String get ticketsSubject => 'Subject';
+
+  @override
+  String get ticketsBody => 'Description';
+
+  @override
+  String get ticketsPriority => 'Priority';
+
+  @override
+  String get ticketsProject => 'Project';
+
+  @override
+  String get ticketsNone => '—';
+
+  @override
+  String get ticketsOrg => 'Organization';
+
+  @override
+  String get ticketsNoReplies => 'No replies yet';
+
+  @override
+  String get ticketsYou => 'You';
+
+  @override
+  String get ticketsReplyHint => 'Write your reply…';
+
+  @override
+  String get channelVisPrivate => 'Private';
+
+  @override
+  String get channelVisMembers => 'Members only';
+
+  @override
+  String get channelVisCompany => 'Company';
+
+  @override
+  String get channelVisPublic => 'Public';
+
+  @override
+  String get channelVisDefault => 'Default';
+
+  @override
+  String get channelRoleOwner => 'Owner';
+
+  @override
+  String get channelRoleModerator => 'Moderator';
+
+  @override
+  String get channelRoleMember => 'Member';
+
+  @override
+  String get channelRoleGuest => 'Guest';
+
+  @override
+  String get channelNotifyAll => 'All messages';
+
+  @override
+  String get channelNotifyMentions => 'Mentions only';
+
+  @override
+  String get channelNotifyMuted => 'Muted';
+
+  @override
+  String get channelCreated => 'Channel created';
+
+  @override
+  String get channelNew => 'New channel';
+
+  @override
+  String get channelName => 'Channel name';
+
+  @override
+  String get channelVisibility => 'Visibility';
+
+  @override
+  String get channelJoined => 'You joined the channel';
+
+  @override
+  String get channelAlreadyMember => 'You\'re already a member';
+
+  @override
+  String get channelDirectory => 'Channel directory';
+
+  @override
+  String get channelDirectoryEmpty => 'No channels available to join';
+
+  @override
+  String channelMembersCount(int count) {
+    return '$count members';
+  }
+
+  @override
+  String get channelJoin => 'Join';
+
+  @override
+  String get groupCreated => 'Group created';
+
+  @override
+  String get groupNew => 'New group';
+
+  @override
+  String get groupTitleOptional => 'Group name (optional)';
+
+  @override
+  String get groupNoContacts =>
+      'No direct-message contacts yet — message your colleagues first';
+
+  @override
+  String channelRemoveConfirm(String name) {
+    return 'Remove $name from the conversation?';
+  }
+
+  @override
+  String get channelRemove => 'Remove';
+
+  @override
+  String get channelMembers => 'Members';
+
+  @override
+  String get channelAddMember => 'Add member';
+
+  @override
+  String channelMakeRole(String role) {
+    return 'Make $role';
+  }
+
+  @override
+  String get messageSearchHint => 'Search message text…';
+
+  @override
+  String messageSearchMin(int count) {
+    return 'Type at least $count characters';
+  }
+
+  @override
+  String get messageSearchNone => 'No results';
+
+  @override
+  String messageSearchTotal(int count) {
+    return '$count results';
+  }
+
+  @override
+  String get channelFavorited => 'Added to favorites';
+
+  @override
+  String get channelUnfavorited => 'Removed from favorites';
+
+  @override
+  String channelNotifySaved(String pref) {
+    return 'Notifications: $pref';
+  }
+
+  @override
+  String get channelArchived => 'Channel archived';
+
+  @override
+  String get channelUnarchived => 'Channel unarchived';
+
+  @override
+  String get groupLeaveConfirm =>
+      'Leave this group? You won\'t receive its messages anymore.';
+
+  @override
+  String get groupLeave => 'Leave group';
+
+  @override
+  String get groupLeft => 'You left the group';
+
+  @override
+  String get channelFavorite => 'Favorite (toggle)';
+
+  @override
+  String get channelNotify => 'Notification preference';
+
+  @override
+  String get channelArchive => 'Archive / unarchive';
+
+  @override
+  String get dmEdit => 'Edit';
+
+  @override
+  String get dmDelete => 'Delete message';
+
+  @override
+  String get dmDeleteConfirm =>
+      'Delete this message? A “deleted” marker remains.';
+
+  @override
+  String get dmEdited => '(edited)';
+
+  @override
+  String get reviewAccepted => 'Accepted';
+
+  @override
+  String get reviewNeedsRevision => 'Needs revision';
+
+  @override
+  String get reviewPending => 'Pending review';
+
+  @override
+  String get reviewFeedbackTitle => 'Revision feedback';
+
+  @override
+  String get reviewFeedbackHint =>
+      'What should be improved? The employee will read it';
+
+  @override
+  String get teamReportsTitle => 'Team daily reports';
+
+  @override
+  String get previousDay => 'Previous day';
+
+  @override
+  String get nextDay => 'Next day';
+
+  @override
+  String get reviewScopeTeam => 'My team';
+
+  @override
+  String get reviewScopeMine => 'My projects';
+
+  @override
+  String get reviewAll => 'All';
+
+  @override
+  String reviewSummary(int total, int pending, int accepted, int revision) {
+    return '$total entries · $pending pending · $accepted accepted · $revision to revise';
+  }
+
+  @override
+  String get reviewEmpty => 'No entries for this day';
+
+  @override
+  String get reviewTruncated =>
+      'Showing the first 200 entries — narrow the filter';
+
+  @override
+  String reviewHours(String hours) {
+    return '$hours h';
+  }
+
+  @override
+  String reviewProgress(String progress) {
+    return 'Progress $progress%';
+  }
+
+  @override
+  String reviewProblems(String text) {
+    return 'Blockers: $text';
+  }
+
+  @override
+  String reviewNext(String text) {
+    return 'Next: $text';
+  }
+
+  @override
+  String reviewFeedback(String text) {
+    return 'Reviewer note: $text';
+  }
+
+  @override
+  String get reviewAccept => 'Accept';
+
+  @override
+  String get reviewRequestRevision => 'Request revision';
+
+  @override
+  String get reviewReopen => 'Reopen';
+
+  @override
+  String get calendarTitle => 'Calendar';
+
+  @override
+  String get calendarPrev => 'Previous window';
+
+  @override
+  String get calendarNext => 'Next window';
+
+  @override
+  String get calendarEmpty => 'Nothing scheduled in this window';
+
+  @override
+  String calendarOverflow(int count) {
+    return '$count more items not shown — open the calendar on the web to see them';
+  }
+
+  @override
+  String get alertsTitle => 'Alerts';
+
+  @override
+  String get alertsEmpty => 'Nothing expiring soon';
+
+  @override
+  String get alertsLate => 'Overdue';
+
+  @override
+  String get alertsWeek => 'Within a week';
+
+  @override
+  String alertsWindow(int days) {
+    return 'Within $days days';
+  }
+
+  @override
+  String alertsDaysLate(int days) {
+    return '$days days overdue';
+  }
+
+  @override
+  String alertsDaysLeft(int days) {
+    return 'In $days days';
+  }
 }

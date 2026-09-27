@@ -1151,4 +1151,746 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get diagnosticsPushPermissionDenied =>
       'permission denied (الإذن مرفوض)';
+
+  @override
+  String get fieldValueRequired => 'هذا الحقل مطلوب';
+
+  @override
+  String get attendanceTitle => 'الحضور والانصراف';
+
+  @override
+  String get attendanceAlreadyIn => 'سُجّل حضورك اليوم مسبقاً';
+
+  @override
+  String get attendanceOpenShift =>
+      'لديك ورديةٌ مفتوحة من يومٍ سابق — سجّل انصرافك منها أولاً';
+
+  @override
+  String get attendanceNotIn => 'لم تسجّل حضوراً بعد';
+
+  @override
+  String get attendanceAlreadyOut => 'سُجّل انصرافك مسبقاً';
+
+  @override
+  String get attendanceConsentRequired => 'إرسال الموقع يتطلّب موافقتك الصريحة';
+
+  @override
+  String get attendanceNoProfile => 'لا ملف موظفٍ مربوطاً بحسابك';
+
+  @override
+  String get attendanceLocationUnavailable =>
+      'تعذّر تحديد الموقع — يُسجَّل بلا موقع';
+
+  @override
+  String get attendanceCheckedIn => 'سُجّل الحضور';
+
+  @override
+  String get attendanceCheckedOut => 'سُجّل الانصراف';
+
+  @override
+  String get attendanceStateNotIn => 'لم تسجّل حضورك اليوم';
+
+  @override
+  String attendanceStateIn(String time) {
+    return 'حاضر منذ $time';
+  }
+
+  @override
+  String attendanceStateOut(String timeIn, String timeOut) {
+    return 'حضور $timeIn · انصراف $timeOut';
+  }
+
+  @override
+  String attendanceHours(String hours) {
+    return '$hours ساعة';
+  }
+
+  @override
+  String get attendanceOvernight => 'وردية ليلية ممتدة من اليوم السابق';
+
+  @override
+  String get attendanceMode => 'وضع العمل';
+
+  @override
+  String get attendanceShareLocation => 'إرفاق موقعي لهذه المرة';
+
+  @override
+  String get attendanceShareLocationHint =>
+      'قراءةٌ واحدة لحظة الضغط بموافقتك — لا تتبّع';
+
+  @override
+  String get attendanceCheckIn => 'تسجيل الحضور';
+
+  @override
+  String get attendanceCheckOut => 'تسجيل الانصراف';
+
+  @override
+  String get leaveRejectReasonTitle => 'سبب الرفض';
+
+  @override
+  String get leaveRejectReasonHint => 'يقرؤه صاحب الطلب';
+
+  @override
+  String get leaveApproveConfirm =>
+      'اعتماد طلب الإجازة؟ يحسم الخادم مرحلته (موافقة المدير أو الاعتماد النهائي).';
+
+  @override
+  String get leaveAlreadyDecided => 'هذا الطلب محسومٌ مسبقاً';
+
+  @override
+  String get leaveSelfRequest =>
+      'لا تقرّر في طلبك أنت — يقرّر مديرك أو الموارد البشرية';
+
+  @override
+  String get leaveNotDecider =>
+      'قرار هذا الطلب لمدير الموظف أو الموارد البشرية';
+
+  @override
+  String get leaveReasonRequired => 'سبب الرفض مطلوب';
+
+  @override
+  String get leaveDecisionTitle => 'قرار الطلب';
+
+  @override
+  String get custodyTitle => 'عهدتي';
+
+  @override
+  String get custodyEmpty => 'لا عهدة بيدك ولا حركات';
+
+  @override
+  String get custodyAcked => 'سُجّل إقرار الاستلام';
+
+  @override
+  String get custodyPendingReceipts => 'إقرارات استلام معلّقة';
+
+  @override
+  String get custodyAck => 'أُقرّ بالاستلام';
+
+  @override
+  String custodyAssets(int count) {
+    return 'ما بيدي ($count)';
+  }
+
+  @override
+  String get custodyNoAssets => 'لا أصول بيدك الآن';
+
+  @override
+  String get custodyReceiptPending => 'بانتظار إقرارك';
+
+  @override
+  String get custodyMoves => 'حركات عهدتي';
+
+  @override
+  String custodyHandoverTo(String name) {
+    return 'تسليم العهدة إلى $name';
+  }
+
+  @override
+  String get custodyNoteHint => 'ملاحظة (اختيارية)';
+
+  @override
+  String get custodyRecover => 'استرداد العهدة';
+
+  @override
+  String get custodyHandover => 'تسليم العهدة';
+
+  @override
+  String get custodyActionsTitle => 'العهدة';
+
+  @override
+  String get inventoryTitle => 'جلسات الجرد';
+
+  @override
+  String get inventoryFreezeConfirm =>
+      'فتح جلسة جردٍ جديدة بتجميد لقطة أصولك الآن؟';
+
+  @override
+  String inventoryFrozen(int count) {
+    return 'جُمِّد $count أصلاً في الجلسة';
+  }
+
+  @override
+  String get inventoryFreeze => 'جلسة جديدة';
+
+  @override
+  String get inventoryEmpty => 'لا جلسات جرد';
+
+  @override
+  String inventorySessionMeta(int items, int scans, String by) {
+    return '$items صنفاً · $scans مسحة · $by';
+  }
+
+  @override
+  String get inventorySession => 'جلسة الجرد';
+
+  @override
+  String get inventoryReconcile => 'المصالحة';
+
+  @override
+  String get inventoryReconcileConfirm =>
+      'مصالحة الجلسة كتابياً (موجود/مفقود/انتقل/غير متوقع)؟ يتطلّب تأكيد الهوية.';
+
+  @override
+  String get inventoryReconciled => 'تمت المصالحة';
+
+  @override
+  String get inventoryClose => 'إغلاق الجلسة';
+
+  @override
+  String get inventoryCloseConfirm =>
+      'إغلاق الجلسة؟ لا مسح بعد الإغلاق. يتطلّب تأكيد الهوية.';
+
+  @override
+  String get inventoryClosed => 'أُغلقت الجلسة';
+
+  @override
+  String get inventoryScan => 'مسح';
+
+  @override
+  String inventoryItems(int count) {
+    return 'الأصناف ($count)';
+  }
+
+  @override
+  String get inventoryRecentScans => 'أحدث المسحات';
+
+  @override
+  String get inventoryUnknownCode => 'رمز غير معروف (لا يُخزَّن)';
+
+  @override
+  String get inventorySessionClosed => 'الجلسة مغلقة — لا مسح بعد الإغلاق';
+
+  @override
+  String get inventoryScanHint => 'وجّه الكاميرا إلى رمز الأصل';
+
+  @override
+  String inventoryScanKnown(String name) {
+    return '✓ معروف: $name';
+  }
+
+  @override
+  String inventoryScanUnexpected(String name) {
+    return '⚠ غير متوقع: $name';
+  }
+
+  @override
+  String get inventoryScanUnknown => '✗ رمز غير معروف في نطاقك';
+
+  @override
+  String inventoryScanCount(int count) {
+    return 'المسح ($count)';
+  }
+
+  @override
+  String pageOf(int page, int pages) {
+    return '$page من $pages';
+  }
+
+  @override
+  String filesDeleteConfirm(String name) {
+    return 'حذف المرفق «$name»؟';
+  }
+
+  @override
+  String get filesDeleted => 'حُذف المرفق';
+
+  @override
+  String filesExpires(String date) {
+    return 'ينتهي $date';
+  }
+
+  @override
+  String get filesMessageNoPreview =>
+      'المعاينة داخل التطبيق للصور فقط (من الذاكرة) — افتح هذا المرفق من المنصة على الويب';
+
+  @override
+  String get inventoryUnknownCompany =>
+      'الشركة المختارة في السياق غير معروفة — اختر شركةً أخرى أو ألغِ التضييق';
+
+  @override
+  String versionsRestoreConfirm(int version) {
+    return 'استعادة السجل إلى النسخة $version؟ تُنشأ نسخةٌ جديدة بقيمها.';
+  }
+
+  @override
+  String get versionsRestore => 'استعادة';
+
+  @override
+  String versionsRestored(int version) {
+    return 'استُعيدت النسخة $version';
+  }
+
+  @override
+  String get versionsTitle => 'نسخ السجل';
+
+  @override
+  String get versionsEmpty => 'لا نسخ محفوظة لهذا السجل';
+
+  @override
+  String get versionsCurrent => 'النسخة الحالية';
+
+  @override
+  String get versionsOldest => 'أقدم نسخة معروضة';
+
+  @override
+  String get versionsNoVisibleChange => 'لا تغيير في الحقول الظاهرة لك';
+
+  @override
+  String versionsChanged(String fields) {
+    return 'تغيّر: $fields';
+  }
+
+  @override
+  String get financeQueuedBlocked =>
+      'الوحدة بانتظار اعتمادٍ معلّق — لا تنفيذ الآن';
+
+  @override
+  String financePaid(String amount) {
+    return 'سُجّلت دفعة $amount';
+  }
+
+  @override
+  String financePaidRemaining(
+    String amount,
+    String remaining,
+    String currency,
+  ) {
+    return 'سُجّلت دفعة $amount — المتبقي $remaining $currency';
+  }
+
+  @override
+  String get financeQuoteSendConfirm =>
+      'إرسال عرض السعر؟ قد يُحال للمراجعة الداخلية بحسب عتبة الاعتماد.';
+
+  @override
+  String get financeQuoteEscalated =>
+      'أُحيل العرض للمراجعة الداخلية قبل الإرسال';
+
+  @override
+  String get financeQuoteSent => 'أُرسل عرض السعر';
+
+  @override
+  String get financeQuoteAcceptConfirm => 'تسجيل قبول عرض السعر؟';
+
+  @override
+  String get financeQuoteAccepted => 'قُبل عرض السعر';
+
+  @override
+  String get financeQuoteAlreadyAccepted => 'العرض مقبولٌ مسبقاً — لا أثر جديد';
+
+  @override
+  String get financeReceiveConfirm => 'استلام أمر الشراء وإنشاء حركات المخزون؟';
+
+  @override
+  String get financeAlreadyReceived => 'الأمر مستلمٌ مسبقاً';
+
+  @override
+  String financeReceived(int moves, int skipped) {
+    return 'اُستلم الأمر: $moves حركة مخزون · $skipped متخطّى';
+  }
+
+  @override
+  String get financePay => 'تسجيل دفعة';
+
+  @override
+  String get financeQuoteSend => 'إرسال العرض';
+
+  @override
+  String get financeQuoteAccept => 'قبول العرض';
+
+  @override
+  String get financeReceive => 'استلام الأمر';
+
+  @override
+  String get financeAmountInvalid =>
+      'اكتب مبلغاً موجباً بصيغة عشرية صريحة (مثل 2500.000) بلا فواصل آلاف';
+
+  @override
+  String get financeAmount => 'المبلغ';
+
+  @override
+  String get financePayRef => 'المرجع (اختياري)';
+
+  @override
+  String get financePayNote => 'ملاحظة (اختيارية)';
+
+  @override
+  String get commentEdit => 'تحرير';
+
+  @override
+  String get commentEdited => 'حُرِّر التعليق';
+
+  @override
+  String get commentDeleteConfirm => 'حذف هذا التعليق؟';
+
+  @override
+  String get commentDeleted => 'حُذف التعليق';
+
+  @override
+  String get commentPinnedDone => 'ثُبِّت التعليق';
+
+  @override
+  String get commentUnpinned => 'أُلغي التثبيت';
+
+  @override
+  String get commentResolvedDone => 'عُلِّم محلولاً';
+
+  @override
+  String get commentReopened => 'أُعيد فتحه';
+
+  @override
+  String get commentToTaskDone => 'حُوِّل التعليق إلى مهمة';
+
+  @override
+  String get commentUnpin => 'إلغاء التثبيت';
+
+  @override
+  String get commentPin => 'تثبيت';
+
+  @override
+  String get commentReopen => 'إعادة فتح';
+
+  @override
+  String get commentResolve => 'تعليم محلولاً';
+
+  @override
+  String get commentToTask => 'تحويل لمهمة';
+
+  @override
+  String get ticketsTitle => 'تذاكري';
+
+  @override
+  String get ticketsNew => 'بلاغ جديد';
+
+  @override
+  String get ticketsEmpty => 'لا تذاكر بعد';
+
+  @override
+  String get ticketsCreated => 'فُتح البلاغ';
+
+  @override
+  String get ticketsDuplicateTitle => 'بلاغ مشابه مفتوح';
+
+  @override
+  String ticketsDuplicateBody(String subject) {
+    return 'لديك بلاغٌ مطابق ما زال مفتوحاً: «$subject». أضِف ردّك عليه، أو أرسل هذا إن كان بلاغاً مختلفاً.';
+  }
+
+  @override
+  String get ticketsOpenExisting => 'فتح القائم';
+
+  @override
+  String get ticketsSubmitAnyway => 'إرسال كبلاغٍ مختلف';
+
+  @override
+  String get ticketsSubject => 'الموضوع';
+
+  @override
+  String get ticketsBody => 'الوصف';
+
+  @override
+  String get ticketsPriority => 'الأولوية';
+
+  @override
+  String get ticketsProject => 'المشروع';
+
+  @override
+  String get ticketsNone => '—';
+
+  @override
+  String get ticketsOrg => 'المنظمة';
+
+  @override
+  String get ticketsNoReplies => 'لا ردود بعد';
+
+  @override
+  String get ticketsYou => 'أنت';
+
+  @override
+  String get ticketsReplyHint => 'اكتب ردّك…';
+
+  @override
+  String get channelVisPrivate => 'خاصة';
+
+  @override
+  String get channelVisMembers => 'للأعضاء';
+
+  @override
+  String get channelVisCompany => 'للشركة';
+
+  @override
+  String get channelVisPublic => 'عامة';
+
+  @override
+  String get channelVisDefault => 'الافتراضي';
+
+  @override
+  String get channelRoleOwner => 'مالك';
+
+  @override
+  String get channelRoleModerator => 'مشرف';
+
+  @override
+  String get channelRoleMember => 'عضو';
+
+  @override
+  String get channelRoleGuest => 'ضيف';
+
+  @override
+  String get channelNotifyAll => 'كل الرسائل';
+
+  @override
+  String get channelNotifyMentions => 'الإشارات فقط';
+
+  @override
+  String get channelNotifyMuted => 'مكتومة';
+
+  @override
+  String get channelCreated => 'أُنشئت القناة';
+
+  @override
+  String get channelNew => 'قناة جديدة';
+
+  @override
+  String get channelName => 'اسم القناة';
+
+  @override
+  String get channelVisibility => 'الظهور';
+
+  @override
+  String get channelJoined => 'انضممت إلى القناة';
+
+  @override
+  String get channelAlreadyMember => 'أنت عضوٌ فيها مسبقاً';
+
+  @override
+  String get channelDirectory => 'دليل القنوات';
+
+  @override
+  String get channelDirectoryEmpty => 'لا قنوات متاحة للانضمام';
+
+  @override
+  String channelMembersCount(int count) {
+    return '$count عضواً';
+  }
+
+  @override
+  String get channelJoin => 'انضمام';
+
+  @override
+  String get groupCreated => 'أُنشئت المجموعة';
+
+  @override
+  String get groupNew => 'مجموعة جديدة';
+
+  @override
+  String get groupTitleOptional => 'اسم المجموعة (اختياري)';
+
+  @override
+  String get groupNoContacts =>
+      'لا جهات في رسائلك المباشرة بعد — راسل زملاءك أولاً';
+
+  @override
+  String channelRemoveConfirm(String name) {
+    return 'إزالة $name من الحاوية؟';
+  }
+
+  @override
+  String get channelRemove => 'إزالة';
+
+  @override
+  String get channelMembers => 'الأعضاء';
+
+  @override
+  String get channelAddMember => 'إضافة عضو';
+
+  @override
+  String channelMakeRole(String role) {
+    return 'اجعله $role';
+  }
+
+  @override
+  String get messageSearchHint => 'ابحث في نص الرسائل…';
+
+  @override
+  String messageSearchMin(int count) {
+    return 'اكتب $count أحرف على الأقل';
+  }
+
+  @override
+  String get messageSearchNone => 'لا نتائج';
+
+  @override
+  String messageSearchTotal(int count) {
+    return '$count نتيجة';
+  }
+
+  @override
+  String get channelFavorited => 'أُضيفت للمفضّلة';
+
+  @override
+  String get channelUnfavorited => 'أُزيلت من المفضّلة';
+
+  @override
+  String channelNotifySaved(String pref) {
+    return 'الإشعار: $pref';
+  }
+
+  @override
+  String get channelArchived => 'أُرشفت القناة';
+
+  @override
+  String get channelUnarchived => 'أُعيدت القناة من الأرشيف';
+
+  @override
+  String get groupLeaveConfirm => 'مغادرة هذه المجموعة؟ لن تصلك رسائلها بعد.';
+
+  @override
+  String get groupLeave => 'مغادرة المجموعة';
+
+  @override
+  String get groupLeft => 'غادرت المجموعة';
+
+  @override
+  String get channelFavorite => 'المفضّلة (تبديل)';
+
+  @override
+  String get channelNotify => 'تفضيل الإشعار';
+
+  @override
+  String get channelArchive => 'أرشفة/إعادة';
+
+  @override
+  String get dmEdit => 'تحرير';
+
+  @override
+  String get dmDelete => 'سحب الرسالة';
+
+  @override
+  String get dmDeleteConfirm => 'سحب هذه الرسالة؟ يبقى أثرها «حُذفت».';
+
+  @override
+  String get dmEdited => '(معدّلة)';
+
+  @override
+  String get reviewAccepted => 'مقبول';
+
+  @override
+  String get reviewNeedsRevision => 'يحتاج تنقيحاً';
+
+  @override
+  String get reviewPending => 'بانتظار المراجعة';
+
+  @override
+  String get reviewFeedbackTitle => 'ملاحظة التنقيح';
+
+  @override
+  String get reviewFeedbackHint => 'ما المطلوب تحسينه؟ يقرؤها الموظف';
+
+  @override
+  String get teamReportsTitle => 'تقارير الفريق اليومية';
+
+  @override
+  String get previousDay => 'اليوم السابق';
+
+  @override
+  String get nextDay => 'اليوم التالي';
+
+  @override
+  String get reviewScopeTeam => 'فريقي';
+
+  @override
+  String get reviewScopeMine => 'مشاريعي';
+
+  @override
+  String get reviewAll => 'الكل';
+
+  @override
+  String reviewSummary(int total, int pending, int accepted, int revision) {
+    return '$total بنداً · $pending بانتظار · $accepted مقبول · $revision للتنقيح';
+  }
+
+  @override
+  String get reviewEmpty => 'لا بنود لهذا اليوم';
+
+  @override
+  String get reviewTruncated => 'عُرض أول ٢٠٠ بند — ضيّق التصفية';
+
+  @override
+  String reviewHours(String hours) {
+    return '$hours ساعة';
+  }
+
+  @override
+  String reviewProgress(String progress) {
+    return 'تقدّم $progress٪';
+  }
+
+  @override
+  String reviewProblems(String text) {
+    return 'عوائق: $text';
+  }
+
+  @override
+  String reviewNext(String text) {
+    return 'التالي: $text';
+  }
+
+  @override
+  String reviewFeedback(String text) {
+    return 'ملاحظة المراجع: $text';
+  }
+
+  @override
+  String get reviewAccept => 'قبول';
+
+  @override
+  String get reviewRequestRevision => 'طلب تنقيح';
+
+  @override
+  String get reviewReopen => 'إعادة فتح';
+
+  @override
+  String get calendarTitle => 'التقويم';
+
+  @override
+  String get calendarPrev => 'النافذة السابقة';
+
+  @override
+  String get calendarNext => 'النافذة التالية';
+
+  @override
+  String get calendarEmpty => 'لا مواعيد في هذه النافذة';
+
+  @override
+  String calendarOverflow(int count) {
+    return '$count عنصراً إضافياً لم يُعرض — افتح التقويم على الويب للاطلاع عليها';
+  }
+
+  @override
+  String get alertsTitle => 'التنبيهات';
+
+  @override
+  String get alertsEmpty => 'لا شيء ينتهي قريباً';
+
+  @override
+  String get alertsLate => 'متأخر';
+
+  @override
+  String get alertsWeek => 'خلال أسبوع';
+
+  @override
+  String alertsWindow(int days) {
+    return 'خلال $days يوماً';
+  }
+
+  @override
+  String alertsDaysLate(int days) {
+    return 'متأخر $days يوماً';
+  }
+
+  @override
+  String alertsDaysLeft(int days) {
+    return 'بعد $days يوماً';
+  }
 }

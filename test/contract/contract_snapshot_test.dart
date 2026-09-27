@@ -75,7 +75,8 @@ void main() {
   });
 
   test('CRUD العام والإجراءات والمزامنة موجودة (§123)', () {
-    expect(endpointsOf('crud'), hasLength(6));
+    // خلفية v2.618 (المرحلة ٣.٦): `GET {module}/{id}/versions` سابعةٌ في crud.
+    expect(endpointsOf('crud'), hasLength(7));
     expect(
       endpointsOf('actions'),
       containsAll([
@@ -91,12 +92,14 @@ void main() {
     // العددُ مثبَّتٌ عمداً: نقطةٌ جديدةٌ تُكشف هنا فتُسجَّل في مصفوفة التغطية.
     // (خلفية v2.614: التفاعلُ على التعليق، والتفاعلُ والكتابةُ و«منذ» في DM —
     // مبنيّةٌ منذ v0.4.0 في CommentRepository/DmRepository)
-    expect(endpointsOf('comments'), hasLength(3));
+    // خلفية v2.618: + مرفق التعليق + أفعال التعليق الخمسة (المرحلة ٤.٣).
+    expect(endpointsOf('comments'), hasLength(9));
     expect(
       endpointsOf('comments'),
       contains('POST /api/mobile/v1/comments/{id}/react'),
     );
-    expect(endpointsOf('dm'), hasLength(7));
+    // خلفية v2.618: + مرفق الرسالة + تحريرها وسحبها.
+    expect(endpointsOf('dm'), hasLength(10));
     expect(
       endpointsOf('dm'),
       containsAll([
@@ -194,7 +197,16 @@ void main() {
   });
 
   test('الملفات والماسح والتتبع والدفع', () {
-    expect(endpointsOf('files'), hasLength(6));
+    // خلفية v2.618 (٣.٥): + قائمة مرفقات السجل وحذف المرفق تحت `attachments`
+    // (لا `files` — كي لا تخطف CRUD وحدة الوثائق).
+    expect(endpointsOf('files'), hasLength(8));
+    expect(
+      endpointsOf('files'),
+      containsAll([
+        'GET /api/mobile/v1/attachments',
+        'DELETE /api/mobile/v1/attachments/{id}',
+      ]),
+    );
     expect(
       endpointsOf('scanner'),
       contains('GET /api/mobile/v1/identity/resolve/{q}'),
@@ -271,4 +283,112 @@ void main() {
       ]),
     );
   });
+
+  test(
+    'المرحلتان ٣ و٤ (خلفية v2.618) — كل ما يناديه التطبيق في سجل القدرات',
+    () {
+      const p = '/api/mobile/v1';
+      expect(endpointsOf('attendance'), {
+        'GET $p/attendance/today',
+        'POST $p/attendance/check-in',
+        'POST $p/attendance/check-out',
+      });
+      expect(endpointsOf('leaves'), {'POST $p/leaves/{id}/decide'});
+      expect(endpointsOf('custody'), {
+        'GET $p/me/custody',
+        'POST $p/custody/{id}/handover',
+        'POST $p/custody/{id}/recover',
+      });
+      expect(endpointsOf('inventory'), {
+        'GET $p/inventory/sessions',
+        'POST $p/inventory/sessions',
+        'GET $p/inventory/sessions/{id}',
+        'POST $p/inventory/sessions/{id}/scan',
+        'POST $p/inventory/sessions/{id}/reconcile',
+        'POST $p/inventory/sessions/{id}/close',
+      });
+      expect(endpointsOf('crud'), contains('GET $p/{module}/{id}/versions'));
+      expect(
+        endpointsOf('comments'),
+        containsAll([
+          'GET $p/comments/{id}/attachment',
+          'PATCH $p/comments/{id}',
+          'DELETE $p/comments/{id}',
+          'POST $p/comments/{id}/pin',
+          'POST $p/comments/{id}/resolve',
+          'POST $p/comments/{id}/to-task',
+        ]),
+      );
+      expect(
+        endpointsOf('dm'),
+        containsAll([
+          'GET $p/dm/messages/{id}/attachment',
+          'PATCH $p/dm/messages/{id}',
+          'DELETE $p/dm/messages/{id}',
+        ]),
+      );
+      expect(endpointsOf('portal_tickets'), {
+        'GET $p/portal/tickets',
+        'POST $p/portal/tickets',
+        'GET $p/portal/tickets/{id}',
+        'POST $p/portal/tickets/{id}/reply',
+      });
+      // ١٣ نقطة: التطبيق يستعمل ١٢ — `groups/{id}/participants` (توسيع المجموعة
+      // بمجموعةٍ جديدة) غير مبنيّ بعد (docs/mobile-feature-coverage.md).
+      expect(endpointsOf('channels'), hasLength(13));
+      expect(
+        endpointsOf('channels'),
+        containsAll([
+          'GET $p/conversations/directory',
+          'POST $p/conversations',
+          'POST $p/conversations/{id}/join',
+          'GET $p/conversations/{id}/members',
+          'POST $p/conversations/{id}/members',
+          'PUT $p/conversations/{id}/members/{user}',
+          'DELETE $p/conversations/{id}/members/{user}',
+          'POST $p/conversations/{id}/favorite',
+          'POST $p/conversations/{id}/archive',
+          'PUT $p/conversations/{id}/notify',
+          'POST $p/groups',
+          'POST $p/groups/{id}/leave',
+        ]),
+      );
+      expect(endpointsOf('search'), contains('GET $p/search/messages'));
+      expect(endpointsOf('reports'), {
+        'GET $p/reports/daily',
+        'POST $p/reports/daily/{id}/review',
+      });
+      expect(endpointsOf('calendar'), {'GET $p/calendar', 'GET $p/alerts'});
+      expect(endpointsOf('finance_actions'), {
+        'POST $p/fin/{id}/pay',
+        'POST $p/quotes/{id}/send',
+        'POST $p/quotes/{id}/accept',
+        'POST $p/purchases/{id}/receive',
+      });
+      expect(endpointsOf('ask'), contains('POST $p/ask/stream'));
+      // أشكال الحقول التي يقرؤها التطبيق معلنة في المواصفة.
+      final schemas = ((openapi['components'] as Map)['schemas'] as Map)
+          .cast<String, dynamic>();
+      Set<String> props(String name) =>
+          ((schemas[name] as Map)['properties'] as Map).keys
+              .cast<String>()
+              .toSet();
+      expect(
+        props('AttendanceToday'),
+        containsAll(['state', 'can', 'location']),
+      );
+      expect(
+        props('RecordFile'),
+        containsAll(['can', 'download', 'original_name']),
+      );
+      expect(
+        props('RecordVersionItem'),
+        containsAll(['version', 'restorable']),
+      );
+      expect(props('InventoryAbilities'), containsAll(['scan', 'reconcile']));
+      expect(props('ReviewEntry'), contains('can_review'));
+      expect(props('FinDocumentCard'), containsAll(['total', 'remaining']));
+      expect(props('MessageAttachment'), contains('download'));
+    },
+  );
 }

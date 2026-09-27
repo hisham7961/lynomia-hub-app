@@ -4,6 +4,8 @@ library;
 import 'package:uuid/uuid.dart';
 
 import '../../core/api/api_client.dart';
+import '../../core/api/json_read.dart';
+import '../files/file_repository.dart';
 import 'reactions.dart';
 
 export 'reactions.dart' show CommentReaction, ReactionToggle;
@@ -20,6 +22,7 @@ class RecordComment {
     this.pinned = false,
     this.resolved = false,
     this.hasAttachment = false,
+    this.attachment,
     this.reactions = const [],
     this.replies = const [],
     this.createdAt,
@@ -40,6 +43,7 @@ class RecordComment {
       pinned: j['pinned'] == true,
       resolved: j['resolved'] == true,
       hasAttachment: j['has_attachment'] == true,
+      attachment: MessageAttachmentRef.fromJson(j['attachment']),
       reactions: parseReactions(j['reactions']),
       replies: (j['replies'] as List? ?? const [])
           .whereType<Map>()
@@ -59,6 +63,9 @@ class RecordComment {
   final bool pinned;
   final bool resolved;
   final bool hasAttachment;
+
+  /// مقبض تنزيل المرفق (للداخلي — خلفية ≥ v2.618)؛ null لغيره.
+  final MessageAttachmentRef? attachment;
   final List<CommentReaction> reactions;
   final List<RecordComment> replies;
   final DateTime? createdAt;
@@ -77,6 +84,7 @@ class RecordComment {
       pinned: pinned,
       resolved: resolved,
       hasAttachment: hasAttachment,
+      attachment: attachment,
       reactions: t.targetId == id ? applyToggle(reactions, t) : reactions,
       replies: [for (final r in replies) r.applyReaction(t)],
       createdAt: createdAt,
@@ -157,4 +165,88 @@ class CommentRepository {
         ),
         'comment_id',
       );
+
+  // ── أفعال التعليق (المرحلة ٤.٣ · `mobile.comment_actions.*`) — الحرّاس خادمية
+  // (`CommentActions`): التحرير لصاحبه، والحذف له أو للمالك، والتثبيت لمعدّل
+  // الوحدة/مشرف القناة، والحلّ لصاحبه أو مديره، والتحويل لمهمة `tasks:a`.
+  // التبديلات ليست عديمة الأثر ⇒ لا مفتاح ولا إعادة تلقائية.
+
+  /// `PATCH comments/{id}` — تحرير تعليقي.
+  Future<CommentCard> edit(String commentId, String body) async =>
+      CommentCard.fromJson(
+        jsonMap(
+          (await api.sendData(
+            'PATCH',
+            'comments/${Uri.encodeComponent(commentId)}',
+            body: {'body': body},
+          ))['comment'],
+        ),
+      );
+
+  /// `DELETE comments/{id}`.
+  Future<void> delete(String commentId) =>
+      api.sendData('DELETE', 'comments/${Uri.encodeComponent(commentId)}');
+
+  /// `POST comments/{id}/pin` — تبديل التثبيت.
+  Future<CommentCard> togglePin(String commentId) async => CommentCard.fromJson(
+    jsonMap(
+      (await api.sendData(
+        'POST',
+        'comments/${Uri.encodeComponent(commentId)}/pin',
+        body: const {},
+      ))['comment'],
+    ),
+  );
+
+  /// `POST comments/{id}/resolve` — تبديل الحلّ.
+  Future<CommentCard> toggleResolve(String commentId) async =>
+      CommentCard.fromJson(
+        jsonMap(
+          (await api.sendData(
+            'POST',
+            'comments/${Uri.encodeComponent(commentId)}/resolve',
+            body: const {},
+          ))['comment'],
+        ),
+      );
+
+  /// `POST comments/{id}/to-task` — مرّة واحدة؛ Idempotency للفعل الواحد.
+  /// يعيد معرّف المهمة المنشأة.
+  Future<String> toTask(String commentId, {String? idempotencyKey}) async {
+    final d = await api.sendData(
+      'POST',
+      'comments/${Uri.encodeComponent(commentId)}/to-task',
+      body: const {},
+      idempotencyKey: idempotencyKey ?? const Uuid().v4(),
+    );
+    return jsonMap(d['task'])['id']?.toString() ?? '';
+  }
+}
+
+/// بطاقة التعليق بعد فعلٍ عليه (`CommentCard`).
+class CommentCard {
+  const CommentCard({
+    required this.id,
+    required this.body,
+    this.pinned = false,
+    this.resolved = false,
+    this.edited = false,
+    this.taskId,
+  });
+
+  factory CommentCard.fromJson(Map<String, dynamic> j) => CommentCard(
+    id: j['id']?.toString() ?? '',
+    body: j['body']?.toString() ?? '',
+    pinned: j['pinned'] == true,
+    resolved: j['resolved'] == true,
+    edited: j['edited'] == true,
+    taskId: jsonStr(j['task_id']),
+  );
+
+  final String id;
+  final String body;
+  final bool pinned;
+  final bool resolved;
+  final bool edited;
+  final String? taskId;
 }

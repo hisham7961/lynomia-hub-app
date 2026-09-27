@@ -457,7 +457,7 @@ class _RefEditorState extends State<_RefEditor> {
     final picked = await showModalBottomSheet<({String id, String name})>(
       context: context,
       isScrollControlled: true,
-      builder: (ctx) => _RefPickerSheet(refModule: widget.field.ref!),
+      builder: (ctx) => RefPickerSheet(refModule: widget.field.ref!),
     );
     if (picked == null) return;
     setState(() {
@@ -509,16 +509,28 @@ class _RefEditorState extends State<_RefEditor> {
   }
 }
 
-class _RefPickerSheet extends StatefulWidget {
-  const _RefPickerSheet({required this.refModule});
+/// يفتح [RefPickerSheet] ويعيد الاختيار.
+Future<({String id, String name})?> pickReference(
+  BuildContext context,
+  String refModule,
+) => showModalBottomSheet<({String id, String name})>(
+  context: context,
+  isScrollControlled: true,
+  builder: (ctx) => RefPickerSheet(refModule: refModule),
+);
+
+/// منتقي سجلٍّ من وحدةٍ مرجعية (بحثٌ خادمي) — يُعيد `(id, name)` أو null.
+/// عامٌّ ليُستعمل خارج النموذج (مستلم العهدة، عضو القناة).
+class RefPickerSheet extends StatefulWidget {
+  const RefPickerSheet({super.key, required this.refModule});
 
   final String refModule;
 
   @override
-  State<_RefPickerSheet> createState() => _RefPickerSheetState();
+  State<RefPickerSheet> createState() => RefPickerSheetState();
 }
 
-class _RefPickerSheetState extends State<_RefPickerSheet> {
+class RefPickerSheetState extends State<RefPickerSheet> {
   List<RecordData> _records = const [];
   ModuleSchema? _schema;
   bool _loading = true;

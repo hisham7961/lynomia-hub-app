@@ -21,3 +21,11 @@
 | `/approvals`, `/approvals/:id` | الاعتمادات | `approvals*` | طابور المعتمد خادمياً | يتطلب اتصالاً | وجهة السجل الهدف |
 | `/scanner` | الماسح | `identity/resolve/{q}` | إذن كاميرا عند الفتح | يتطلب اتصالاً للحل | يلاحح للكيان المحلول |
 | `/tracking` | التتبع الميداني | `tracking/*` | موافقة صريحة + إذن موقع | دفعات تبقى للمحاولة التالية | — |
+| `/me/custody` | عهدتي + إقرار الاستلام — v0.9.0 | `me/custody`, `assets/{id}/actions/ack` | الجلسة (داخلي) | يتطلب اتصالاً | الأصل ⇒ `/r/assets/{id}` |
+| `/inventory`, `/inventory/:id`, `/inventory/:id/scan` | جلسات الجرد: تجميد، تفصيل، مسح متتابع، مصالحة/إغلاق بالتصعيد — v0.9.0 | `inventory/sessions*` | `assets.can.v` للمدخل + `can` الخادمية للأفعال | يتطلب اتصالاً | الصنف ⇒ `/r/assets/{id}` |
+| `/r/:module/:id/versions` | نسخ السجل + الاستعادة — v0.9.0 | `{module}/{id}/versions`, `actions/restore-version` | `restorable` خادمياً + التصعيد | يتطلب اتصالاً | — |
+| `/portal/tickets`, `/portal/tickets/:id` | «تذاكري» في قشرة العميل — v0.9.0 | `portal/tickets*` | حساب العميل وحده | يتطلب اتصالاً | — |
+| `/conversations/directory`, `/conversations/new-group`, `/conversations/:id/members` | دليل القنوات، مجموعة جديدة، الأعضاء — v0.9.0 | `conversations/*`, `groups` | العضوية/`can_manage` خادمياً | يتطلب اتصالاً | الانضمام ⇒ `/conversations/{id}` |
+| `/messages/search` | بحث نصّ الرسائل — v0.9.0 | `search/messages` | ما يراه القارئ خادمياً | يتطلب اتصالاً | النتيجة ⇒ وجهتها القانونية |
+| `/reports/daily` | مراجعة تقارير الفريق — v0.9.0 | `reports/daily*` | مراجِع بقبول الخادم (٤٠٣ ⇒ لا مدخل) | يتطلب اتصالاً | — |
+| `/calendar`, `/alerts` | التقويم الموحّد والتنبيهات — v0.9.0 | `calendar`, `alerts` | خادمية (hub_can/scope/field_mode) | يتطلب اتصالاً | العنصر ⇒ `/r/*` أو وثائقي |

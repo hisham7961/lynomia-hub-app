@@ -1,14 +1,16 @@
 /// لوحة مرفقات السجل (§67 §68 §69) — رفع مقطّع بتقدم/إلغاء/إعادة من الكاميرا
 /// أو مكتبة الصور أو المستندات، وعرض حقول file/img بقيمها.
 ///
-/// ملاحظة عقدية: لا نقطة جوال تسرد مرفقات سجل قائمة — المعروض هنا حقول
-/// file/img من السجل وما رُفع في هذه الجلسة (موثق في docs/backend-change-requests.md).
+/// القائمة من الخادم (`GET attachments` — خلفية ≥ v2.618) بما يجوز لكل مرفق
+/// (`can`: تنزيل/معاينة/حذف)؛ ومع خادمٍ أقدم بلا القائمة (٤٠٤) يُعرض ما رُفع في
+/// هذه الجلسة وحقول file/img من السجل — صدقاً لا اختلاقاً.
 ///
 /// الفتح (§69): المرفق المرفوع يُنزَّل عبر `files/{id}/download` **إلى الذاكرة**؛
 /// الصورة تُعرض من البايتات ولا تلمس القرص، وما عداها يُفتح بصدقٍ من المنصة على
 /// الويب (لا عارض أصلي بلا كتابة ملف مؤقت — قاعدة عدم الإبقاء على القرص).
 library;
 
+import 'dart:async';
 import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
@@ -22,6 +24,7 @@ import 'package:uuid/uuid.dart';
 import '../../app/di/app_scope.dart';
 import '../../core/errors/api_exception.dart';
 import '../../core/ui/async_view.dart';
+import '../../core/ui/feedback.dart';
 import '../../l10n/app_localizations.dart';
 import '../modules/module_repository.dart';
 import '../modules/module_schema.dart';
@@ -98,6 +101,70 @@ class AttachmentsPanel extends StatefulWidget {
 class _AttachmentsPanelState extends State<AttachmentsPanel> {
   final List<AttachmentInfo> _uploaded = [];
   _UploadJob? _job;
+
+  /// قائمة الخادم — null قبل التحميل أو حين لا يعرفها الخادم (أقدم).
+  List<RecordFile>? _server;
+  bool _serverLoading = true;
+  Object? _serverError;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadServer();
+  }
+
+  Future<void> _loadServer() async {
+    setState(() {
+      _serverLoading = true;
+      _serverError = null;
+    });
+    try {
+      final files = await AppScope.of(context).files
+          .recordFiles(widget.module, widget.recordId);
+      if (mounted) setState(() => _server = files);
+    } on ApiException catch (e) {
+      // خادمٌ أقدم بلا القائمة ⇒ السلوك السابق (جلسة الرفع + الحقول).
+      if (mounted && e.code != ApiErrorCode.resourceNotFound) {
+        setState(() => _serverError = e);
+      }
+    } on Object catch (e) {
+      if (mounted) setState(() => _serverError = e);
+    } finally {
+      if (mounted) setState(() => _serverLoading = false);
+    }
+  }
+
+  Future<void> _delete(RecordFile f) async {
+    final l = AppLocalizations.of(context)!;
+    final ok = await confirmDialog(
+      context,
+      message: l.filesDeleteConfirm(f.info.name),
+      confirmLabel: l.actionDelete,
+    );
+    if (!ok || !mounted) return;
+    try {
+      await AppScope.of(context).files.deleteFile(f.id);
+      if (!mounted) return;
+      showSnack(context, l.filesDeleted);
+      await _loadServer();
+    } on Object catch (e) {
+      if (mounted) showErrorSnack(context, e);
+    }
+  }
+
+  /// فتح مرفقٍ من القائمة: المعاينة للصور حين يجيزها الخادم، وإلا الويب.
+  Future<void> _openServer(RecordFile f) async {
+    final l = AppLocalizations.of(context)!;
+    if (f.infected) {
+      showSnack(context, l.filesInfected);
+      return;
+    }
+    if (f.info.isImage && (f.canPreview || f.canDownload)) {
+      await _open(f.info);
+      return;
+    }
+    await _offerWeb(l.filesNoInAppPreview);
+  }
 
   Future<void> _pickAndUpload(AttachmentSource source) async {
     final l = AppLocalizations.of(context)!;
@@ -209,6 +276,7 @@ class _AttachmentsPanelState extends State<AttachmentsPanel> {
         _uploaded.addAll(attachments);
         _job = null;
       });
+      if (_server != null) unawaited(_loadServer());
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text(l.filesUploadDone)));
     } on Object catch (e) {
@@ -248,12 +316,13 @@ class _AttachmentsPanelState extends State<AttachmentsPanel> {
     final fileFields = widget.schema.fields
         .where((f) => f.type == 'file' || f.type == 'img')
         .toList();
+    final server = _server;
     final hasAny =
         fileFields.any((f) {
           final v = widget.record[f.key];
           return v != null && v.toString().isNotEmpty;
         }) ||
-        _uploaded.isNotEmpty;
+        (server == null ? _uploaded.isNotEmpty : server.isNotEmpty);
 
     return ListView(
       padding: const EdgeInsets.all(16),
@@ -302,7 +371,11 @@ class _AttachmentsPanelState extends State<AttachmentsPanel> {
             ),
           ),
         const SizedBox(height: 12),
-        if (!hasAny)
+        if (_serverLoading && server == null)
+          const LinearProgressIndicator()
+        else if (_serverError != null)
+          ErrorView(error: _serverError!, onRetry: _loadServer),
+        if (!hasAny && !_serverLoading)
           Padding(
             padding: const EdgeInsets.only(top: 32),
             child: EmptyView(message: l.filesEmpty, icon: Icons.attach_file),
@@ -328,42 +401,120 @@ class _AttachmentsPanelState extends State<AttachmentsPanel> {
                   ),
                 ),
               ),
-          for (final a in _uploaded)
-            Card(
-              margin: const EdgeInsets.only(bottom: 8),
-              child: ListTile(
-                leading: const Icon(Icons.attach_file),
-                title: Text(
-                  a.name,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                subtitle: a.size == null
-                    ? null
-                    : Text(formatFileSize(l, a.size!)),
-                trailing: IconButton(
-                  key: Key('attachment-open-${a.id}'),
-                  tooltip: l.actionOpen,
-                  icon: Icon(
-                    a.isImage ? Icons.visibility_outlined : Icons.open_in_new,
+          if (server != null)
+            for (final f in server)
+              Card(
+                margin: const EdgeInsets.only(bottom: 8),
+                child: ListTile(
+                  key: Key('record-file-${f.id}'),
+                  leading: Icon(
+                    f.infected ? Icons.gpp_bad_outlined : Icons.attach_file,
                   ),
-                  onPressed: () => _open(a),
+                  title: Text(
+                    f.info.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  subtitle: Text(
+                    [
+                      ?f.kindLabel,
+                      if (f.info.size != null) formatFileSize(l, f.info.size!),
+                      ?f.uploadedBy?.name,
+                      if (f.expiresAt != null) l.filesExpires(f.expiresAt!),
+                    ].join(' · '),
+                  ),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (f.canDownload || f.canPreview)
+                        IconButton(
+                          key: Key('attachment-open-${f.id}'),
+                          tooltip: l.actionOpen,
+                          icon: Icon(
+                            f.info.isImage
+                                ? Icons.visibility_outlined
+                                : Icons.open_in_new,
+                          ),
+                          onPressed: () => _openServer(f),
+                        ),
+                      if (f.canDelete)
+                        IconButton(
+                          key: Key('attachment-delete-${f.id}'),
+                          tooltip: l.actionDelete,
+                          icon: const Icon(Icons.delete_outline),
+                          onPressed: () => _delete(f),
+                        ),
+                    ],
+                  ),
                 ),
-                onTap: () => _open(a),
               ),
-            ),
+          if (server == null)
+            for (final a in _uploaded)
+              Card(
+                margin: const EdgeInsets.only(bottom: 8),
+                child: ListTile(
+                  leading: const Icon(Icons.attach_file),
+                  title: Text(
+                    a.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  subtitle: a.size == null
+                      ? null
+                      : Text(formatFileSize(l, a.size!)),
+                  trailing: IconButton(
+                    key: Key('attachment-open-${a.id}'),
+                    tooltip: l.actionOpen,
+                    icon: Icon(
+                      a.isImage ? Icons.visibility_outlined : Icons.open_in_new,
+                    ),
+                    onPressed: () => _open(a),
+                  ),
+                  onTap: () => _open(a),
+                ),
+              ),
         ],
       ],
     );
   }
 }
 
+/// فتح مرفق تعليقٍ/رسالة (طلب #2): الصورة تُعرض من الذاكرة عبر مسار التنزيل
+/// المصادَق الذي يبثّه الخادم؛ وغيرها صدقاً: لا عارض أصلي بلا كتابة قرص.
+Future<void> openMessageAttachment(
+  BuildContext context,
+  MessageAttachmentRef ref,
+) async {
+  final info = ref.asInfo;
+  if (!info.isImage) {
+    showSnack(context, AppLocalizations.of(context)!.filesMessageNoPreview);
+    return;
+  }
+  final files = AppScope.of(context).files;
+  await Navigator.of(context).push(
+    MaterialPageRoute<void>(
+      builder: (_) => AttachmentPreviewScreen(
+        attachment: info,
+        loader: () => files.downloadPath(ref.downloadPath),
+      ),
+    ),
+  );
+}
+
 /// معاينة صورة مرفق من الذاكرة — البايتات تُترك مع الشاشة، لا ملف ولا خبيئة
 /// (نظير معاينة «وثائقي»؛ صالحة للحسّاس لأن لا شيء يهبط القرص).
 class AttachmentPreviewScreen extends StatefulWidget {
-  const AttachmentPreviewScreen({super.key, required this.attachment});
+  const AttachmentPreviewScreen({
+    super.key,
+    required this.attachment,
+    this.loader,
+  });
 
   final AttachmentInfo attachment;
+
+  /// مصدر البايتات — افتراضاً `files/{id}/download`؛ ولمرفق التعليق/الرسالة
+  /// مسار الخادم المرفق (`download`).
+  final Future<Uint8List> Function()? loader;
 
   @override
   State<AttachmentPreviewScreen> createState() =>
@@ -387,8 +538,10 @@ class _AttachmentPreviewScreenState extends State<AttachmentPreviewScreen> {
       _error = null;
     });
     try {
-      final bytes = await AppScope.of(context).files
-          .download(widget.attachment.id);
+      final loader = widget.loader;
+      final bytes = loader != null
+          ? await loader()
+          : await AppScope.of(context).files.download(widget.attachment.id);
       if (mounted) setState(() => _bytes = bytes);
     } on Object catch (e) {
       if (mounted) setState(() => _error = e);

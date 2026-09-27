@@ -16,6 +16,9 @@ import '../../core/ui/visible_poller.dart';
 import '../../l10n/app_localizations.dart';
 import '../comments/comments_panel.dart';
 import '../comments/reactions.dart';
+import '../../core/ui/feedback.dart';
+import '../files/attachments_panel.dart';
+import 'channels_screens.dart';
 import 'collab_repository.dart';
 import 'dm_repository.dart';
 import 'live_events.dart';
@@ -89,10 +92,33 @@ class DmThreadsScreen extends StatelessWidget {
           title: Text(l.messagesTitle),
           actions: [
             IconButton(
+              key: const Key('open-message-search'),
+              tooltip: l.messageSearchHint,
+              icon: const Icon(Icons.search),
+              onPressed: () => context.push('/messages/search'),
+            ),
+            IconButton(
               key: const Key('open-saved'),
               tooltip: l.savedTitle,
               icon: const Icon(Icons.bookmark_outline),
               onPressed: () => context.push('/saved'),
+            ),
+            PopupMenuButton<String>(
+              key: const Key('messages-menu'),
+              onSelected: (v) => switch (v) {
+                'channel' => createChannelFlow(context),
+                'directory' => context.push('/conversations/directory'),
+                'group' => context.push('/conversations/new-group'),
+                _ => null,
+              },
+              itemBuilder: (_) => [
+                PopupMenuItem(value: 'channel', child: Text(l.channelNew)),
+                PopupMenuItem(
+                  value: 'directory',
+                  child: Text(l.channelDirectory),
+                ),
+                PopupMenuItem(value: 'group', child: Text(l.groupNew)),
+              ],
             ),
           ],
           bottom: TabBar(
@@ -302,7 +328,7 @@ class _ConversationsTabState extends State<ConversationsTab> {
                     ),
                     onTap: () async {
                       await context.push(
-                        '/conversations/${c.id}?title=${Uri.encodeComponent(c.title)}',
+                        conversationRoute(c.id, c.title, c.kind),
                       );
                       _load();
                     },
@@ -315,26 +341,152 @@ class _ConversationsTabState extends State<ConversationsTab> {
   }
 }
 
-/// قناة/غرفة/مجموعة: تعليقات الحاوية (`module=channel`) باستطلاع «منذ» وكتابة.
-class ConversationScreen extends StatelessWidget {
+/// قناة/غرفة/مجموعة: تعليقات الحاوية (`module=channel`) باستطلاع «منذ» وكتابة،
+/// وقائمة إدارة (الأعضاء، المفضّلة، الإشعار، الأرشفة للمالك، مغادرة المجموعة) —
+/// بدوري من `GET conversations/{id}/members` لا بافتراضٍ محلي.
+class ConversationScreen extends StatefulWidget {
   const ConversationScreen({
     super.key,
     required this.conversationId,
     required this.title,
+    this.kind = '',
   });
 
   final String conversationId;
   final String title;
 
+  /// `channel` · `room` · `group` (تصنيفٌ عرضي من الخادم).
+  final String kind;
+
   @override
-  Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: Text(title)),
-    body: CommentsPanel(
-      module: 'channel',
-      recordId: conversationId,
-      liveConversationId: conversationId,
-    ),
-  );
+  State<ConversationScreen> createState() => _ConversationScreenState();
+}
+
+class _ConversationScreenState extends State<ConversationScreen> {
+  ConversationMembers? _members;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadRole();
+  }
+
+  Future<void> _loadRole() async {
+    try {
+      final m = await AppScope.of(context).collab
+          .members(widget.conversationId);
+      if (mounted) setState(() => _members = m);
+    } on Object {
+      // ثانوي: بلا دورٍ معروف تغيب أفعال الإدارة (لا زرّ بلا أهلية).
+    }
+  }
+
+  Future<void> _menu(String choice) async {
+    final l = AppLocalizations.of(context)!;
+    final repo = AppScope.of(context).collab;
+    final id = widget.conversationId;
+    try {
+      switch (choice) {
+        case 'members':
+          await context.push(
+            Uri(
+              path: '/conversations/$id/members',
+              queryParameters: {'kind': widget.kind},
+            ).toString(),
+          );
+          await _loadRole();
+        case 'favorite':
+          final fav = await repo.toggleFavorite(id);
+          if (mounted) {
+            showSnack(context, fav ? l.channelFavorited : l.channelUnfavorited);
+          }
+        case 'notify':
+          final pref = await showModalBottomSheet<String>(
+            context: context,
+            builder: (ctx) => SafeArea(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  for (final p in kNotifyPrefs)
+                    ListTile(
+                      key: Key('notify-$p'),
+                      title: Text(notifyPrefLabel(l, p)),
+                      onTap: () => Navigator.pop(ctx, p),
+                    ),
+                ],
+              ),
+            ),
+          );
+          if (pref == null) return;
+          final saved = await repo.setNotifyPref(id, pref);
+          if (mounted) {
+            showSnack(context, l.channelNotifySaved(notifyPrefLabel(l, saved)));
+          }
+        case 'archive':
+          final archived = await repo.toggleArchive(id);
+          if (mounted) {
+            showSnack(
+              context,
+              archived ? l.channelArchived : l.channelUnarchived,
+            );
+          }
+        case 'leave':
+          if (!await confirmDialog(
+            context,
+            message: l.groupLeaveConfirm,
+            confirmLabel: l.groupLeave,
+          )) {
+            return;
+          }
+          await repo.leaveGroup(id);
+          if (!mounted) return;
+          showSnack(context, l.groupLeft);
+          context.pop();
+      }
+    } on Object catch (e) {
+      if (mounted) showErrorSnack(context, e);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    final m = _members;
+    final isGroup = widget.kind == 'group';
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(widget.title),
+        actions: [
+          if (m != null)
+            PopupMenuButton<String>(
+              key: const Key('conversation-menu'),
+              onSelected: _menu,
+              itemBuilder: (_) => [
+                PopupMenuItem(value: 'members', child: Text(l.channelMembers)),
+                PopupMenuItem(
+                  value: 'favorite',
+                  child: Text(l.channelFavorite),
+                ),
+                PopupMenuItem(value: 'notify', child: Text(l.channelNotify)),
+                if (m.isOwner && !isGroup)
+                  PopupMenuItem(
+                    value: 'archive',
+                    child: Text(l.channelArchive),
+                  ),
+                if (isGroup)
+                  PopupMenuItem(value: 'leave', child: Text(l.groupLeave)),
+              ],
+            ),
+        ],
+      ),
+      body: CommentsPanel(
+        module: 'channel',
+        recordId: widget.conversationId,
+        liveConversationId: widget.conversationId,
+        canModerate: m?.canManage ?? false,
+      ),
+    );
+  }
 }
 
 class DmChatScreen extends StatefulWidget {
@@ -531,6 +683,8 @@ class _DmChatScreenState extends State<DmChatScreen> {
   Future<void> _actions(DmMessage m) async {
     final l = AppLocalizations.of(context)!;
     const save = '__save__';
+    const edit = '__edit__';
+    const delete = '__delete__';
     final choice = await showModalBottomSheet<String>(
       context: context,
       builder: (ctx) => SafeArea(
@@ -561,6 +715,21 @@ class _DmChatScreenState extends State<DmChatScreen> {
                 title: Text(l.savedAction),
                 onTap: () => Navigator.pop(ctx, save),
               ),
+              // تحرير/سحب رسالتي — لصاحبها وحده (الخادم يعيد الفحص).
+              if (m.mine) ...[
+                ListTile(
+                  key: const Key('dm-edit'),
+                  leading: const Icon(Icons.edit_outlined),
+                  title: Text(l.dmEdit),
+                  onTap: () => Navigator.pop(ctx, edit),
+                ),
+                ListTile(
+                  key: const Key('dm-delete'),
+                  leading: const Icon(Icons.delete_outline),
+                  title: Text(l.dmDelete),
+                  onTap: () => Navigator.pop(ctx, delete),
+                ),
+              ],
             ],
           ),
         ),
@@ -569,8 +738,64 @@ class _DmChatScreenState extends State<DmChatScreen> {
     if (choice == null || !mounted) return;
     if (choice == save) {
       await saveWithUndo(context, targetType: 'dm', targetId: m.id);
+    } else if (choice == edit) {
+      await _edit(m);
+    } else if (choice == delete) {
+      await _delete(m);
     } else {
       await _react(m, choice);
+    }
+  }
+
+  void _replace(DmMessage updated) {
+    setState(() {
+      _messages = [
+        for (final x in _messages ?? const <DmMessage>[])
+          x.id == updated.id
+              ? x.copyWith(
+                  deleted: updated.deleted,
+                  body: updated.body,
+                  edited: updated.edited,
+                )
+              : x,
+      ];
+    });
+  }
+
+  Future<void> _edit(DmMessage m) async {
+    final l = AppLocalizations.of(context)!;
+    final body = await promptTextDialog(
+      context,
+      title: l.dmEdit,
+      initial: m.body ?? '',
+      required: true,
+      maxLines: 6,
+      maxLength: 4000,
+    );
+    if (body == null || body == m.body || !mounted) return;
+    try {
+      final updated = await AppScope.of(context).dm.editMessage(m.id, body);
+      if (mounted) _replace(updated);
+    } on Object catch (e) {
+      if (mounted) showErrorSnack(context, e);
+    }
+  }
+
+  Future<void> _delete(DmMessage m) async {
+    final l = AppLocalizations.of(context)!;
+    if (!await confirmDialog(
+      context,
+      message: l.dmDeleteConfirm,
+      confirmLabel: l.dmDelete,
+    )) {
+      return;
+    }
+    if (!mounted) return;
+    try {
+      final updated = await AppScope.of(context).dm.deleteMessage(m.id);
+      if (mounted) _replace(updated);
+    } on Object catch (e) {
+      if (mounted) showErrorSnack(context, e);
     }
   }
 
@@ -746,10 +971,40 @@ class _Bubble extends StatelessWidget {
                           )
                         : null,
                   ),
-                  if (m.hasAttachment)
+                  if (m.attachment != null)
+                    InkWell(
+                      key: Key('dm-attachment-${m.id}'),
+                      onTap: () =>
+                          openMessageAttachment(context, m.attachment!),
+                      child: Padding(
+                        padding: const EdgeInsets.only(top: 4),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.attach_file, size: 14),
+                            Flexible(
+                              child: Text(
+                                m.attachment!.name,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  decoration: TextDecoration.underline,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    )
+                  else if (m.hasAttachment)
                     const Padding(
                       padding: EdgeInsets.only(top: 2),
                       child: Icon(Icons.attach_file, size: 14),
+                    ),
+                  if (m.edited && !m.deleted)
+                    Text(
+                      l.dmEdited,
+                      style: Theme.of(context).textTheme.labelSmall,
                     ),
                 ],
               ),

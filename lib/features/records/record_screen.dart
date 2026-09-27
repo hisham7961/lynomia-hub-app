@@ -11,7 +11,10 @@ import '../../core/ui/async_view.dart';
 import '../../core/ui/step_up_flow.dart';
 import '../../l10n/app_localizations.dart';
 import '../comments/comments_panel.dart';
+import '../custody/custody_screens.dart';
 import '../files/attachments_panel.dart';
+import '../finance/finance_actions_card.dart';
+import '../leaves/leave_decision_card.dart';
 import '../modules/module_repository.dart';
 import '../modules/module_schema.dart';
 import 'field_display.dart';
@@ -28,6 +31,7 @@ class RecordScreen extends StatefulWidget {
 
 class _RecordScreenState extends State<RecordScreen> {
   ModuleSchema? _schema;
+  SchemaSnapshot? _snapshot;
   RecordData? _record;
   ActionsEnvelope? _actions;
   Object? _error;
@@ -56,6 +60,7 @@ class _RecordScreenState extends State<RecordScreen> {
       }
       if (!mounted) return;
       setState(() {
+        _snapshot = snapshot;
         _schema = snapshot.modules[widget.module];
         _record = record;
         _actions = actions;
@@ -70,9 +75,20 @@ class _RecordScreenState extends State<RecordScreen> {
     }
   }
 
+  Future<void> _openVersions() async {
+    await context.push('/r/${widget.module}/${widget.id}/versions');
+    if (mounted) _load();
+  }
+
   Future<void> _runAction(ActionSpec spec) async {
     final l = AppLocalizations.of(context)!;
     final c = AppScope.of(context);
+
+    // الاستعادة إلى نسخة: تُختار من قائمة النسخ الخادمية لا برقمٍ يُكتب يدوياً.
+    if (spec.action == 'restore-version') {
+      await _openVersions();
+      return;
+    }
 
     // تمييز الإجراء (§56): هدام ⇒ تأكيد؛ محمي ⇒ إعلام بالتصفيف.
     if (spec.destructive || spec.requiresApproval) {
@@ -214,6 +230,24 @@ class _RecordScreenState extends State<RecordScreen> {
     );
   }
 
+  /// أفعال سير العمل الخاصة بوحدة السجل — عرضٌ بصلاحية المخطط، والخادم يحسم.
+  List<Widget> _workflowCards(ModuleSchema schema) => [
+    if (widget.module == 'leaves')
+      LeaveDecisionCard(leaveId: widget.id, onDecided: _load),
+    if (widget.module == 'assets' && schema.can.e)
+      CustodyActionsCard(
+        assetId: widget.id,
+        canPickUsers: _snapshot?.modules['users']?.can.v ?? false,
+        onChanged: _load,
+      ),
+    if (kFinanceActionModules.contains(widget.module) && schema.can.e)
+      FinanceActionsCard(
+        module: widget.module,
+        recordId: widget.id,
+        onChanged: _load,
+      ),
+  ];
+
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
@@ -273,6 +307,12 @@ class _RecordScreenState extends State<RecordScreen> {
                   ).toString(),
                 ),
               ),
+            IconButton(
+              key: const Key('record-versions'),
+              tooltip: l.versionsTitle,
+              icon: const Icon(Icons.history),
+              onPressed: _openVersions,
+            ),
             if (schema.can.e)
               IconButton(
                 tooltip: l.actionEdit,
@@ -293,9 +333,18 @@ class _RecordScreenState extends State<RecordScreen> {
         ),
         body: TabBarView(
           children: [
-            _FieldsTab(schema: schema, record: record, actions: _actions),
+            _FieldsTab(
+              schema: schema,
+              record: record,
+              actions: _actions,
+              header: _workflowCards(schema),
+            ),
             if (hasActions) _ActionsTab(envelope: _actions!, onRun: _runAction),
-            CommentsPanel(module: widget.module, recordId: widget.id),
+            CommentsPanel(
+              module: widget.module,
+              recordId: widget.id,
+              canModerate: schema.can.e,
+            ),
             AttachmentsPanel(
               module: widget.module,
               recordId: widget.id,
@@ -310,11 +359,19 @@ class _RecordScreenState extends State<RecordScreen> {
 }
 
 class _FieldsTab extends StatelessWidget {
-  const _FieldsTab({required this.schema, required this.record, this.actions});
+  const _FieldsTab({
+    required this.schema,
+    required this.record,
+    this.actions,
+    this.header = const [],
+  });
 
   final ModuleSchema schema;
   final RecordData record;
   final ActionsEnvelope? actions;
+
+  /// بطاقات أفعال سير العمل الخاصة بالوحدة (قرار/عهدة/مالية).
+  final List<Widget> header;
 
   @override
   Widget build(BuildContext context) {
@@ -322,6 +379,7 @@ class _FieldsTab extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
+        ...header,
         if (actions?.status?.isNotEmpty ?? false)
           Padding(
             padding: const EdgeInsets.only(bottom: 12),

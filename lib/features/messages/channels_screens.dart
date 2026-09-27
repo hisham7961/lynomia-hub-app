@@ -241,8 +241,15 @@ class _ChannelDirectoryScreenState extends State<ChannelDirectoryScreen> {
 
 /// مجموعة رسائل جديدة: المشاركون من جهات رسائلي المباشرة (أشخاصٌ أراسلهم) —
 /// والخادم يتحقق أنهم داخليون ضمن نطاقي.
+///
+/// ومع [forkFrom] هي «إضافة مشاركين» إلى مجموعةٍ قائمة (`POST
+/// groups/{id}/participants` ⇐ `GroupService::fork`): الإضافة **مجموعةٌ جديدة**
+/// بأعضاء الحالية + الجدد بتاريخٍ فارغ وعنوان الأصل، وتبقى القديمة لجمهورها —
+/// فلا حقل عنوان، والمرشّحون جهاتي ممن ليسوا أعضاءً فيها.
 class NewGroupScreen extends StatefulWidget {
-  const NewGroupScreen({super.key});
+  const NewGroupScreen({super.key, this.forkFrom});
+
+  final String? forkFrom;
 
   @override
   State<NewGroupScreen> createState() => _NewGroupScreenState();
@@ -274,12 +281,20 @@ class _NewGroupScreenState extends State<NewGroupScreen> {
       _error = null;
     });
     try {
-      final t = await AppScope.of(context).dm.threads();
+      final scope = AppScope.of(context);
+      final fork = widget.forkFrom;
+      final members = fork == null
+          ? const <String>{}
+          : (await scope.collab.members(fork)).members
+                .map((m) => m.userId)
+                .toSet();
+      final t = await scope.dm.threads();
       if (mounted) {
         setState(
           () => _contacts = [
             for (final th in t.threads)
-              if (th.userId.isNotEmpty) (id: th.userId, name: th.userName),
+              if (th.userId.isNotEmpty && !members.contains(th.userId))
+                (id: th.userId, name: th.userName),
           ],
         );
       }
@@ -295,13 +310,21 @@ class _NewGroupScreenState extends State<NewGroupScreen> {
     final l = AppLocalizations.of(context)!;
     setState(() => _creating = true);
     try {
-      final conv = await AppScope.of(context).collab.createGroup(
-        _picked.toList(),
-        title: _title.text,
-        idempotencyKey: const Uuid().v4(),
-      );
+      final collab = AppScope.of(context).collab;
+      final fork = widget.forkFrom;
+      final conv = fork == null
+          ? await collab.createGroup(
+              _picked.toList(),
+              title: _title.text,
+              idempotencyKey: const Uuid().v4(),
+            )
+          : (await collab.forkGroup(
+              fork,
+              _picked.toList(),
+              idempotencyKey: const Uuid().v4(),
+            )).conversation;
       if (!mounted) return;
-      showSnack(context, l.groupCreated);
+      showSnack(context, fork == null ? l.groupCreated : l.groupForked);
       context.pushReplacement(
         conversationRoute(
           conv.id,
@@ -319,9 +342,10 @@ class _NewGroupScreenState extends State<NewGroupScreen> {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
+    final forking = widget.forkFrom != null;
     return Scaffold(
       appBar: AppBar(
-        title: Text(l.groupNew),
+        title: Text(forking ? l.groupAddParticipants : l.groupNew),
         actions: [
           TextButton(
             key: const Key('group-create'),
@@ -334,11 +358,15 @@ class _NewGroupScreenState extends State<NewGroupScreen> {
         children: [
           Padding(
             padding: const EdgeInsets.all(16),
-            child: TextField(
-              controller: _title,
-              maxLength: 200,
-              decoration: InputDecoration(labelText: l.groupTitleOptional),
-            ),
+            child: forking
+                ? Text(l.groupForkExplain, key: const Key('group-fork-explain'))
+                : TextField(
+                    controller: _title,
+                    maxLength: 200,
+                    decoration: InputDecoration(
+                      labelText: l.groupTitleOptional,
+                    ),
+                  ),
           ),
           Expanded(
             child: AsyncView<List<({String id, String name})>>(
@@ -347,7 +375,9 @@ class _NewGroupScreenState extends State<NewGroupScreen> {
               value: _contacts,
               onRetry: _load,
               emptyWhen: (c) => c.isEmpty,
-              emptyMessage: l.groupNoContacts,
+              emptyMessage: forking
+                  ? l.groupForkNoCandidates
+                  : l.groupNoContacts,
               builder: (context, contacts) => ListView(
                 children: [
                   for (final c in contacts)
@@ -465,8 +495,17 @@ class _ConversationMembersScreenState extends State<ConversationMembersScreen> {
         false;
     return Scaffold(
       appBar: AppBar(title: Text(l.channelMembers)),
-      floatingActionButton:
-          d != null && d.canManage && widget.kind != 'group' && canPick
+      // المجموعة: أي عضوٍ يضيف مشاركين — مجموعةً جديدة (`groups/{id}/participants`).
+      floatingActionButton: d != null && widget.kind == 'group'
+          ? FloatingActionButton.extended(
+              key: const Key('group-add-participants'),
+              onPressed: () => context.push(
+                '/conversations/${Uri.encodeComponent(widget.conversationId)}/expand',
+              ),
+              icon: const Icon(Icons.group_add_outlined),
+              label: Text(l.groupAddParticipants),
+            )
+          : d != null && d.canManage && widget.kind != 'group' && canPick
           ? FloatingActionButton(
               key: const Key('member-add'),
               tooltip: l.channelAddMember,

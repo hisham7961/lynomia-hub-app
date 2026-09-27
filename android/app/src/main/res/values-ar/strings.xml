@@ -2,4 +2,7 @@
 <resources>
     <!-- اسم العرض بالعربية — يطابق appTitle في lib/l10n/app_ar.arb وInfoPlist.strings (ar). -->
     <string name="app_name">لينوميا هب</string>
+    <!-- قناة الإشعار lynomia_default — يطابق notificationChannelName/Description في ARB (حارسه governance_test). -->
+    <string name="notification_channel_name">إشعارات لينوميا هب</string>
+    <string name="notification_channel_description">الرسائل والاعتمادات والتنبيهات من مساحة عملك</string>
 </resources>

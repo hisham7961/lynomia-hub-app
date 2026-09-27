@@ -586,6 +586,27 @@ class CollabRepository {
     ),
   );
 
+  /// `POST groups/{id}/participants` — **إضافة مشاركين = مجموعةٌ جديدة**
+  /// (`GroupService::fork`): أعضاء الحالية (عداي) + الجدد بتاريخٍ فارغ، بعنوان
+  /// الأصل، وتبقى القديمة لجمهورها (أمن الجمهور التاريخي). غير العضو 404،
+  /// والمشارك غير الصالح أو تجاوز الحدّ 422. بمفتاح Idempotency للفعل الواحد.
+  Future<({ConversationCard conversation, String forkedFrom})> forkGroup(
+    String id,
+    List<String> participants, {
+    String? idempotencyKey,
+  }) async {
+    final d = await api.sendData(
+      'POST',
+      'groups/${Uri.encodeComponent(id)}/participants',
+      body: {'participants': participants},
+      idempotencyKey: idempotencyKey ?? const Uuid().v4(),
+    );
+    return (
+      conversation: ConversationCard.fromJson(jsonMap(d['conversation'])),
+      forkedFrom: d['forked_from']?.toString() ?? id,
+    );
+  }
+
   /// `POST groups/{id}/leave` — عضويتي وحدها.
   Future<void> leaveGroup(String id) => api.sendData(
     'POST',

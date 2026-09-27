@@ -80,6 +80,72 @@ class ReviewEntry {
   final bool canReview;
 }
 
+/// رموز امتثال التقرير اليومي (`DailyWorkCompliance`) — التفريع عليها لا على
+/// التسميات العربية المرافقة.
+abstract final class ComplianceCode {
+  static const compliant = 'compliant';
+  static const pending = 'pending';
+  static const missing = 'missing';
+  static const late = 'late';
+  static const notRequired = 'not_required';
+  static const reported = 'reported';
+}
+
+/// صفّ امتثال الحضور×التقرير لموظّفٍ في يومٍ — لحامل `hr:v` وحده (الخادم يحسم).
+class ComplianceRow {
+  const ComplianceRow({
+    required this.employeeId,
+    required this.compliance,
+    this.name,
+    this.dept,
+    this.effectiveStatus,
+    this.verdictPending = false,
+    this.timeIn,
+    this.timeOut,
+    this.reportSubmitted = false,
+    this.reportCount = 0,
+    this.lateArrival = false,
+    this.onLeave = false,
+  });
+
+  factory ComplianceRow.fromJson(Map<String, dynamic> j) {
+    final c = jsonMap(j['compliance']);
+    return ComplianceRow(
+      employeeId: j['employee_id']?.toString() ?? '',
+      name: jsonStr(j['name']),
+      dept: jsonStr(j['dept']),
+      compliance: c['compliance']?.toString() ?? '',
+      effectiveStatus: jsonStr(c['effective_status']),
+      verdictPending: c['verdict_pending'] == true,
+      timeIn: jsonStr(c['time_in']),
+      timeOut: jsonStr(c['time_out']),
+      reportSubmitted: c['report_submitted'] == true,
+      reportCount: jsonInt(c['report_count']),
+      lateArrival: c['late_arrival'] == true,
+      onLeave: c['on_leave'] == true,
+    );
+  }
+
+  final String employeeId;
+
+  /// null حين يُحجب الحقل عن الدور.
+  final String? name;
+  final String? dept;
+
+  /// `ComplianceCode` — رمزٌ آلي.
+  final String compliance;
+  final String? effectiveStatus;
+
+  /// الحكم لم يحن بعد (يومٌ جارٍ قبل دوامه) — يُعرض «—» لا «غائب».
+  final bool verdictPending;
+  final String? timeIn;
+  final String? timeOut;
+  final bool reportSubmitted;
+  final int reportCount;
+  final bool lateArrival;
+  final bool onLeave;
+}
+
 class TeamDaily {
   const TeamDaily({
     required this.date,
@@ -91,6 +157,7 @@ class TeamDaily {
     required this.needsRevision,
     required this.entries,
     required this.truncated,
+    this.compliance,
   });
 
   factory TeamDaily.fromJson(Map<String, dynamic> j) {
@@ -105,6 +172,9 @@ class TeamDaily {
       needsRevision: jsonInt(sum['needs_revision']),
       entries: jsonMaps(j['entries']).map(ReviewEntry.fromJson).toList(),
       truncated: j['truncated'] == true,
+      compliance: j['compliance'] is List
+          ? jsonMaps(j['compliance']).map(ComplianceRow.fromJson).toList()
+          : null,
     );
   }
 
@@ -119,6 +189,9 @@ class TeamDaily {
   final int needsRevision;
   final List<ReviewEntry> entries;
   final bool truncated;
+
+  /// امتثال اليوم لموظفي النطاق — null لغير حامل `hr:v` (لا قسم يُعرض).
+  final List<ComplianceRow>? compliance;
 }
 
 class TeamReportsRepository {

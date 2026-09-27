@@ -159,6 +159,43 @@ String isoDate(DateTime d) =>
     '${d.month.toString().padLeft(2, '0')}-'
     '${d.day.toString().padLeft(2, '0')}';
 
+/// أسباب عدم الأهلية الآلية (`custody/{id}/abilities`).
+abstract final class CustodyDenyReason {
+  static const notPermitted = 'not_permitted';
+  static const notHeld = 'not_held';
+}
+
+/// أهلية التسليم/الاسترداد بلا أثر (خلفية v2.619) من بوّابة `CustodyHandover`
+/// نفسها: `assets:e` **أو** المفتاح الدقيق `custodyAssign`، والاسترداد لعهدةٍ
+/// بيد أحد. عرضٌ يعيد الخادم فحصه عند الفعل.
+class CustodyAbilities {
+  const CustodyAbilities({
+    required this.id,
+    required this.canHandover,
+    required this.canRecover,
+    this.holderId,
+    this.reason,
+  });
+
+  factory CustodyAbilities.fromJson(Map<String, dynamic> j) => CustodyAbilities(
+    id: j['id']?.toString() ?? '',
+    canHandover: j['can_handover'] == true,
+    canRecover: j['can_recover'] == true,
+    holderId: jsonStr(j['holder_id']),
+    reason: jsonStr(j['reason']),
+  );
+
+  final String id;
+  final bool canHandover;
+  final bool canRecover;
+
+  /// null إن لم تكن بيد أحد أو حُجب الحقل عن الدور.
+  final String? holderId;
+
+  /// `not_permitted` | `not_held` | null.
+  final String? reason;
+}
+
 class CustodyRepository {
   CustodyRepository(this.api);
 
@@ -166,6 +203,12 @@ class CustodyRepository {
 
   Future<MyCustody> mine() async =>
       MyCustody.fromJson(await api.getData('me/custody'));
+
+  /// `GET custody/{id}/abilities` — قراءة بلا أثر (403 بلا رؤية ولا فعل، 404 خارج النطاق).
+  Future<CustodyAbilities> abilities(String assetId) async =>
+      CustodyAbilities.fromJson(
+        await api.getData('custody/${Uri.encodeComponent(assetId)}/abilities'),
+      );
 
   /// `POST custody/{id}/handover` — Idempotency ثابت للفعل الواحد.
   Future<CustodyMoveResult> handover(

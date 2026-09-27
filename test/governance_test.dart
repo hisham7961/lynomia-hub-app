@@ -1,6 +1,7 @@
 /// حوكمة النسخة — VERSION و pubspec و README و CHANGELOG متطابقة (CLAUDE.md).
 library;
 
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -136,6 +137,56 @@ void main() {
         read('android/app/src/main/res/values-ar/strings.xml'),
         contains('>${AppIdentifiers.displayNameAr}<'),
       );
+    });
+
+    test('Android: قناة الإشعار lynomia_default تُنشأ عند الإقلاع باسمٍ معرَّب '
+        '(المرحلة ٥ · طلب #10)', () {
+      const id = AppIdentifiers.androidNotificationChannelId;
+      expect(id, 'lynomia_default', reason: 'PushService::ANDROID_CHANNEL');
+      const dir = 'android/app/src/main/kotlin/dev/lynomia/lynomia_hub_app';
+      final activity = read('$dir/MainActivity.kt');
+      expect(activity, contains('override fun onCreate('));
+      expect(activity, contains('NotificationChannels.ensureDefault(this)'));
+      final channels = read('$dir/NotificationChannels.kt');
+      expect(channels, contains('const val DEFAULT_ID = "$id"'));
+      expect(channels, contains('NotificationManager.IMPORTANCE_HIGH'));
+      expect(channels, contains('Build.VERSION_CODES.O'));
+      expect(channels, contains('R.string.notification_channel_name'));
+      expect(channels, contains('R.string.notification_channel_description'));
+      final m = read('android/app/src/main/AndroidManifest.xml');
+      expect(
+        m,
+        contains(
+          'android:name="com.google.firebase.messaging.default_notification_channel_id"',
+        ),
+      );
+      expect(m, contains('android:value="$id"'));
+      // الاسم والوصف مطابقان لـ ARB في اللغتين (مصدرٌ واحد للنص).
+      Map<String, dynamic> arb(String p) =>
+          (jsonDecode(read(p)) as Map).cast<String, dynamic>();
+      for (final (res, arbPath) in [
+        ('values', 'lib/l10n/app_en.arb'),
+        ('values-ar', 'lib/l10n/app_ar.arb'),
+      ]) {
+        final xml = read('android/app/src/main/res/$res/strings.xml');
+        final a = arb(arbPath);
+        expect(
+          xml,
+          contains(
+            '<string name="notification_channel_name">'
+            '${a['notificationChannelName']}</string>',
+          ),
+          reason: res,
+        );
+        expect(
+          xml,
+          contains(
+            '<string name="notification_channel_description">'
+            '${a['notificationChannelDescription']}</string>',
+          ),
+          reason: res,
+        );
+      }
     });
 
     test('Android: توقيع من key.properties، ولا إضافة google-services', () {

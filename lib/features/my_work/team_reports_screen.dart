@@ -1,6 +1,7 @@
 /// مراجعة التقارير اليومية للفريق (المرحلة ٤.٤) — للمدير/الموارد البشرية: يومٌ
 /// بعينه، والنطاق (فريقي/مشاريعي)، وتصفية بالحالة، وقبول/طلب تنقيح (ملاحظة
-/// إلزامية)/إعادة فتح لكل بندٍ يجيزه الخادم (`can_review`).
+/// إلزامية)/إعادة فتح لكل بندٍ يجيزه الخادم (`can_review`). وقسم «امتثال
+/// اليوم» (الحضور×التقرير لكل موظف) حين يبثّه الخادم — لحامل `hr:v` وحده.
 library;
 
 import 'package:flutter/material.dart';
@@ -12,6 +13,19 @@ import '../../core/ui/dates.dart';
 import '../../core/ui/feedback.dart';
 import '../../l10n/app_localizations.dart';
 import 'team_reports_repository.dart';
+
+/// تسمية رمز الامتثال من ARB — تفريعٌ على الرمز الآلي لا على `labels` العربية.
+String complianceLabel(AppLocalizations l, ComplianceRow r) {
+  if (r.verdictPending) return l.complianceVerdictPending;
+  return switch (r.compliance) {
+    ComplianceCode.compliant => l.complianceCompliant,
+    ComplianceCode.pending => l.compliancePending,
+    ComplianceCode.late => l.complianceLate,
+    ComplianceCode.notRequired => l.complianceNotRequired,
+    ComplianceCode.reported => l.complianceReported,
+    _ => l.complianceMissing,
+  };
+}
 
 String reviewStatusLabel(AppLocalizations l, String s) => switch (s) {
   ReviewStatus.accepted => l.reviewAccepted,
@@ -195,13 +209,16 @@ class _TeamReportsScreenState extends State<TeamReportsScreen> {
               error: _error,
               value: d,
               onRetry: _load,
-              emptyWhen: (d) => d.entries.isEmpty,
+              emptyWhen: (d) =>
+                  d.entries.isEmpty && (d.compliance?.isEmpty ?? true),
               emptyMessage: l.reviewEmpty,
               builder: (context, d) => RefreshIndicator(
                 onRefresh: _load,
                 child: ListView(
                   padding: const EdgeInsets.all(12),
                   children: [
+                    if (d.compliance case final rows? when rows.isNotEmpty)
+                      _ComplianceSection(rows: rows),
                     for (final e in d.entries)
                       _EntryCard(
                         entry: e,
@@ -309,6 +326,66 @@ class _EntryCard extends StatelessWidget {
               ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// امتثال اليوم لموظفي النطاق — ملخّصٌ بالرموز ثم صفٌّ لكل موظف (مطويٌّ افتراضاً).
+class _ComplianceSection extends StatelessWidget {
+  const _ComplianceSection({required this.rows});
+
+  final List<ComplianceRow> rows;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    final small = Theme.of(context).textTheme.bodySmall;
+    int count(bool Function(ComplianceRow) f) => rows.where(f).length;
+    final done = count(
+      (r) =>
+          !r.verdictPending &&
+          (r.compliance == ComplianceCode.compliant ||
+              r.compliance == ComplianceCode.late ||
+              r.compliance == ComplianceCode.reported),
+    );
+    final pending = count(
+      (r) => r.verdictPending || r.compliance == ComplianceCode.pending,
+    );
+    final missing = count(
+      (r) => !r.verdictPending && r.compliance == ComplianceCode.missing,
+    );
+    return Card(
+      key: const Key('compliance-section'),
+      margin: const EdgeInsets.only(bottom: 12),
+      child: ExpansionTile(
+        title: Text(l.complianceTitle(rows.length)),
+        subtitle: Text(
+          l.complianceSummary(done, pending, missing),
+          key: const Key('compliance-summary'),
+        ),
+        children: [
+          for (final r in rows)
+            ListTile(
+              key: Key('compliance-${r.employeeId}'),
+              dense: true,
+              title: Text(r.name ?? '—'),
+              subtitle: Text(
+                [
+                  ?r.dept,
+                  if (r.onLeave) l.complianceOnLeave,
+                  if (r.timeIn != null) l.complianceTimeIn(r.timeIn!),
+                  if (r.timeOut != null) l.complianceTimeOut(r.timeOut!),
+                  if (r.lateArrival) l.complianceLateArrival,
+                ].join(' · '),
+                style: small,
+              ),
+              trailing: Chip(
+                visualDensity: VisualDensity.compact,
+                label: Text(complianceLabel(l, r)),
+              ),
+            ),
+        ],
       ),
     );
   }

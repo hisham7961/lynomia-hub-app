@@ -3,12 +3,12 @@
     "info": {
         "title": "Lynomia Business Hub — Mobile API",
         "version": "1",
-        "x-hub-version": "2.618.0",
+        "x-hub-version": "2.619.0",
         "description": "سطحُ الجوال الأصيل (first-party) لتطبيق iOS/Android — **مستقلٌّ عن `/api/v1`** (مفتاح التكامل) ولا يمسّه.\nالمصادقةُ جلسةٌ من زوجِ رمزَين: وصولٌ قصيرُ الأجل (Bearer) + تحديثٌ متجدّدٌ لمرّة، كلاهما مُجزّأٌ خادميّاً ومربوطٌ بالجهاز.\nكلُّ ردٍّ يحمل `X-Request-Id` و`X-API-Version`، وكلُّ خطأٍ يحمل `code` آليّاً (لا يُطالَب العميلُ بقراءة العربية) و`request_id`.\nالقفلُ التفاؤليّ عبر `If-Match` (نسخةُ السجل) ⇒ `VERSION_CONFLICT`، وعدمُ الأثرِ عبر `Idempotency-Key` على كلِّ جانبٍ قابلٍ للإعادة.\nترويساتُ السياق/التليمتري (X-Lynomia-*) **تضييقُ عرضٍ ووسمٌ لا تخويل** — راجع `x-context-headers`. المعرّفاتُ الخارجيّة (FCM/APNs/App-Attest/Play-Integrity/الروابط العالميّة/روابط المتجر) **NOT_CONFIGURED** — راجع `x-not-configured`."
     },
     "servers": [
         {
-            "url": "http://127.0.0.1:8618"
+            "url": "https://hub.lynomia.com"
         }
     ],
     "security": [
@@ -4592,6 +4592,102 @@
                 }
             }
         },
+        "/api/mobile/v1/custody/{id}/abilities": {
+            "get": {
+                "tags": [
+                    "custody"
+                ],
+                "summary": "أهليّةُ زرَّي التسليم/الاسترداد بلا أثر — بوّابةُ CustodyHandover (assets:e أو custodyAssign) + Custody::scoped (404) + الحيازة",
+                "operationId": "mobile_custody_abilities",
+                "x-route-name": "mobile.custody.abilities",
+                "security": [
+                    {
+                        "mobileBearerAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "معرّفُ السجل (UUID)"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "نجاح",
+                        "headers": {
+                            "X-Request-Id": {
+                                "$ref": "#/components/headers/X-Request-Id"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "required": [
+                                                "id",
+                                                "can_handover",
+                                                "can_recover",
+                                                "holder_id",
+                                                "reason"
+                                            ],
+                                            "properties": {
+                                                "id": {
+                                                    "type": "string"
+                                                },
+                                                "can_handover": {
+                                                    "type": "boolean"
+                                                },
+                                                "can_recover": {
+                                                    "type": "boolean"
+                                                },
+                                                "holder_id": {
+                                                    "type": "string",
+                                                    "nullable": true,
+                                                    "description": "null إن لم تكن بيد أحد أو حُجب الحقلُ عن الدور"
+                                                },
+                                                "reason": {
+                                                    "type": "string",
+                                                    "nullable": true,
+                                                    "enum": [
+                                                        "not_permitted",
+                                                        "not_held",
+                                                        null
+                                                    ]
+                                                }
+                                            }
+                                        },
+                                        "request_id": {
+                                            "type": "string",
+                                            "nullable": true
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/403"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/404"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/429"
+                    }
+                }
+            }
+        },
         "/api/mobile/v1/custody/{id}/handover": {
             "post": {
                 "tags": [
@@ -6213,6 +6309,138 @@
                 }
             }
         },
+        "/api/mobile/v1/fin/{id}/pay-options": {
+            "get": {
+                "tags": [
+                    "finance_actions"
+                ],
+                "summary": "خياراتُ نموذج الدفعة بلا أثرٍ ولا تصعيد — بوّابةُ الدفعة نفسُها (fin:e ⇒ 403، النطاق ⇒ 404) + بنوكُ banks:v بنطاقها كنموذج الويب",
+                "operationId": "mobile_fin_pay_options",
+                "x-route-name": "mobile.fin.pay_options",
+                "security": [
+                    {
+                        "mobileBearerAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "معرّفُ السجل (UUID)"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "نجاح",
+                        "headers": {
+                            "X-Request-Id": {
+                                "$ref": "#/components/headers/X-Request-Id"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "required": [
+                                                "id",
+                                                "can_pay",
+                                                "reason",
+                                                "remaining",
+                                                "currency",
+                                                "banks",
+                                                "default_bank_id"
+                                            ],
+                                            "properties": {
+                                                "id": {
+                                                    "type": "string"
+                                                },
+                                                "can_pay": {
+                                                    "type": "boolean"
+                                                },
+                                                "reason": {
+                                                    "type": "string",
+                                                    "nullable": true,
+                                                    "enum": [
+                                                        "dead_state",
+                                                        "settled",
+                                                        null
+                                                    ],
+                                                    "description": "dead_state: ملغى/مسودة · settled: لا متبقّي — null حين can_pay"
+                                                },
+                                                "remaining": {
+                                                    "type": "string",
+                                                    "nullable": true,
+                                                    "pattern": "^\\d+\\.\\d{3}$",
+                                                    "description": "عشريٌّ نصّاً — null إن حُجب الإجماليُّ أو المدفوعُ عن الدور"
+                                                },
+                                                "currency": {
+                                                    "type": "string",
+                                                    "nullable": true
+                                                },
+                                                "banks": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "required": [
+                                                            "id",
+                                                            "name"
+                                                        ],
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "string"
+                                                            },
+                                                            "name": {
+                                                                "type": "string"
+                                                            },
+                                                            "currency": {
+                                                                "type": "string",
+                                                                "nullable": true
+                                                            }
+                                                        }
+                                                    }
+                                                },
+                                                "default_bank_id": {
+                                                    "type": "string",
+                                                    "nullable": true,
+                                                    "description": "بنكُ المستند إن كان بين المعروض"
+                                                },
+                                                "step_up_purpose": {
+                                                    "type": "string",
+                                                    "description": "غرضُ التصعيد الذي يطلبه POST fin/{id}/pay"
+                                                }
+                                            }
+                                        },
+                                        "request_id": {
+                                            "type": "string",
+                                            "nullable": true
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/403"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/404"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/429"
+                    }
+                }
+            }
+        },
         "/api/mobile/v1/groups": {
             "post": {
                 "tags": [
@@ -7393,6 +7621,120 @@
                     },
                     "422": {
                         "$ref": "#/components/responses/422"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/429"
+                    }
+                }
+            }
+        },
+        "/api/mobile/v1/leaves/{id}/decision": {
+            "get": {
+                "tags": [
+                    "leaves"
+                ],
+                "summary": "أهليّةُ زرِّ القرار بلا أثر — LeaveDecision::abilities نفسُها التي يحسم بها decide (leaves:v ⇒ 403، خارجَ النطاق 404)",
+                "operationId": "mobile_leaves_decision",
+                "x-route-name": "mobile.leaves.decision",
+                "security": [
+                    {
+                        "mobileBearerAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "معرّفُ السجل (UUID)"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "نجاح",
+                        "headers": {
+                            "X-Request-Id": {
+                                "$ref": "#/components/headers/X-Request-Id"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "required": [
+                                                "id",
+                                                "status",
+                                                "can_decide",
+                                                "reason",
+                                                "can_approve",
+                                                "can_reject",
+                                                "approve_status"
+                                            ],
+                                            "properties": {
+                                                "id": {
+                                                    "type": "string"
+                                                },
+                                                "status": {
+                                                    "type": "string"
+                                                },
+                                                "can_decide": {
+                                                    "type": "boolean"
+                                                },
+                                                "reason": {
+                                                    "type": "string",
+                                                    "nullable": true,
+                                                    "enum": [
+                                                        "already_decided",
+                                                        "self_request",
+                                                        "not_decider",
+                                                        null
+                                                    ],
+                                                    "description": "السببُ الآليُّ نفسُه الذي يردّ به decide — null حين can_decide"
+                                                },
+                                                "can_approve": {
+                                                    "type": "boolean"
+                                                },
+                                                "can_reject": {
+                                                    "type": "boolean"
+                                                },
+                                                "approve_status": {
+                                                    "type": "string",
+                                                    "nullable": true,
+                                                    "enum": [
+                                                        "معتمد",
+                                                        "موافقة المدير",
+                                                        null
+                                                    ],
+                                                    "description": "ما يصير إليه الطلبُ بالموافقة (HR يحسم، المديرُ يوصي)"
+                                                },
+                                                "reject_reason_required": {
+                                                    "type": "boolean"
+                                                }
+                                            }
+                                        },
+                                        "request_id": {
+                                            "type": "string",
+                                            "nullable": true
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/403"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/404"
                     },
                     "429": {
                         "$ref": "#/components/responses/429"

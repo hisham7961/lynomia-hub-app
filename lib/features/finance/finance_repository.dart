@@ -90,6 +90,70 @@ class PurchaseReceipt {
   final String? status;
 }
 
+/// أسباب عدم إتاحة الدفعة الآلية (`fin/{id}/pay-options`).
+abstract final class PayDenyReason {
+  static const deadState = 'dead_state';
+  static const settled = 'settled';
+}
+
+class PayBank {
+  const PayBank({required this.id, required this.name, this.currency});
+
+  factory PayBank.fromJson(Map<String, dynamic> j) => PayBank(
+    id: j['id']?.toString() ?? '',
+    name: j['name']?.toString() ?? '',
+    currency: jsonStr(j['currency']),
+  );
+
+  final String id;
+  final String name;
+  final String? currency;
+}
+
+/// خيارات نموذج الدفعة بلا أثر ولا تصعيد (خلفية v2.619) — ما يعرضه نموذج
+/// الويب لمن يملك الفعل. `canPay` عرضٌ؛ حرّاس البنك تبقى عند الفعل.
+class PayOptions {
+  const PayOptions({
+    required this.id,
+    required this.canPay,
+    required this.banks,
+    this.reason,
+    this.remaining,
+    this.currency,
+    this.defaultBankId,
+    this.stepUpPurpose,
+  });
+
+  factory PayOptions.fromJson(Map<String, dynamic> j) {
+    final banks = jsonMaps(j['banks']).map(PayBank.fromJson).toList();
+    final def = jsonStr(j['default_bank_id']);
+    return PayOptions(
+      id: j['id']?.toString() ?? '',
+      canPay: j['can_pay'] == true,
+      reason: jsonStr(j['reason']),
+      remaining: jsonDecimal(j['remaining']),
+      currency: jsonStr(j['currency']),
+      banks: banks,
+      // البنك الافتراضي لا يُعتمد إلا إن كان بين المعروض (الخادم يضمنه — ونتحقق).
+      defaultBankId: banks.any((b) => b.id == def) ? def : null,
+      stepUpPurpose: jsonStr(j['step_up_purpose']),
+    );
+  }
+
+  final String id;
+  final bool canPay;
+
+  /// `dead_state` | `settled` | null.
+  final String? reason;
+
+  /// عشريٌّ من نصّ — null حين يُحجب الإجمالي أو المدفوع عن الدور.
+  final Decimal? remaining;
+  final String? currency;
+  final List<PayBank> banks;
+  final String? defaultBankId;
+  final String? stepUpPurpose;
+}
+
 /// يطبّع مبلغاً أدخله المستخدم إلى عشريٍّ صريح بلا فواصل (يرفض ما سواه).
 Decimal? parseAmount(String raw) {
   // الأرقام الهندية (U+0660–U+0669) والفاصل العشري العربي (U+066B) ⇒ لاتينية.
@@ -109,10 +173,16 @@ class FinanceRepository {
 
   final ApiClient api;
 
+  /// `GET fin/{id}/pay-options` — بلا أثر (403 بلا `fin:e`، 404 خارج النطاق).
+  Future<PayOptions> payOptions(String finId) async => PayOptions.fromJson(
+    await api.getData('fin/${Uri.encodeComponent(finId)}/pay-options'),
+  );
+
   /// `POST fin/{id}/pay` — المبلغ نصٌّ عشري؛ خلف التصعيد (428 ⇒ runWithStepUp).
   Future<FinPaymentResult> pay(
     String finId, {
     required Decimal amount,
+    String? bankId,
     DateTime? payDate,
     String? payRef,
     String? payNote,
@@ -123,6 +193,7 @@ class FinanceRepository {
       'fin/${Uri.encodeComponent(finId)}/pay',
       body: {
         'amount': amount.toString(),
+        if (bankId != null && bankId.isNotEmpty) 'bankId': bankId,
         if (payDate != null)
           'payDate':
               '${payDate.year.toString().padLeft(4, '0')}-'

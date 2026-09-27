@@ -12,6 +12,7 @@ import 'package:uuid/uuid.dart';
 import '../../app/di/app_scope.dart';
 import '../../core/errors/api_exception.dart';
 import '../../core/ui/async_view.dart';
+import '../../core/ui/eligibility.dart';
 import '../../core/ui/feedback.dart';
 import '../../l10n/app_localizations.dart';
 import '../records/field_editors.dart';
@@ -172,9 +173,11 @@ class _Header extends StatelessWidget {
   );
 }
 
-/// تسليم/استرداد العهدة على سجل الأصل — يظهر لمن يعدّل الأصول (عرضٌ؛ الخادم
-/// يعيد الفحص). منتقي المستلم من وحدة `users` حين يبثّها المخطط لهذا الدور —
-/// وإلا فلا زرّ تسليم (لا زرّ بلا وسيلة إكمال).
+/// تسليم/استرداد العهدة على سجل الأصل — الأهلية من `GET custody/{id}/abilities`
+/// (خلفية v2.619 — بوّابة `CustodyHandover` نفسها: `assets:e` **أو** المفتاح
+/// الدقيق `custodyAssign`، فحامل المفتاح الدقيق وحده يرى الأزرار الآن)؛ الاسترداد
+/// لعهدةٍ بيد أحد. منتقي المستلم من وحدة `users` حين يبثّها المخطط لهذا الدور —
+/// وإلا فلا زرّ تسليم (لا زرّ بلا وسيلة إكمال). عرضٌ؛ الخادم يعيد الفحص.
 class CustodyActionsCard extends StatefulWidget {
   const CustodyActionsCard({
     super.key,
@@ -193,6 +196,16 @@ class CustodyActionsCard extends StatefulWidget {
 
 class _CustodyActionsCardState extends State<CustodyActionsCard> {
   bool _busy = false;
+  late final EligibilityLoader<CustodyAbilities> _abilities = EligibilityLoader(
+    this,
+    () => AppScope.of(context).custody.abilities(widget.assetId),
+  );
+
+  @override
+  void initState() {
+    super.initState();
+    _abilities.load();
+  }
 
   Future<void> _run(Future<CustodyMoveResult> Function(String key) op) async {
     final l = AppLocalizations.of(context)!;
@@ -202,6 +215,7 @@ class _CustodyActionsCardState extends State<CustodyActionsCard> {
       if (!mounted) return;
       showSnack(context, l.actionDone);
       widget.onChanged();
+      await _abilities.load();
     } on ApiException catch (e) {
       if (mounted) showErrorSnack(context, e);
     } on Object catch (e) {
@@ -257,35 +271,50 @@ class _CustodyActionsCardState extends State<CustodyActionsCard> {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
-    return Card(
-      key: const Key('custody-actions'),
-      margin: const EdgeInsets.only(bottom: 12),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Wrap(
-          spacing: 8,
-          crossAxisAlignment: WrapCrossAlignment.center,
-          children: [
-            Text(
-              l.custodyActionsTitle,
-              style: Theme.of(context).textTheme.titleSmall,
-            ),
-            if (widget.canPickUsers)
-              FilledButton.tonalIcon(
-                key: const Key('custody-handover'),
-                onPressed: _busy ? null : _handover,
-                icon: const Icon(Icons.handshake_outlined),
-                label: Text(l.custodyHandover),
+    return _abilities.build(context, (a) {
+      final handover = a.canHandover && widget.canPickUsers;
+      final recover = a.canRecover;
+      if (!handover && !recover) {
+        // لا فعل متاح: «ليست بيد أحد» معلومةٌ لمن يملك الفعل؛ وغير المخوَّل
+        // (`not_permitted`) لا بطاقة له.
+        return a.canHandover && a.reason == CustodyDenyReason.notHeld
+            ? EligibilityNote(
+                key: const Key('custody-note'),
+                text: l.custodyNotHeld,
+              )
+            : const SizedBox.shrink();
+      }
+      return Card(
+        key: const Key('custody-actions'),
+        margin: const EdgeInsets.only(bottom: 12),
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Wrap(
+            spacing: 8,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              Text(
+                l.custodyActionsTitle,
+                style: Theme.of(context).textTheme.titleSmall,
               ),
-            OutlinedButton.icon(
-              key: const Key('custody-recover'),
-              onPressed: _busy ? null : _recover,
-              icon: const Icon(Icons.assignment_return_outlined),
-              label: Text(l.custodyRecover),
-            ),
-          ],
+              if (handover)
+                FilledButton.tonalIcon(
+                  key: const Key('custody-handover'),
+                  onPressed: _busy ? null : _handover,
+                  icon: const Icon(Icons.handshake_outlined),
+                  label: Text(l.custodyHandover),
+                ),
+              if (recover)
+                OutlinedButton.icon(
+                  key: const Key('custody-recover'),
+                  onPressed: _busy ? null : _recover,
+                  icon: const Icon(Icons.assignment_return_outlined),
+                  label: Text(l.custodyRecover),
+                ),
+            ],
+          ),
         ),
-      ),
-    );
+      );
+    });
   }
 }

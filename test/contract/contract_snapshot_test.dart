@@ -285,7 +285,7 @@ void main() {
   });
 
   test(
-    'المرحلتان ٣ و٤ (خلفية v2.618) — كل ما يناديه التطبيق في سجل القدرات',
+    'المرحلتان ٣ و٤ (خلفية v2.618 + أهلية v2.619) — كل ما يناديه التطبيق',
     () {
       const p = '/api/mobile/v1';
       expect(endpointsOf('attendance'), {
@@ -293,11 +293,16 @@ void main() {
         'POST $p/attendance/check-in',
         'POST $p/attendance/check-out',
       });
-      expect(endpointsOf('leaves'), {'POST $p/leaves/{id}/decide'});
+      // خلفية v2.619: قراءات الأهلية بلا أثر (قرار الإجازة، قدرات العهدة).
+      expect(endpointsOf('leaves'), {
+        'POST $p/leaves/{id}/decide',
+        'GET $p/leaves/{id}/decision',
+      });
       expect(endpointsOf('custody'), {
         'GET $p/me/custody',
         'POST $p/custody/{id}/handover',
         'POST $p/custody/{id}/recover',
+        'GET $p/custody/{id}/abilities',
       });
       expect(endpointsOf('inventory'), {
         'GET $p/inventory/sessions',
@@ -333,8 +338,8 @@ void main() {
         'GET $p/portal/tickets/{id}',
         'POST $p/portal/tickets/{id}/reply',
       });
-      // ١٣ نقطة: التطبيق يستعمل ١٢ — `groups/{id}/participants` (توسيع المجموعة
-      // بمجموعةٍ جديدة) غير مبنيّ بعد (docs/mobile-feature-coverage.md).
+      // ١٣ نقطة كلها مستعملة (v1.0.0: + `groups/{id}/participants` — إضافة
+      // مشاركين = مجموعةٌ جديدة، NewGroupScreen(forkFrom)).
       expect(endpointsOf('channels'), hasLength(13));
       expect(
         endpointsOf('channels'),
@@ -350,6 +355,7 @@ void main() {
           'POST $p/conversations/{id}/archive',
           'PUT $p/conversations/{id}/notify',
           'POST $p/groups',
+          'POST $p/groups/{id}/participants',
           'POST $p/groups/{id}/leave',
         ]),
       );
@@ -361,6 +367,7 @@ void main() {
       expect(endpointsOf('calendar'), {'GET $p/calendar', 'GET $p/alerts'});
       expect(endpointsOf('finance_actions'), {
         'POST $p/fin/{id}/pay',
+        'GET $p/fin/{id}/pay-options',
         'POST $p/quotes/{id}/send',
         'POST $p/quotes/{id}/accept',
         'POST $p/purchases/{id}/receive',
@@ -391,4 +398,120 @@ void main() {
       expect(props('MessageAttachment'), contains('download'));
     },
   );
+
+  test('قراءات الأهلية (خلفية v2.619) — الحقول التي يقرؤها التطبيق معلنة', () {
+    const p = '/api/mobile/v1';
+    // مخطط ردّ 200 نصّاً — يكفي للتأكد من إعلان الحقول ورموز الأسباب.
+    String okSchema(String path) {
+      final get = ((openapi['paths'] as Map)['$p/$path'] as Map)['get'] as Map;
+      return jsonEncode((get['responses'] as Map)['200']);
+    }
+
+    final decision = okSchema('leaves/{id}/decision');
+    for (final f in [
+      'can_decide',
+      'reason',
+      'can_approve',
+      'can_reject',
+      'approve_status',
+      'already_decided',
+      'self_request',
+      'not_decider',
+    ]) {
+      expect(decision, contains('"$f"'), reason: 'leaves decision: $f');
+    }
+    final custody = okSchema('custody/{id}/abilities');
+    for (final f in [
+      'can_handover',
+      'can_recover',
+      'holder_id',
+      'not_permitted',
+      'not_held',
+    ]) {
+      expect(custody, contains('"$f"'), reason: 'custody abilities: $f');
+    }
+    final pay = okSchema('fin/{id}/pay-options');
+    for (final f in [
+      'can_pay',
+      'remaining',
+      'currency',
+      'banks',
+      'default_bank_id',
+      'dead_state',
+      'settled',
+    ]) {
+      expect(pay, contains('"$f"'), reason: 'pay-options: $f');
+    }
+    // الدفعة تقبل bankId (الاسم الذي يرسله التطبيق).
+    final payBody = jsonEncode(
+      ((openapi['paths'] as Map)['$p/fin/{id}/pay'] as Map)['post'],
+    );
+    expect(payBody, contains('"bankId"'));
+  });
+
+  test('المجموع: ١٥٠ نقطة في ٣٧ مجالاً (خلفية v2.619)', () {
+    final areas = (caps['areas'] as Map).cast<String, dynamic>();
+    final total = areas.values
+        .map((a) => ((a as Map)['endpoints'] as List).length)
+        .fold<int>(0, (a, b) => a + b);
+    expect(areas, hasLength(37));
+    expect(total, 150);
+    expect(source['backend_version'], '2.619.0');
+  });
+
+  test('كل نقطة في العقد مستعملة من lib/ أو مذكورة عن قصدٍ في مصفوفة التغطية', () {
+    // المسارات المركّبة وقت التشغيل (لا تطابقها الحرفية): تُعدّ مستعملة صراحةً.
+    const dynamicUse = {
+      // approval_repository: 'approvals/$id/${approve ? 'approve' : 'reject'}'
+      'POST approvals/{id}/approve',
+      'POST approvals/{id}/reject',
+      // مقبض المرفق يبثّه الخادم مساراً (`download`) ويُنادى عبر mobileRelativePath
+      'GET comments/{id}/attachment',
+      'GET dm/messages/{id}/attachment',
+    };
+    const intentionallyUnused = {
+      'GET navigation',
+      'PATCH {module}/{id}',
+      'GET files/{id}/stream',
+      'POST files/attach',
+      'GET schema/modules',
+      'GET openapi.json',
+      'GET push/admin/status',
+      'POST push/admin/test',
+    };
+    final src = Directory('lib')
+        .listSync(recursive: true)
+        .whereType<File>()
+        .where((f) => f.path.endsWith('.dart'))
+        .map((f) => f.readAsStringSync())
+        .join('\n');
+    final unused = <String>{};
+    for (final area in (caps['areas'] as Map).values) {
+      for (final e in ((area as Map)['endpoints'] as List).cast<Map>()) {
+        final path = (e['path'] as String).replaceFirst('/api/mobile/v1/', '');
+        final key = '${e['method']} $path';
+        if (path.startsWith('{')) continue; // CRUD العام — module_repository
+        final rx = path
+            .split('/')
+            .map(
+              (seg) => seg.startsWith('{')
+                  ? r"(\$\{[^}]+\}|\$\w+|[^'/\s]+)"
+                  : RegExp.escape(seg),
+            )
+            .join('/');
+        final used = RegExp("['/]$rx(['?]|\$)", multiLine: true).hasMatch(src);
+        if (!used && !dynamicUse.contains(key)) unused.add(key);
+      }
+    }
+    // نقطتان لهما دالة مستودعٍ حرفية بلا أي نداءٍ من الواجهة — غير مستعملتين فعلاً.
+    expect(src, isNot(contains('.navigation()')));
+    expect(src, isNot(contains('.patch(')));
+    unused.addAll({'GET navigation', 'PATCH {module}/{id}'});
+    expect(unused, intentionallyUnused);
+    final doc = File('docs/mobile-feature-coverage.md').readAsStringSync();
+    for (final k in intentionallyUnused) {
+      final path = k.split(' ').last;
+      expect(doc, contains(path), reason: 'غير مذكورة في التغطية: $k');
+    }
+  });
 }

@@ -1893,4 +1893,101 @@ class AppLocalizationsAr extends AppLocalizations {
   String alertsDaysLeft(int days) {
     return 'بعد $days يوماً';
   }
+
+  @override
+  String get notificationChannelName => 'إشعارات لينوميا هب';
+
+  @override
+  String get notificationChannelDescription =>
+      'الرسائل والاعتمادات والتنبيهات من مساحة عملك';
+
+  @override
+  String leaveApproveBecomes(String status) {
+    return 'بالموافقة يصير الطلب «$status»';
+  }
+
+  @override
+  String get eligibilityLoadFailed => 'تعذّر التحقق من الإتاحة';
+
+  @override
+  String get custodyNotHeld => 'الأصل ليس بعهدة أحد الآن — لا استرداد';
+
+  @override
+  String financeRemaining(String remaining, String currency) {
+    return 'المتبقي: $remaining $currency';
+  }
+
+  @override
+  String get financePayDeadState =>
+      'المستند ملغى أو مسودة — لا تُسجَّل عليه دفعات';
+
+  @override
+  String get financePaySettled => 'المستند مسدَّد بالكامل — لا متبقٍّ';
+
+  @override
+  String get financeBank => 'البنك';
+
+  @override
+  String get financeNoBank => 'بلا بنك';
+
+  @override
+  String get groupAddParticipants => 'إضافة مشاركين';
+
+  @override
+  String get groupForkExplain =>
+      'إضافة مشاركين تُنشئ مجموعةً جديدة بالأعضاء الحاليين والجدد بتاريخٍ فارغ، وتبقى هذه المجموعة كما هي لأعضائها.';
+
+  @override
+  String get groupForked => 'أُنشئت مجموعةٌ جديدة بالمشاركين';
+
+  @override
+  String get groupForkNoCandidates =>
+      'لا جهات جديدة في رسائلك المباشرة لإضافتها';
+
+  @override
+  String complianceTitle(int count) {
+    return 'امتثال اليوم ($count)';
+  }
+
+  @override
+  String complianceSummary(int done, int pending, int missing) {
+    return 'مقدَّم $done · بانتظار $pending · غير مقدَّم $missing';
+  }
+
+  @override
+  String get complianceCompliant => 'مقدَّم';
+
+  @override
+  String get compliancePending => 'بانتظار التقديم';
+
+  @override
+  String get complianceMissing => 'غير مقدَّم';
+
+  @override
+  String get complianceLate => 'مقدَّم متأخراً';
+
+  @override
+  String get complianceNotRequired => 'غير مطلوب';
+
+  @override
+  String get complianceReported => 'مقدَّم (بلا حضور)';
+
+  @override
+  String get complianceVerdictPending => 'لم يحن الحكم بعد';
+
+  @override
+  String get complianceOnLeave => 'إجازة';
+
+  @override
+  String get complianceLateArrival => 'وصل متأخراً';
+
+  @override
+  String complianceTimeIn(String time) {
+    return 'دخول $time';
+  }
+
+  @override
+  String complianceTimeOut(String time) {
+    return 'خروج $time';
+  }
 }

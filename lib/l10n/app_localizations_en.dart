@@ -1917,4 +1917,103 @@ class AppLocalizationsEn extends AppLocalizations {
   String alertsDaysLeft(int days) {
     return 'In $days days';
   }
+
+  @override
+  String get notificationChannelName => 'Lynomia Hub notifications';
+
+  @override
+  String get notificationChannelDescription =>
+      'Messages, approvals and alerts from your workspace';
+
+  @override
+  String leaveApproveBecomes(String status) {
+    return 'Approving sets the request to “$status”';
+  }
+
+  @override
+  String get eligibilityLoadFailed => 'Could not check availability';
+
+  @override
+  String get custodyNotHeld =>
+      'This asset is not held by anyone — nothing to recover';
+
+  @override
+  String financeRemaining(String remaining, String currency) {
+    return 'Remaining: $remaining $currency';
+  }
+
+  @override
+  String get financePayDeadState =>
+      'The document is cancelled or a draft — payments can\'t be recorded';
+
+  @override
+  String get financePaySettled =>
+      'The document is fully settled — nothing remaining';
+
+  @override
+  String get financeBank => 'Bank';
+
+  @override
+  String get financeNoBank => 'No bank';
+
+  @override
+  String get groupAddParticipants => 'Add participants';
+
+  @override
+  String get groupForkExplain =>
+      'Adding participants creates a new group with current and new members and an empty history; this group stays as is for its members.';
+
+  @override
+  String get groupForked => 'A new group was created with the participants';
+
+  @override
+  String get groupForkNoCandidates =>
+      'No new contacts in your direct messages to add';
+
+  @override
+  String complianceTitle(int count) {
+    return 'Today\'s compliance ($count)';
+  }
+
+  @override
+  String complianceSummary(int done, int pending, int missing) {
+    return 'Submitted $done · Pending $pending · Missing $missing';
+  }
+
+  @override
+  String get complianceCompliant => 'Submitted';
+
+  @override
+  String get compliancePending => 'Awaiting submission';
+
+  @override
+  String get complianceMissing => 'Not submitted';
+
+  @override
+  String get complianceLate => 'Submitted late';
+
+  @override
+  String get complianceNotRequired => 'Not required';
+
+  @override
+  String get complianceReported => 'Submitted (no attendance)';
+
+  @override
+  String get complianceVerdictPending => 'Not yet due';
+
+  @override
+  String get complianceOnLeave => 'On leave';
+
+  @override
+  String get complianceLateArrival => 'Arrived late';
+
+  @override
+  String complianceTimeIn(String time) {
+    return 'In $time';
+  }
+
+  @override
+  String complianceTimeOut(String time) {
+    return 'Out $time';
+  }
 }

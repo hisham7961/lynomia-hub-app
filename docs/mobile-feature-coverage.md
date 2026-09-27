@@ -1,6 +1,6 @@
 # مصفوفة تغطية القدرات (§124)
 
-المصدر: `contracts/mobile-capabilities.json` (١٤٧ نقطة · ٣٧ مجالاً · خلفية v2.618.0 @044ccca). الحالة:
+المصدر: `contracts/mobile-capabilities.json` (١٥٠ نقطة · ٣٧ مجالاً · خلفية v2.619.0 @e725f56). الحالة:
 `IMPLEMENTED` مبنية ومختبرة · `NOT_APPLICABLE` ليست شاشة جوال بطبيعتها ·
 `BLOCKED_EXTERNAL_CONFIG` تنتظر اعتماداً خارجياً فقط · `BACKEND_GAP` فجوة عقد ·
 `PENDING_APP` قدرةٌ خلفيّةٌ قائمةٌ لم تُبنَ في التطبيق بعد (لا زرَّ لها — لا واجهة ميتة) — لا شيء منها الآن.
@@ -35,7 +35,7 @@
 | مرفق التعليق/الرسالة (٢ · طلب #2) | `comments/{id}/attachment` · `dm/messages/{id}/attachment` | `FileRepository.downloadPath` + `openMessageAttachment` | رابط المرفق على التعليق وفقاعة DM: الصورة من الذاكرة، وغيرها رسالة صادقة (لا عارض بلا قرص) | ONLINE — لا بايت يهبط القرص | phase3 + contract | IMPLEMENTED |
 | DM (٤) | `dm/threads…` | `DmRepository` | الرسائل | ONLINE | comm | IMPLEMENTED |
 | تحرير/سحب رسالتي (٢ · ٤.٢) | `dm/messages/{id}` (PATCH · DELETE) | `DmRepository.editMessage/deleteMessage` | ضغطٌ مطوّل على رسالتي ⇒ «تحرير»/«سحب الرسالة» (لرسائلي وحدها) + وسم «(معدّلة)» | ONLINE (بلا إعادة) | phase4 + contract | IMPLEMENTED |
-| إدارة القنوات والمجموعات (١٢ من ١٣ · ٤.٢) | `conversations/directory` · `conversations` (POST) · `conversations/{id}/join,members[,/{user}],favorite,archive,notify` · `groups` · `groups/{id}/leave` | `CollabRepository.*` + `channels_screens.dart` | الرسائل ← ⋮: قناة جديدة · دليل القنوات (انضمام ⇒ فتح) · مجموعة جديدة (مشاركون من جهات DM) · القناة ← ⋮: الأعضاء (تغيير الدور/الإزالة/الإضافة لمن `can_manage`) · المفضّلة · تفضيل الإشعار · الأرشفة (للمالك `my_role`) · مغادرة المجموعة | ONLINE — الإنشاء بمفتاح؛ الانضمام والتبديلات بلا إعادة | phase4 + contract | IMPLEMENTED — **عدا** `groups/{id}/participants` (توسيع مجموعة بمجموعةٍ جديدة): PENDING_APP، وإضافة عضو قناة تتطلّب وحدة `users` في مخطط الدور (منتقي المستلم) وإلا لا زرّ |
+| إدارة القنوات والمجموعات (١٣ · ٤.٢) | `conversations/directory` · `conversations` (POST) · `conversations/{id}/join,members[,/{user}],favorite,archive,notify` · `groups` · `groups/{id}/participants` · `groups/{id}/leave` | `CollabRepository.*` + `channels_screens.dart` | الرسائل ← ⋮: قناة جديدة · دليل القنوات (انضمام ⇒ فتح) · مجموعة جديدة (مشاركون من جهات DM) · القناة ← ⋮: الأعضاء (تغيير الدور/الإزالة/الإضافة لمن `can_manage`) · المفضّلة · تفضيل الإشعار · الأرشفة (للمالك `my_role`) · مغادرة المجموعة · المجموعة ← الأعضاء ← «إضافة مشاركين» (v1.0.0 · `GroupService::fork`): المرشّحون جهات DM ممن ليسوا أعضاءً، والنتيجة **مجموعةٌ جديدة** بتاريخٍ فارغ وعنوان الأصل (القديمة لجمهورها) تُفتح مباشرة | ONLINE — الإنشاء والتوسيع بمفتاح؛ الانضمام والتبديلات بلا إعادة | phase4 + v1_completion + contract | IMPLEMENTED (إضافة عضو **قناة** تتطلّب وحدة `users` في مخطط الدور — منتقي المستلم — وإلا لا زرّ) |
 | الاعتمادات (٤) | `approvals…` | `ApprovalRepository` | طابور/تفصيل/حسم · والكتابة المحمية (`202 APPROVAL_REQUIRED`) تُعرض «صُفَّ للمعتمدين» بوجهة الطلب في النموذج والتعديل والحذف والإجراءات | ONLINE | comm + screens_widget | IMPLEMENTED |
 | التفضيلات (٣) | `prefs[,/pin]` | `PrefsRepository` + `PrefsScreen` | حسابي ← التفضيلات: كتم أنواع الإشعار (`notify.muteable` الخادمية — الكتم بالنوع لا بالوحدة، كالويب) وتثبيت/فكّ الوجهات بسقف الخادم · «مثبتاتي» على الرئيسية من `pins.pinned` | ONLINE — الكتم استبدال عديم الأثر؛ التثبيت بمفتاح idempotency للنقرة | phase1_app | IMPLEMENTED (داخلي فقط — `prefs` خارج قائمة العميل خادمياً) |
 | الملفات (٨) | `files/…` · `attachments` · `attachments/{id}` (DELETE) | `FileRepository` + `AttachmentsPanel` + `AttachmentPreviewScreen` | تبويب المرفقات: **القائمة من الخادم** (`GET attachments?module=&record_id=` — بقواعد شاشة الويب؛ الممنوع لا يُعرض) مع `can` لكل مرفق: «فتح» حين `download/preview` (الصورة من الذاكرة، غيرها من الويب)، «حذف» حين `can.delete` بتأكيد · رفع مقطّع يعيد تحميل القائمة · خادمٌ أقدم (٤٠٤) ⇒ ما رُفع في الجلسة + حقول file/img | ONLINE — لا بايت يهبط القرص؛ الحذف بلا إعادة | comm + widget + screens_widget + phase3 | IMPLEMENTED (`files/{id}/stream` غير مستعمل عن قصد — التنزيل يكفي للصور؛ لا عارض PDF أصلي بلا كتابة قرص) |
@@ -46,29 +46,40 @@
 | openapi.json | `openapi.json` | `contracts/mobile-openapi.json` | لقطة عقد + أداة تحديث | عامة | contract tests | IMPLEMENTED (لقطة) |
 | تفعيل حساب العميل (٢) | `activation/{token}[,/complete]` | `ActivationRepository` + شاشة التفعيل | رابط عميق `/activate/{token}` (عام) | ONLINE (عامة) | client_experience | IMPLEMENTED |
 | الحضور والانصراف (٣ · ٣.١) | `attendance/today,check-in,check-out` | `AttendanceRepository` + `AttendanceCard` | مهامي ← بطاقة الحضور: الحالة من الخادم، الزرّان بحسب `can`، وضع العمل من `modes`، و«إرفاق موقعي لهذه المرة» **فقط** حين `location.recorded_by_server` وبموافقة صريحة لكل ضغطة (قراءة واحدة عبر `LocationSource` — لا تتبّع)؛ الرفض بـ`details.reason` (وردية أمس المفتوحة، مسجّل مسبقاً…) برسائل محلية؛ بلا ملف موظف أو ٤٠٤ ⇒ لا بطاقة | ONLINE — مفتاح Idempotency ثابت للضغطة (إعادة عابرة آمنة) | phase3 + phase4 + contract | IMPLEMENTED |
-| قرار الإجازة (١ · ٣.٢) | `leaves/{id}/decide` | `LeaveRepository` + `LeaveDecisionCard` | سجل `leaves` ← بطاقة القرار: اعتماد (تأكيد) · رفض بسببٍ إلزامي (تحقق محلي + الخادم) · `self_request`/`not_decider`/`already_decided` ⇒ البطاقة تُغلق برسالة صادقة | ONLINE — مفتاح Idempotency | phase3 + contract | IMPLEMENTED (البطاقة تظهر لكل من يرى السجل — الأهلية خادمية لا تُعلن مسبقاً؛ طلبٌ خلفي مقترح: `can_decide` على السجل) |
-| العهدة (٣ · ٣.٣) | `me/custody` · `custody/{id}/handover,recover` (+ الإقرار عبر `assets/{id}/actions/ack` القائم) | `CustodyRepository` + `MyCustodyScreen` + `CustodyActionsCard` | مهامي/حسابي ← عهدتي (ما بيدي + الحركات + «أُقرّ بالاستلام» بمسار الخادم) · سجل الأصل (لمن `assets.can.e`) ← تسليم (مستلم من وحدة `users` حين يبثّها المخطط) / استرداد | ONLINE — مفتاح Idempotency | phase3 + contract | IMPLEMENTED (حامل المفتاح الدقيق `custodyAssign` بلا `assets:e` لا يرى الأزرار — لا إشارة خادمية له) |
+| قرار الإجازة (٢ · ٣.٢) | `leaves/{id}/decide` · `leaves/{id}/decision` | `LeaveRepository.decide/decision` + `LeaveDecisionCard` + `EligibilityLoader` | سجل `leaves` ← الأهلية أولاً بلا أثر (`GET decision` — `LeaveDecision::abilities` نفسها): البطاقة لمن `can_decide`، «اعتماد» لمن `can_approve` مع ما تصير إليه الحالة (`approve_status`)، «رفض» بسببٍ إلزامي لمن `can_reject`؛ غير المقرِّر يرى سبب الخادم (`already_decided`/`self_request`/`not_decider`) من ARB بلا أزرار؛ ٤٠٣/٤٠٤ ⇒ لا بطاقة؛ السباق بعد القراءة يُغلقها برسالة صادقة | ONLINE — القراءة بلا مفتاح؛ الفعل بمفتاح Idempotency | phase3 + v1_completion + contract | IMPLEMENTED (طلب #11 محلول في v2.619) |
+| العهدة (٤ · ٣.٣) | `me/custody` · `custody/{id}/handover,recover,abilities` (+ الإقرار عبر `assets/{id}/actions/ack` القائم) | `CustodyRepository` + `MyCustodyScreen` + `CustodyActionsCard` | مهامي/حسابي ← عهدتي (ما بيدي + الحركات + «أُقرّ بالاستلام» بمسار الخادم) · سجل الأصل ← الأزرار من `GET custody/{id}/abilities` (بوّابة `CustodyHandover`: `assets:e` **أو** `custodyAssign`): تسليم حين `can_handover` (ومستلم من وحدة `users` حين يبثّها المخطط) / استرداد حين `can_recover`؛ `not_held` ⇒ ملاحظة صادقة، و`not_permitted`/٤٠٣ ⇒ لا بطاقة؛ القدرات تُعاد قراءتها بعد الفعل | ONLINE — القراءة بلا مفتاح؛ الفعل بمفتاح Idempotency | phase3 + v1_completion + contract | IMPLEMENTED (طلب #12 محلول في v2.619 — حامل `custodyAssign` وحده يرى الأزرار الآن) |
 | جلسات الجرد (٦ · ٣.٤) | `inventory/sessions[,/{id}[,/scan,reconcile,close]]` | `InventoryRepository` + `inventory_screens.dart` | مهامي (لمن `assets.can.v`) ← الجلسات (تجميد حين `can.freeze`) ← الجلسة (العدّ بالحكم، الأصناف مرقّمة، أحدث المسحات) ← مسحٌ متتابع بالماسح القائم (`ScanViewBuilder`) · المصالحة والإغلاق بـ`runWithStepUp` (428 ⇒ تأكيد الهوية ⇒ إعادة بالمفتاح نفسه) · `unknown_company`/`session_closed` برسائل محلية | ONLINE — مفتاح لكل فعل/مسحة | phase3 + contract | IMPLEMENTED |
 | تذاكر العميل (٤ · ٤.١) | `portal/tickets[,/{id}[,/reply]]` | `PortalTicketsRepository` + `portal_tickets_screens.dart` | قشرة العميل ← أيقونة «تذاكري» في الرأس: القائمة · بلاغ جديد (الأولويات/المشاريع/المنظمات من الخادم) · التوأم المفتوح `409 duplicate_ticket` ⇒ «فتح القائم» أو «إرسال كبلاغٍ مختلف» (`force`) · التفصيل بالردود العامة والردّ (المغلقة `done` بلا حقل رد) | ONLINE — مفتاح Idempotency | phase4 + contract | IMPLEMENTED |
-| مراجعة تقارير الفريق (٢ · ٤.٤) | `reports/daily` · `reports/daily/{id}/review` | `TeamReportsRepository` + `TeamReportsScreen` | مهامي ← «تقارير الفريق اليومية» (تظهر فقط حين يقبل الخادم القارئ مراجِعاً — ٤٠٣/٤٠٤ ⇒ لا مدخل): يوم بيوم، فريقي/مشاريعي، تصفية بالحالة، قبول/طلب تنقيح (ملاحظة إلزامية)/إعادة فتح حيث `can_review` | ONLINE — مفتاح Idempotency | phase4 + contract | IMPLEMENTED (قسم `compliance` لحامل `hr:v` غير معروض بعد) |
+| مراجعة تقارير الفريق (٢ · ٤.٤) | `reports/daily` · `reports/daily/{id}/review` | `TeamReportsRepository` + `TeamReportsScreen` | مهامي ← «تقارير الفريق اليومية» (تظهر فقط حين يقبل الخادم القارئ مراجِعاً — ٤٠٣/٤٠٤ ⇒ لا مدخل): يوم بيوم، فريقي/مشاريعي، تصفية بالحالة، قبول/طلب تنقيح (ملاحظة إلزامية)/إعادة فتح حيث `can_review` | ONLINE — مفتاح Idempotency | phase4 + v1_completion + contract | IMPLEMENTED (+ قسم «امتثال اليوم» حين يبثّ الخادم `compliance` لحامل `hr:v`: ملخّص مقدَّم/بانتظار/غير مقدَّم وصفٌّ لكل موظف بتسمية ARB من الرمز الآلي، و`verdict_pending` ⇒ «لم يحن الحكم» لا «غائب») |
 | التقويم والتنبيهات (٢ · ٤.٥) | `calendar` · `alerts` | `CalendarRepository` + `CalendarScreen`/`AlertsScreen` | مهامي ← التقويم (نوافذ ٣٠ يوماً ذهاباً وإياباً، العنصر يفتح سجله، و`overflow` يُذكر بصدق) · التنبيهات (بعددها؛ متأخر/أسبوع/النافذة؛ صفّ صاحب الشأن ⇒ وثائقي) | ONLINE | phase4 + contract | IMPLEMENTED |
-| الأفعال المالية (٤ · ٤.٦) | `fin/{id}/pay` · `quotes/{id}/send,accept` · `purchases/{id}/receive` | `FinanceRepository` + `FinanceActionsCard` | سجل `fin`/`quotes`/`purchases` (لمن `can.e`): تسجيل دفعة (المبلغ `Decimal` نصّاً بتحققٍ محلي — لا فواصل آلاف ولا double؛ خلف التصعيد `action:fin:pay`) · إرسال العرض (`sent`/`escalated`) · قبوله · استلام أمر الشراء · `409 APPROVAL_REQUIRED` برسالته | ONLINE — مفتاح Idempotency ثابت عبر التصعيد | phase4 + contract | IMPLEMENTED (اختيار الحساب البنكي `bankId` غير معروض — الخادم يطبّق الافتراضي) |
+| الأفعال المالية (٥ · ٤.٦) | `fin/{id}/pay,pay-options` · `quotes/{id}/send,accept` · `purchases/{id}/receive` | `FinanceRepository` + `FinanceActionsCard` | سجل `fin`/`quotes`/`purchases` (لمن `can.e`): تسجيل دفعة — خياراتها أولاً بلا أثر (`GET pay-options`): الزرّ حين `can_pay` وإلا سبب الخادم (`dead_state`/`settled`) من ARB، والمتبقي `Decimal` بعملته، ومنتقي البنك من بنوك الدور بالافتراضي `default_bank_id` (أو «بلا بنك») يُرسَل `bankId` (المبلغ `Decimal` نصّاً بتحققٍ محلي — لا فواصل آلاف ولا double؛ خلف التصعيد `action:fin:pay`) · إرسال العرض (`sent`/`escalated`) · قبوله · استلام أمر الشراء · `409 APPROVAL_REQUIRED` برسالته | ONLINE — مفتاح Idempotency ثابت عبر التصعيد | phase4 + v1_completion + contract | IMPLEMENTED |
 | بوابة العميل (١٠) | `portal/home,engagements,projects[,/{id}],documents[,/{id}],invoices[,/{id}],conversations[,/{id}]` | `PortalRepository` + `ClientShell` وشاشات البوابة | قشرة حساب العميل كاملة | ONLINE (لا تخبئة — عالم حي) | client_experience + عزل القشرة + screens_widget (تفاصيل المشروع/الفاتورة/الوثيقة) | IMPLEMENTED |
 | إدارة أعضاء العميل (٤) | `clients/{client}/members…` | `ClientMembersRepository` + شاشة الأعضاء | سجل وحدة clients ← «أعضاء العميل» | ONLINE (+ تصعيد بالغرض) | client_experience + screens_widget | IMPLEMENTED |
 
+## نقاطٌ غير مستعملة عن قصد (٨ من ١٥٠)
+
+كل نقطة في `contracts/mobile-capabilities.json` إمّا تناديها الواجهة (**١٤٢**) أو مذكورةٌ هنا بسببها — والتدقيق
+آليٌّ (مطابقة كل مسار في العقد بنداءٍ في `lib/`)، أُعيد في v1.0.0.
+
+| النقطة | السبب |
+|---|---|
+| `GET navigation` | شجرة التنقّل تصل ضمن `bootstrap.ia` الذي يُعاد جلبه بـETag عند الإقلاع/الاستئناف/تبديل السياق — نداءٌ ثانٍ للشجرة نفسها بلا فائدة (`BootstrapRepository.navigation` باقٍ للاحتياط، بلا مدخل واجهة). |
+| `PATCH {module}/{id}` | نموذج التعديل يرسل مجموعة الحقول القابلة للتحرير كاملةً عبر `PUT` بـ`If-Match` — مسارٌ واحد للكتابة يكفي (`ModuleRepository.patch` باقٍ بلا مدخل). |
+| `GET files/{id}/stream` | `files/{id}/download` يكفي لمعاينة الصور من الذاكرة؛ البثّ يخدم عارض PDF/فيديو أصلياً يكتب القرص — مرفوضٌ أمنياً (لا بايت يهبط القرص). |
+| `POST files/attach` | الرفع مقطّعٌ دائماً (`files/upload-session` ⇒ `chunk` ⇒ `complete` يُرفق بالسجل) — قابلٌ للاستئناف وبمفتاح Idempotency لكل الأحجام؛ الرفع المفرد multipart مسارٌ ثانٍ مكرِّر. |
+| `GET schema/modules` | المخطط الكامل `GET schema` بـETag يحمل الوحدات نفسها — قائمتها منفصلةً مكرِّرة. |
+| `GET openapi.json` | مواصفةٌ للمطوّر لا للتشغيل — تُلتقط لقطةً في `contracts/` عبر `tool/update_contracts.sh` وتحرسها `test/contract/`. |
+| `GET push/admin/status` · `POST push/admin/test` | NOT_APPLICABLE — إدارة المالك في مركز المنصة (ويب §98)، لا شاشة جوال. |
+
 ## الحصيلة
 
-- قدرات الخلفية الجوالية: **147 نقطة / 37 مجالاً** (خلفية v2.618.0 @044ccca)
-- IMPLEMENTED: كل مجموعات الجدول أعلاه — **v0.9.0 (المرحلتان ٣ و٤):** ٥٢ نقطة جديدة؛ المستعمَل منها من الواجهة ٥١
-  (الحضور ٣، قرار الإجازة ١، العهدة ٣، الجرد ٦، المرفقات ٢ + مرفقا الرسالة/التعليق ٢، النسخ ١، التذاكر ٤، القنوات
-  والمجموعات ١٢، تحرير/سحب DM ٢، بحث الرسائل ١، أفعال التعليق ٥، تقارير الفريق ٢، التقويم/التنبيهات ٢، المالية ٤، البثّ ١).
-- بلا واجهة عن قصد: `GET navigation` (الشجرة من `bootstrap.ia`)، و`PATCH {module}/{id}` (PUT يكفي)، و`files/{id}/stream`
-  (التنزيل يكفي للصور).
-- PENDING_APP: **1** — `POST groups/{id}/participants` (توسيع مجموعة بمجموعةٍ جديدة؛ لا زرّ له).
-- NOT_APPLICABLE: **1** (إدارة الدفع للمالك — سطح ويب إداري)
-- BLOCKED_EXTERNAL_CONFIG: **0 شيفرةً** — مزوّد FCM والروابط العالمية مبنيّان؛ ما بقي **مُدخلات المالك** وحدها
-  (`docs/OWNER_SETUP.md`). خادمياً حُلّ طلبا #9 (حساب الخدمة يُسكّ منه رمز FCM) و#10 (`apns.badge` + `channel_id =
-  lynomia_default`) في v2.618؛ **على التطبيق** تسجيل قناة Android `lynomia_default` (غيابها ⇒ قناة FCM الاحتياطية) — بندٌ
-  للمرحلة ٥.
-- BACKEND_GAP: **0 مفتوحاً** — #1 و#2 حُلّا في v2.618 وبُنيا في v0.9.0.
+- قدرات الخلفية الجوالية: **150 نقطة / 37 مجالاً** (خلفية v2.619.0 @e725f56)
+- **مستعمَلة من الواجهة: 142** · **غير مستعملة عن قصد بسببٍ موثّق: 8** (الجدول أعلاه، منها ٢ NOT_APPLICABLE).
+- **v1.0.0:** + قراءات الأهلية الثلاث (`leaves/{id}/decision` · `custody/{id}/abilities` · `fin/{id}/pay-options`)
+  + `groups/{id}/participants` — كلها بواجهةٍ واختبار (`test/features/v1_completion_test.dart`).
+- PENDING_APP: **0**.
+- NOT_APPLICABLE: **2 نقطتان / قدرة واحدة** (إدارة الدفع للمالك — سطح ويب إداري).
+- BLOCKED_EXTERNAL_CONFIG: **0 شيفرةً** — مزوّد FCM والروابط العالمية وقناة Android `lynomia_default` (تُنشأ أصلياً في
+  `MainActivity` عند الإقلاع — v1.0.0) مبنيّة؛ ما بقي **مُدخلات المالك** وحدها (`docs/OWNER_SETUP.md`).
+- BACKEND_GAP: **0 مفتوحاً** — #11 و#12 حُلّا في v2.619 وبُنيا في v1.0.0؛ يبقى #3 تدوين اتساقٍ غير عاجل.
 - **غير مفسر: 0**

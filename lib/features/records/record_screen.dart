@@ -234,7 +234,8 @@ class _RecordScreenState extends State<RecordScreen> {
   List<Widget> _workflowCards(ModuleSchema schema) => [
     if (widget.module == 'leaves')
       LeaveDecisionCard(leaveId: widget.id, onDecided: _load),
-    if (widget.module == 'assets' && schema.can.e)
+    // الأهلية من `custody/{id}/abilities` (assets:e أو custodyAssign) لا من can.e.
+    if (widget.module == 'assets')
       CustodyActionsCard(
         assetId: widget.id,
         canPickUsers: _snapshot?.modules['users']?.can.v ?? false,

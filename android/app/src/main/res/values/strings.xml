@@ -2,4 +2,7 @@
 <resources>
     <!-- اسم العرض (المشغّل) — الافتراضي/الإنجليزي. العربي في values-ar. -->
     <string name="app_name">Lynomia Hub</string>
+    <!-- قناة الإشعار lynomia_default — يطابق notificationChannelName/Description في ARB (حارسه governance_test). -->
+    <string name="notification_channel_name">Lynomia Hub notifications</string>
+    <string name="notification_channel_description">Messages, approvals and alerts from your workspace</string>
 </resources>

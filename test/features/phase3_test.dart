@@ -536,6 +536,17 @@ void main() {
         decided++;
         return okData({'id': 'l1', 'status': 'مرفوض', 'message': 'رُفض QWXZ'});
       });
+      // الأهلية تُقرأ أولاً (خلفية v2.619) — والسباق بعدها يبقى للفعل.
+      h.transport.onData('GET leaves/l1/decision', {
+        'id': 'l1',
+        'status': 'بانتظار',
+        'can_decide': true,
+        'reason': null,
+        'can_approve': true,
+        'can_reject': true,
+        'approve_status': 'معتمد',
+        'reject_reason_required': true,
+      });
       await pumpScreen(
         tester,
         h,

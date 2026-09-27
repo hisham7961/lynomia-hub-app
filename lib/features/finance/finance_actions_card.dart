@@ -1,6 +1,11 @@
 /// أفعال مالية على سجلات `fin` · `quotes` · `purchases` (المرحلة ٤.٦) — تظهر
 /// لمن يعدّل الوحدة (`can.e` من المخطط — عرض؛ الخادم يعيد الفحص). الدفعة خلف
 /// التصعيد، و`409` (طابور اعتماد/تعارض) و`422` تُعرض برسالتها الصادقة.
+///
+/// الدفعة تُقرأ خياراتها أولاً بلا أثر (`GET fin/{id}/pay-options` — خلفية
+/// v2.619): الزرّ لمن `can_pay` وإلا سبب الخادم الآلي نصّاً (ملغى/مسودة أو
+/// مسدَّد)، والمتبقي عشريٌّ (`Decimal`) بعملته، ومنتقي البنك من بنوك الدور
+/// بالافتراضي `default_bank_id` — وحرّاس البنك تبقى عند الفعل.
 library;
 
 import 'package:decimal/decimal.dart';
@@ -9,6 +14,7 @@ import 'package:uuid/uuid.dart';
 
 import '../../app/di/app_scope.dart';
 import '../../core/errors/api_exception.dart';
+import '../../core/ui/eligibility.dart';
 import '../../core/ui/feedback.dart';
 import '../../core/ui/step_up_flow.dart';
 import '../../l10n/app_localizations.dart';
@@ -35,6 +41,16 @@ class FinanceActionsCard extends StatefulWidget {
 
 class _FinanceActionsCardState extends State<FinanceActionsCard> {
   bool _busy = false;
+  late final EligibilityLoader<PayOptions> _payOptions = EligibilityLoader(
+    this,
+    () => AppScope.of(context).finance.payOptions(widget.recordId),
+  );
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.module == 'fin') _payOptions.load();
+  }
 
   /// تنفيذٌ بمفتاحٍ واحد للفعل (ثابت عبر التصعيد والإعادة العابرة).
   Future<void> _run(
@@ -50,6 +66,7 @@ class _FinanceActionsCardState extends State<FinanceActionsCard> {
       if (!mounted) return;
       showSnack(context, message);
       widget.onChanged();
+      if (widget.module == 'fin') await _payOptions.load();
     } on ApiException catch (e) {
       if (!mounted) return;
       final l = AppLocalizations.of(context)!;
@@ -67,18 +84,19 @@ class _FinanceActionsCardState extends State<FinanceActionsCard> {
     }
   }
 
-  Future<void> _pay() async {
+  Future<void> _pay(PayOptions options) async {
     final l = AppLocalizations.of(context)!;
     final repo = AppScope.of(context).finance;
     final input = await showDialog<_PayInput>(
       context: context,
-      builder: (_) => const _PayDialog(),
+      builder: (_) => _PayDialog(options: options),
     );
     if (input == null || !mounted) return;
     await _run(stepUp: true, (key) async {
       final res = await repo.pay(
         widget.recordId,
         amount: input.amount,
+        bankId: input.bankId,
         payRef: input.ref,
         payNote: input.note,
         idempotencyKey: key,
@@ -142,15 +160,10 @@ class _FinanceActionsCardState extends State<FinanceActionsCard> {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
+    if (widget.module == 'fin') {
+      return _payOptions.build(context, (o) => _payCard(context, l, o));
+    }
     final buttons = switch (widget.module) {
-      'fin' => [
-        FilledButton.icon(
-          key: const Key('fin-pay'),
-          onPressed: _busy ? null : _pay,
-          icon: const Icon(Icons.payments_outlined),
-          label: Text(l.financePay),
-        ),
-      ],
       'quotes' => [
         FilledButton.tonalIcon(
           key: const Key('quote-send'),
@@ -184,17 +197,57 @@ class _FinanceActionsCardState extends State<FinanceActionsCard> {
       ),
     );
   }
+
+  Widget _payCard(BuildContext context, AppLocalizations l, PayOptions o) {
+    final remaining = o.remaining == null
+        ? null
+        : Text(
+            l.financeRemaining(o.remaining!.toString(), o.currency ?? ''),
+            key: const Key('fin-remaining'),
+          );
+    if (!o.canPay) {
+      return EligibilityNote(
+        key: const Key('fin-pay-note'),
+        text: o.reason == PayDenyReason.settled
+            ? l.financePaySettled
+            : l.financePayDeadState,
+      );
+    }
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          children: [
+            FilledButton.icon(
+              key: const Key('fin-pay'),
+              onPressed: _busy ? null : () => _pay(o),
+              icon: const Icon(Icons.payments_outlined),
+              label: Text(l.financePay),
+            ),
+            ?remaining,
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 class _PayInput {
-  const _PayInput(this.amount, this.ref, this.note);
+  const _PayInput(this.amount, this.bankId, this.ref, this.note);
   final Decimal amount;
+  final String? bankId;
   final String? ref;
   final String? note;
 }
 
 class _PayDialog extends StatefulWidget {
-  const _PayDialog();
+  const _PayDialog({required this.options});
+
+  final PayOptions options;
 
   @override
   State<_PayDialog> createState() => _PayDialogState();
@@ -204,6 +257,7 @@ class _PayDialogState extends State<_PayDialog> {
   final _amount = TextEditingController();
   final _ref = TextEditingController();
   final _note = TextEditingController();
+  late String? _bankId = widget.options.defaultBankId;
   String? _error;
 
   @override
@@ -221,12 +275,13 @@ class _PayDialogState extends State<_PayDialog> {
       setState(() => _error = l.financeAmountInvalid);
       return;
     }
-    Navigator.pop(context, _PayInput(amount, _ref.text, _note.text));
+    Navigator.pop(context, _PayInput(amount, _bankId, _ref.text, _note.text));
   }
 
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
+    final o = widget.options;
     return AlertDialog(
       title: Text(l.financePay),
       content: SingleChildScrollView(
@@ -244,9 +299,36 @@ class _PayDialogState extends State<_PayDialog> {
               decoration: InputDecoration(
                 labelText: l.financeAmount,
                 hintText: '0.000',
+                helperText: o.remaining == null
+                    ? null
+                    : l.financeRemaining(
+                        o.remaining!.toString(),
+                        o.currency ?? '',
+                      ),
                 errorText: _error,
               ),
             ),
+            if (o.banks.isNotEmpty)
+              DropdownButtonFormField<String?>(
+                key: const Key('pay-bank'),
+                initialValue: _bankId,
+                isExpanded: true,
+                decoration: InputDecoration(labelText: l.financeBank),
+                items: [
+                  DropdownMenuItem<String?>(child: Text(l.financeNoBank)),
+                  for (final b in o.banks)
+                    DropdownMenuItem<String?>(
+                      value: b.id,
+                      child: Text(
+                        b.currency == null
+                            ? b.name
+                            : '${b.name} · ${b.currency}',
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                ],
+                onChanged: (v) => setState(() => _bankId = v),
+              ),
             TextField(
               controller: _ref,
               maxLength: 200,

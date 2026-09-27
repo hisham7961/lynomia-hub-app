@@ -5,7 +5,7 @@
 | الملف | المصدر | الغرض |
 |---|---|---|
 | `backend-source.json` | يدوي عبر الأداة | مرجع الخلفية: المستودع/الفرع/SHA/نسخة العقد/تاريخ اللقطة |
-| `mobile-capabilities.json` | `docs/mobile-readiness/mobile-capabilities.json` في الخلفية | سجل القدرات الآلي (٩٥ نقطة + أصناف المزامنة + NOT_CONFIGURED) |
+| `mobile-capabilities.json` | `docs/mobile-readiness/mobile-capabilities.json` في الخلفية | سجل القدرات الآلي (١٥٠ نقطة في ٣٧ مجالاً — خلفية v2.619.0 + أصناف المزامنة + NOT_CONFIGURED) |
 | `mobile-openapi.json` | `GET /api/mobile/v1/openapi.json` (أو `App\Support\MobileOpenApi::spec()` عبر tinker على نسخة عمل بقاعدة SQLite مؤقتة) | مواصفة OpenAPI 3.1 الحية للجوال |
 
 **التحديث:** `tool/update_contracts.sh /path/to/lynomia-hub [https://host]` — يسجل

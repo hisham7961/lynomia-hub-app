@@ -38,4 +38,9 @@ abstract final class AppIdentifiers {
   /// `res/values*/strings.xml` و`InfoPlist.strings` و`appTitle` في ARB.
   static const displayName = 'Lynomia Hub';
   static const displayNameAr = 'لينوميا هب';
+
+  /// قناة إشعار Android التي يسمّيها الخادم (`PushService::ANDROID_CHANNEL`) —
+  /// تُنشأ أصلياً في `MainActivity` (`NotificationChannels.DEFAULT_ID`) عند كل
+  /// إقلاع، وتسمّيها الـmeta-data الافتراضية لـFCM في المانيفست. iOS بلا قنوات.
+  static const androidNotificationChannelId = 'lynomia_default';
 }

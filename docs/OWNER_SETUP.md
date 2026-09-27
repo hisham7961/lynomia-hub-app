@@ -20,17 +20,18 @@
 | 4 | **نطاق الروابط العالمية** (مثل `hub.lynomia.com`) | نطاق خادم الويب (`APP_URL`) | Android: `-P lynomia.appLinkHost=…` · iOS: `APP_LINK_HOST` | `hub.mobile.deep_links.host` (فارغ ⇒ `APP_URL`) | `app-links.lynomia.invalid` (لا يُحلّ ⇒ لا ربط) |
 | 5 | **بصمات SHA-256** لتوقيع Android | keystore الرفع + «App signing key» في Play Console | — | `mobile.dl_android_fingerprints` (مفصولة بفاصلة) | الروابط تفتح المتصفح لا التطبيق |
 | 6 | **مفتاح توقيع Android** (keystore) | يُنشأ مرةً (§٥) ويُحفظ خارج المستودع | `android/key.properties` (محلي) / أسرار CI | — | إصدارٌ موقَّع بـdebug **محلياً فقط** مع تحذير؛ وفي CI يُتخطّى |
-| 7 | **خيارات Firebase** (apiKey/appId/senderId/projectId…) | Firebase Console | `--dart-define-from-file=firebase.defines.json` | `mobile.push_driver=fcm` + `mobile.push_fcm_project_id` + `mobile.push_fcm_access_token` | الدفع «غير مهيأ» (المزوّد الصفري) |
+| 7 | **خيارات Firebase** (apiKey/appId/senderId/projectId…) | Firebase Console | `--dart-define-from-file=firebase.defines.json` | `mobile.push_driver=fcm` + `mobile.push_fcm_project_id` + `mobile.push_fcm_service_account` (JSON حساب الخدمة — الخادم يسكّ منه رمز الوصول ويجدّده) | الدفع «غير مهيأ» (المزوّد الصفري) |
 | 8 | **مفتاح APNs** (`.p8` + Key ID) | Apple Developer ← Keys | يُرفع إلى Firebase (لا للتطبيق ولا للمستودع) | — | لا إشعارات على iOS |
 | 9 | **روابط المتجرين + الدعم + الإصدارات** | بعد إنشاء صفحتي المتجرين | — | `mobile.store_url_ios/android`, `mobile.support_url`, `mobile.min/latest_version_*`, `mobile.force_update` | لا زرّ متجر/دعم (صادق) |
 | 10 | **عنوان الخادم** | الإنتاج | `--dart-define=APP_ENV=prod --dart-define=API_BASE_URL=https://…` | — | شاشة «إعداد غير صالح» (الإنتاج يرفض غير HTTPS) |
 
-> **ضبط إعدادات الخادم اليوم:** مركز «منصّة تطبيق الهاتف» يعرض الحالة ولا يحرّر مفاتيح `mobile.*` بعد (بند
-> الخطة ٢.١ — [خ]). إلى أن يُبنى، على الخادم:
+> **ضبط إعدادات الخادم:** منذ خلفية v2.618.0 يحرّر مركز «منصّة تطبيق الهاتف» مفاتيح `mobile.*` كلها (الإصدارات
+> والمتاجر والدعم، الروابط العميقة، الدفع) بتحقّقٍ صارم وقيد تدقيقٍ لكل تغيير (بند الخطة ٢.١ ✅)؛ والسرّ (حساب
+> الخدمة) للكتابة فقط. و`php artisan hub:set` باقٍ بديلاً على الخادم (§٩):
 > ```bash
 > php artisan hub:set mobile.dl_android_package com.lynomia.hub
 > ```
-> (المفتاح الحساس `mobile.push_fcm_access_token` يُخزَّن مشفّراً تلقائياً.)
+> (المفاتيح الحساسة تُخزَّن مشفّرةً تلقائياً.)
 
 ---
 
@@ -81,10 +82,12 @@
    ```bash
    php artisan hub:set mobile.push_driver fcm
    php artisan hub:set mobile.push_fcm_project_id lynomia-hub
-   php artisan hub:set mobile.push_fcm_access_token "$(gcloud auth print-access-token --impersonate-service-account=…)"
+   php artisan hub:set mobile.push_fcm_service_account "$(cat service-account.json)"
    ```
-   ⚠️ **رمز الوصول OAuth صالحٌ ساعةً واحدة** — الخادم اليوم يقرأ رمزاً ثابتاً ولا يجدّده من حساب الخدمة
-   (طلب خلفي **#9** في `docs/backend-change-requests.md`). حتى يُحلّ: مهمة cron تجدّده كل ٤٥ دقيقة، أو الانتظار.
+   أو من مركز المنصة ← الإعدادات ← «الدفع» (الصق JSON حساب الخدمة — لا يُعاد عرضه). الخادم يسكّ رمز الوصول من
+   حساب الخدمة ويجدّده بنفسه (طلب #9 محلول في v2.618) — **احذف ملف JSON من جهازك بعدها**.
+   **قناة Android:** الخادم يرسل `channel_id = lynomia_default`، والتطبيق ينشئ هذه القناة (أهمية عالية، اسمٌ
+   معرَّب) عند كل إقلاع منذ v1.0.0 — لا شيء عليك فيها.
 7. **التحقق:** سجّل الدخول على جهاز حقيقي ⇒ حسابي ← «الإشعارات: مفعلة على هذا الجهاز» ⇒ من مركز المنصة
    (تبويب الإشعارات) «إشعار تجريبي» ⇒ يظهر شريط «وصل إشعارٌ تجريبي…» في التطبيق (المقدّمة) أو إشعار نظام (الخلفية)
    بلا ملاحة. و`GET /api/mobile/v1/push/admin/status` (للمالك) ⇒ `configured: true`.
@@ -216,7 +219,7 @@
 تتبّع ظاهرة ← *Export compliance*: التطبيق يستعمل HTTPS والتشفير القياسي للنظام/المكتبات فقط (مُعفى) ← ارفع من
 Xcode (*Product ← Archive*) أو `flutter build ipa` ثم Transporter ← TestFlight ← بعدها `mobile.store_url_ios`.
 
-## ٩) إعدادات الخادم دفعةً واحدة (بعد توفر كل شيء)
+## ٩) إعدادات الخادم دفعةً واحدة (بعد توفر كل شيء — أو من محرّر الإعدادات في مركز المنصة)
 
 ```bash
 # الروابط العالمية
@@ -227,13 +230,13 @@ php artisan hub:set mobile.dl_android_fingerprints "AA:…:01,CC:…:02"
 # الدفع
 php artisan hub:set mobile.push_driver             fcm
 php artisan hub:set mobile.push_fcm_project_id     lynomia-hub
-php artisan hub:set mobile.push_fcm_access_token   "<رمز وصول حساب الخدمة>"
+php artisan hub:set mobile.push_fcm_service_account "$(cat service-account.json)"
 # المتجران والدعم والإصدارات
 php artisan hub:set mobile.store_url_android       "https://play.google.com/store/apps/details?id=com.lynomia.hub"
 php artisan hub:set mobile.store_url_ios           "https://apps.apple.com/app/id0000000000"
 php artisan hub:set mobile.support_url             "https://hub.lynomia.com/support"
-php artisan hub:set mobile.latest_version_android  0.7.0
-php artisan hub:set mobile.latest_version_ios      0.7.0
+php artisan hub:set mobile.latest_version_android  1.0.0
+php artisan hub:set mobile.latest_version_ios      1.0.0
 ```
 ثم مركز المنصة ← «التطبيق والإصدار» ← قائمة الإطلاق: كل البنود خضراء.
 

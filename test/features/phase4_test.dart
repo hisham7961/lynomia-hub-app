@@ -974,6 +974,16 @@ void main() {
         });
       });
       h.transport.onData('POST auth/step-up', {'granted': true});
+      h.transport.onData('GET fin/d1/pay-options', {
+        'id': 'd1',
+        'can_pay': true,
+        'reason': null,
+        'remaining': '100.000',
+        'currency': 'KWD',
+        'banks': <Object>[],
+        'default_bank_id': null,
+        'step_up_purpose': 'action:fin:pay',
+      });
       await pumpScreen(
         tester,
         h,

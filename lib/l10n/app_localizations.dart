@@ -3499,6 +3499,168 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'بعد {days} يوماً'**
   String alertsDaysLeft(int days);
+
+  /// No description provided for @notificationChannelName.
+  ///
+  /// In ar, this message translates to:
+  /// **'إشعارات لينوميا هب'**
+  String get notificationChannelName;
+
+  /// No description provided for @notificationChannelDescription.
+  ///
+  /// In ar, this message translates to:
+  /// **'الرسائل والاعتمادات والتنبيهات من مساحة عملك'**
+  String get notificationChannelDescription;
+
+  /// No description provided for @leaveApproveBecomes.
+  ///
+  /// In ar, this message translates to:
+  /// **'بالموافقة يصير الطلب «{status}»'**
+  String leaveApproveBecomes(String status);
+
+  /// No description provided for @eligibilityLoadFailed.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعذّر التحقق من الإتاحة'**
+  String get eligibilityLoadFailed;
+
+  /// No description provided for @custodyNotHeld.
+  ///
+  /// In ar, this message translates to:
+  /// **'الأصل ليس بعهدة أحد الآن — لا استرداد'**
+  String get custodyNotHeld;
+
+  /// No description provided for @financeRemaining.
+  ///
+  /// In ar, this message translates to:
+  /// **'المتبقي: {remaining} {currency}'**
+  String financeRemaining(String remaining, String currency);
+
+  /// No description provided for @financePayDeadState.
+  ///
+  /// In ar, this message translates to:
+  /// **'المستند ملغى أو مسودة — لا تُسجَّل عليه دفعات'**
+  String get financePayDeadState;
+
+  /// No description provided for @financePaySettled.
+  ///
+  /// In ar, this message translates to:
+  /// **'المستند مسدَّد بالكامل — لا متبقٍّ'**
+  String get financePaySettled;
+
+  /// No description provided for @financeBank.
+  ///
+  /// In ar, this message translates to:
+  /// **'البنك'**
+  String get financeBank;
+
+  /// No description provided for @financeNoBank.
+  ///
+  /// In ar, this message translates to:
+  /// **'بلا بنك'**
+  String get financeNoBank;
+
+  /// No description provided for @groupAddParticipants.
+  ///
+  /// In ar, this message translates to:
+  /// **'إضافة مشاركين'**
+  String get groupAddParticipants;
+
+  /// No description provided for @groupForkExplain.
+  ///
+  /// In ar, this message translates to:
+  /// **'إضافة مشاركين تُنشئ مجموعةً جديدة بالأعضاء الحاليين والجدد بتاريخٍ فارغ، وتبقى هذه المجموعة كما هي لأعضائها.'**
+  String get groupForkExplain;
+
+  /// No description provided for @groupForked.
+  ///
+  /// In ar, this message translates to:
+  /// **'أُنشئت مجموعةٌ جديدة بالمشاركين'**
+  String get groupForked;
+
+  /// No description provided for @groupForkNoCandidates.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا جهات جديدة في رسائلك المباشرة لإضافتها'**
+  String get groupForkNoCandidates;
+
+  /// No description provided for @complianceTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'امتثال اليوم ({count})'**
+  String complianceTitle(int count);
+
+  /// No description provided for @complianceSummary.
+  ///
+  /// In ar, this message translates to:
+  /// **'مقدَّم {done} · بانتظار {pending} · غير مقدَّم {missing}'**
+  String complianceSummary(int done, int pending, int missing);
+
+  /// No description provided for @complianceCompliant.
+  ///
+  /// In ar, this message translates to:
+  /// **'مقدَّم'**
+  String get complianceCompliant;
+
+  /// No description provided for @compliancePending.
+  ///
+  /// In ar, this message translates to:
+  /// **'بانتظار التقديم'**
+  String get compliancePending;
+
+  /// No description provided for @complianceMissing.
+  ///
+  /// In ar, this message translates to:
+  /// **'غير مقدَّم'**
+  String get complianceMissing;
+
+  /// No description provided for @complianceLate.
+  ///
+  /// In ar, this message translates to:
+  /// **'مقدَّم متأخراً'**
+  String get complianceLate;
+
+  /// No description provided for @complianceNotRequired.
+  ///
+  /// In ar, this message translates to:
+  /// **'غير مطلوب'**
+  String get complianceNotRequired;
+
+  /// No description provided for @complianceReported.
+  ///
+  /// In ar, this message translates to:
+  /// **'مقدَّم (بلا حضور)'**
+  String get complianceReported;
+
+  /// No description provided for @complianceVerdictPending.
+  ///
+  /// In ar, this message translates to:
+  /// **'لم يحن الحكم بعد'**
+  String get complianceVerdictPending;
+
+  /// No description provided for @complianceOnLeave.
+  ///
+  /// In ar, this message translates to:
+  /// **'إجازة'**
+  String get complianceOnLeave;
+
+  /// No description provided for @complianceLateArrival.
+  ///
+  /// In ar, this message translates to:
+  /// **'وصل متأخراً'**
+  String get complianceLateArrival;
+
+  /// No description provided for @complianceTimeIn.
+  ///
+  /// In ar, this message translates to:
+  /// **'دخول {time}'**
+  String complianceTimeIn(String time);
+
+  /// No description provided for @complianceTimeOut.
+  ///
+  /// In ar, this message translates to:
+  /// **'خروج {time}'**
+  String complianceTimeOut(String time);
 }
 
 class _AppLocalizationsDelegate

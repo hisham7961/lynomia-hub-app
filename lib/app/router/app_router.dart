@@ -371,6 +371,12 @@ GoRouter buildRouter(AppContainer c) => GoRouter(
             kind: state.uri.queryParameters['kind'] ?? '',
           ),
         ),
+        // إضافة مشاركين إلى مجموعة = مجموعةٌ جديدة (GroupService::fork).
+        GoRoute(
+          path: 'expand',
+          builder: (context, state) =>
+              NewGroupScreen(forkFrom: state.pathParameters['id']!),
+        ),
       ],
     ),
     GoRoute(path: '/saved', builder: (context, state) => const SavedScreen()),

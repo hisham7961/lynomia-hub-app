@@ -57,6 +57,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         if (reset) _items.clear();
         _items.addAll(page.items);
         _unread = page.unread;
+        if (reset) AppScope.of(context).account.setUnread(page.unread);
         _cursor = page.nextCursor;
         _hasMore = page.hasMore;
         _loading = false;
@@ -81,13 +82,21 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
   Future<void> _open(HubNotificationItem n) async {
     final c = AppScope.of(context);
-    // النقر يختم القراءة ويعيد الوجهة (§51)؛ null ⇒ البقاء في القائمة.
-    final target = await c.notifications.markRead(n.id);
-    await c.account.loadBootstrap(force: true).catchError((_) {});
+    final NotificationOpenResult result;
+    try {
+      // غير المقروء: القراءة تختم وتعيد الوجهة والعدّاد؛ المقروء: `GET target`
+      // (§51). الوجهة null ⇒ البقاء في القائمة — لا اسم شاشة صلب.
+      result = await c.notifications.open(n.id, alreadyRead: n.read);
+    } on Object catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(describeError(context, e))));
+      return;
+    }
     if (!mounted) return;
     setState(() {
       final i = _items.indexWhere((x) => x.id == n.id);
-      if (i >= 0) {
+      if (i >= 0 && !n.read) {
         _items[i] = HubNotificationItem(
           id: n.id,
           kind: n.kind,
@@ -96,14 +105,49 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           target: n.target,
           createdAt: n.createdAt,
         );
-        if (_unread > 0) _unread -= 1;
+        _unread = result.unread ?? (_unread > 0 ? _unread - 1 : 0);
       }
     });
-    if (target != null) context.push(target.routePath);
+    // الشارة الحية: من رد القراءة إن حمله، وإلا `unread-count`.
+    final unread = result.unread;
+    if (unread != null) {
+      c.account.setUnread(unread);
+    } else if (!n.read) {
+      await _refreshBadge();
+    }
+    if (!mounted) return;
+    final target = result.target;
+    if (target != null) {
+      await context.push(target.routePath);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.notificationNoTarget),
+        ),
+      );
+    }
+  }
+
+  Future<void> _refreshBadge() async {
+    final c = AppScope.of(context);
+    try {
+      c.account.setUnread(await c.notifications.unreadCount());
+    } on Object {
+      // الشارة تبقى على آخر قيمة معروفة — لا اختلاق.
+    }
   }
 
   Future<void> _markAll() async {
-    await AppScope.of(context).notifications.markAllRead();
+    final c = AppScope.of(context);
+    try {
+      await c.notifications.markAllRead();
+    } on Object catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(describeError(context, e))));
+      return;
+    }
+    await _refreshBadge();
     await _load();
   }
 

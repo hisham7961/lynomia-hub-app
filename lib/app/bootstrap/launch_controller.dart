@@ -193,4 +193,41 @@ class LaunchController extends ChangeNotifier {
 
   /// عودة لشاشة الدخول (خروج/إبطال).
   void onSignedOut() => _set(const LaunchLoggedOut());
+
+  /// حالة تشغيل حية من `GET health` أثناء الاستعمال (§45 §94): الصيانة/الإغلاق
+  /// تحجب فوراً، والتحديث المطلوب يُعاد تقييمه من `app-config` (علم الإجبار
+  /// وروابط المتجر) — حاجبٌ إن أُجبر، وإلا تلميحٌ اختياريٌّ في «حسابي».
+  Future<void> applyHealth(HealthStatus health) async {
+    if (_state is! LaunchReady) return;
+    if (health.lockdown || health.maintenance) {
+      _set(LaunchMaintenance(lockdown: health.lockdown));
+      return;
+    }
+    if (health.updateRequired) {
+      try {
+        appConfig = await appConfigRepo.fetch();
+      } on Object {
+        return; // لا قرار بلا إعداد — الطلب التالي يحسم بـAPP_UPDATE_REQUIRED
+      }
+      if (_state is! LaunchReady) return;
+      if (appConfig!.blocksUsage) {
+        _set(LaunchUpdateRequired(appConfig!));
+      } else {
+        notifyListeners(); // التلميح الاختياري يظهر حيث يُقرأ appConfig
+      }
+    }
+  }
+
+  /// رمز صيانة/إغلاق ورد من نقطة حية (503) أثناء الاستعمال.
+  void onServiceBlocked(ApiException e) {
+    if (_state is! LaunchReady) return;
+    if (e.code == ApiErrorCode.maintenance || e.code == ApiErrorCode.lockdown) {
+      _set(
+        LaunchMaintenance(
+          message: e.message.isEmpty ? null : e.message,
+          lockdown: e.code == ApiErrorCode.lockdown,
+        ),
+      );
+    }
+  }
 }

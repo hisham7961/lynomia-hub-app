@@ -42,7 +42,8 @@ class AttachmentInfo {
 
   factory AttachmentInfo.fromJson(Map<String, dynamic> j) => AttachmentInfo(
     id: j['id']?.toString() ?? '',
-    name: (j['name'] ?? j['filename'])?.toString() ?? '',
+    // الخادم يبث `original_name` (MobileFileController::attachmentsPayload).
+    name: (j['original_name'] ?? j['name'] ?? j['filename'])?.toString() ?? '',
     size: (j['size'] as num?)?.toInt(),
     mime: j['mime']?.toString(),
     downloadPath: j['download']?.toString(),
@@ -57,6 +58,14 @@ class AttachmentInfo {
   /// مساران **نسبيان** لنقاط مصادقة — لا روابط عامة (عقد §07 الخلفي).
   final String? downloadPath;
   final String? streamPath;
+
+  /// صورة نقطية قابلة للمعاينة في الذاكرة (من mime الخادم ثم الامتداد).
+  bool get isImage {
+    final m = mime ?? '';
+    if (m.isNotEmpty) return m.startsWith('image/') && m != 'image/svg+xml';
+    final ext = name.split('.').last.toLowerCase();
+    return const {'png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp'}.contains(ext);
+  }
 }
 
 class FileRepository {
@@ -120,7 +129,8 @@ class FileRepository {
           .map((e) => AttachmentInfo.fromJson(e.cast<String, dynamic>()))
           .toList();
 
-  /// تنزيل مصادق إلى ذاكرة مؤقتة — يفتح/يشارك عبر آليات النظام (§69).
+  /// تنزيل مصادق إلى **الذاكرة** (§69) — لا ملف ولا خبيئة؛ المستدعي يعرض
+  /// الصور من البايتات مباشرة، وما عداها يُفتح من الويب (لا كتابة قرص).
   Future<Uint8List> download(String attachmentId) async {
     final resp = await api.send(
       ApiRequest(

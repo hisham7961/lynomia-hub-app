@@ -249,7 +249,7 @@ class _CommentsPanelState extends State<CommentsPanel> {
                     child: Text(
                       _typing.length == 1
                           ? l.typingOne(_typing.single)
-                          : l.typingMany(_typing.join('، ')),
+                          : l.typingMany(_typing.join(l.listSeparator)),
                       key: const Key('channel-typing'),
                       style: Theme.of(context).textTheme.bodySmall,
                     ),
@@ -345,7 +345,7 @@ class _CommentTile extends StatelessWidget {
                   radius: 14,
                   child: Text(
                     comment.userName.isEmpty
-                        ? '؟'
+                        ? l.unknownInitial
                         : comment.userName.characters.first,
                     style: const TextStyle(fontSize: 12),
                   ),
@@ -421,7 +421,12 @@ class _CommentTile extends StatelessWidget {
                   onPressed: () => onReact(null),
                 ),
                 if (onReply != null)
-                  TextButton(onPressed: onReply, child: const Text('↩')),
+                  IconButton(
+                    key: Key('reply-${comment.id}'),
+                    tooltip: l.commentReply,
+                    icon: const Icon(Icons.reply, size: 18),
+                    onPressed: onReply,
+                  ),
               ],
             ),
           ],

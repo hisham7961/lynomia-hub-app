@@ -99,7 +99,7 @@ class _SessionsScreenState extends State<SessionsScreen> {
                   ),
                   title: Text(
                     [
-                      s.platform ?? '؟',
+                      s.platform ?? l.unknownInitial,
                       if (s.appVersion != null) 'v${s.appVersion}',
                     ].join(' · '),
                   ),

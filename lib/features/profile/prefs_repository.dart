@@ -1,6 +1,7 @@
 /// تفضيلات الخادم (§79 §80) — كتم الإشعارات والمثبتات عبر العقد، لا محلياً.
 library;
 
+import 'package:flutter/foundation.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../core/api/api_client.dart';
@@ -86,11 +87,15 @@ class PrefsRepository {
 
   final ApiClient api;
 
+  /// يتقدّم بعد كل تعديلٍ ناجح — الرئيسية تستمع فتعيد جلب المثبتات.
+  final ValueNotifier<int> revision = ValueNotifier(0);
+
   Future<ServerPrefs> fetch() async =>
       ServerPrefs.fromJson(await api.getData('prefs'));
 
   Future<List<String>> setMute(List<String> muted) async {
     final data = await api.sendData('PUT', 'prefs', body: {'mute': muted});
+    revision.value++;
     return (((data['notify'] as Map?) ?? const {})['mute'] as List? ?? const [])
         .map((e) => e.toString())
         .toList();
@@ -104,6 +109,7 @@ class PrefsRepository {
       body: {'token': token},
       idempotencyKey: idempotencyKey ?? const Uuid().v4(),
     );
+    revision.value++;
     return data['pinned'] == true;
   }
 }

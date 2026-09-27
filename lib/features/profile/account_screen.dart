@@ -4,11 +4,13 @@ library;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../app/app.dart';
 import '../../app/di/app_scope.dart';
 import '../../core/push/push_registrar.dart';
 import '../../l10n/app_localizations.dart';
+import '../launch/app_config_repository.dart';
 import '../launch/bootstrap_repository.dart';
 import '../shell/app_shell.dart';
 
@@ -133,7 +135,7 @@ class _AccountScreenState extends State<AccountScreen> {
                     child: Text(
                       user?.name.isNotEmpty == true
                           ? user!.name.characters.first
-                          : '؟',
+                          : l.unknownInitial,
                     ),
                   ),
                   title: Text(user?.name ?? ''),
@@ -221,6 +223,20 @@ class _AccountScreenState extends State<AccountScreen> {
                 ),
               ),
 
+              // التفضيلات الخادمية (§79 §80) — كتم وتثبيت؛ داخلية حصراً.
+              if (!isClient)
+                Card(
+                  margin: const EdgeInsets.only(bottom: 16),
+                  child: ListTile(
+                    key: const Key('account-prefs'),
+                    leading: const Icon(Icons.tune),
+                    title: Text(l.prefsTitle),
+                    subtitle: Text(l.prefsSubtitle),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => context.go('$accountBase/prefs'),
+                  ),
+                ),
+
               // المظهر واللغة (تفضيل محلي §79)
               Card(
                 margin: const EdgeInsets.only(bottom: 16),
@@ -230,9 +246,15 @@ class _AccountScreenState extends State<AccountScreen> {
                       leading: const Icon(Icons.language),
                       title: Text(l.accountLanguage),
                       trailing: SegmentedButton<String>(
-                        segments: const [
-                          ButtonSegment(value: 'ar', label: Text('عربي')),
-                          ButtonSegment(value: 'en', label: Text('EN')),
+                        segments: [
+                          ButtonSegment<String>(
+                            value: 'ar',
+                            label: Text(l.languageArabicShort),
+                          ),
+                          ButtonSegment<String>(
+                            value: 'en',
+                            label: Text(l.languageEnglishShort),
+                          ),
                         ],
                         selected: {
                           Localizations.localeOf(context).languageCode,
@@ -304,6 +326,14 @@ class _AccountScreenState extends State<AccountScreen> {
                   ),
                 ),
 
+              // الإصدار والدعم (§46): تلميحٌ اختياريٌّ بإصدارٍ أحدث من الخادم،
+              // ورابط الدعم حين يهيّئه — لا زرَّ لما لم يُهيّأ.
+              ListenableBuilder(
+                listenable: c.launch,
+                builder: (context, _) =>
+                    _AppAboutCard(config: c.launch.appConfig),
+              ),
+
               // الخروج (§39)
               Card(
                 child: Column(
@@ -335,5 +365,70 @@ class _AccountScreenState extends State<AccountScreen> {
     final platformBrightness = MediaQuery.platformBrightnessOf(context);
     if (brightness == platformBrightness) return ThemeMode.system;
     return brightness == Brightness.dark ? ThemeMode.dark : ThemeMode.light;
+  }
+}
+
+/// بطاقة الإصدار والدعم — كلها من `app-config` الخادمي.
+class _AppAboutCard extends StatelessWidget {
+  const _AppAboutCard({required this.config});
+
+  final AppConfig? config;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    final info = AppScope.of(context).api.appInfo;
+    final cfg = config;
+    final platform =
+        info?.platform ??
+        (Theme.of(context).platform == TargetPlatform.iOS ? 'ios' : 'android');
+    final soft =
+        cfg?.softUpdateAvailable(platform: platform, current: info?.version) ??
+        false;
+    final store = cfg?.storeUrlFor(platform);
+    final support = cfg?.supportUri;
+    return Card(
+      margin: const EdgeInsets.only(bottom: 16),
+      child: Column(
+        children: [
+          ListTile(
+            leading: const Icon(Icons.info_outline),
+            title: Text(l.appVersionTitle),
+            subtitle: Text(
+              info == null ? '—' : '${info.version} (${info.build})',
+              textDirection: TextDirection.ltr,
+              textAlign: TextAlign.start,
+            ),
+          ),
+          if (soft)
+            ListTile(
+              key: const Key('account-update-available'),
+              leading: const Icon(Icons.system_update_alt),
+              title: Text(l.updateAvailableTitle),
+              subtitle: Text(
+                store == null
+                    ? l.updateStoreNotConfigured
+                    : l.updateAvailableBody,
+              ),
+              trailing: store == null ? null : const Icon(Icons.open_in_new),
+              onTap: store == null
+                  ? null
+                  : () => launchUrl(
+                      Uri.parse(store),
+                      mode: LaunchMode.externalApplication,
+                    ),
+            ),
+          if (support != null)
+            ListTile(
+              key: const Key('account-support'),
+              leading: const Icon(Icons.support_agent),
+              title: Text(l.supportTitle),
+              trailing: const Icon(Icons.open_in_new),
+              onTap: () =>
+                  launchUrl(support, mode: LaunchMode.externalApplication),
+            ),
+        ],
+      ),
+    );
   }
 }

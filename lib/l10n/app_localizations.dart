@@ -1987,6 +1987,186 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'أُزيلت من المحفوظات'**
   String get savedRemoved;
+
+  /// No description provided for @syncedAt.
+  ///
+  /// In ar, this message translates to:
+  /// **'آخر مزامنة {date} {time}'**
+  String syncedAt(String date, String time);
+
+  /// No description provided for @notificationNoTarget.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا وجهة لهذا الإشعار — بقي في القائمة'**
+  String get notificationNoTarget;
+
+  /// No description provided for @fileSizeBytes.
+  ///
+  /// In ar, this message translates to:
+  /// **'{count} بايت'**
+  String fileSizeBytes(int count);
+
+  /// No description provided for @fileSizeKb.
+  ///
+  /// In ar, this message translates to:
+  /// **'{size} ك.ب'**
+  String fileSizeKb(String size);
+
+  /// No description provided for @fileSizeMb.
+  ///
+  /// In ar, this message translates to:
+  /// **'{size} م.ب'**
+  String fileSizeMb(String size);
+
+  /// No description provided for @filesNoInAppPreview.
+  ///
+  /// In ar, this message translates to:
+  /// **'المعاينة داخل التطبيق للصور فقط (من الذاكرة، بلا حفظ على الجهاز) — افتح هذا الملف من المنصة على الويب'**
+  String get filesNoInAppPreview;
+
+  /// No description provided for @filesOpenOnWeb.
+  ///
+  /// In ar, this message translates to:
+  /// **'افتح على الويب'**
+  String get filesOpenOnWeb;
+
+  /// No description provided for @filesFieldOnWebOnly.
+  ///
+  /// In ar, this message translates to:
+  /// **'ملف هذا الحقل يُفتح من صفحة السجل على المنصة على الويب'**
+  String get filesFieldOnWebOnly;
+
+  /// No description provided for @filesInfected.
+  ///
+  /// In ar, this message translates to:
+  /// **'محجوب — وُسم مصاباً بفحص الفيروسات'**
+  String get filesInfected;
+
+  /// No description provided for @prefsTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'التفضيلات'**
+  String get prefsTitle;
+
+  /// No description provided for @prefsSubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'كتم الإشعارات وتثبيت المفضّلة — تُحفظ على الخادم'**
+  String get prefsSubtitle;
+
+  /// No description provided for @prefsMuteHint.
+  ///
+  /// In ar, this message translates to:
+  /// **'النوع المكتوم لا يُنشأ لك إشعاره أصلاً — على الويب والجوال معاً'**
+  String get prefsMuteHint;
+
+  /// No description provided for @prefsMuted.
+  ///
+  /// In ar, this message translates to:
+  /// **'مكتوم'**
+  String get prefsMuted;
+
+  /// No description provided for @prefsNotifying.
+  ///
+  /// In ar, this message translates to:
+  /// **'يُشعِرك'**
+  String get prefsNotifying;
+
+  /// No description provided for @prefsPinsCount.
+  ///
+  /// In ar, this message translates to:
+  /// **'مثبّت {count} من {max}'**
+  String prefsPinsCount(int count, int max);
+
+  /// No description provided for @prefsPinsFilter.
+  ///
+  /// In ar, this message translates to:
+  /// **'تصفية الوجهات'**
+  String get prefsPinsFilter;
+
+  /// No description provided for @prefsPin.
+  ///
+  /// In ar, this message translates to:
+  /// **'ثبّت'**
+  String get prefsPin;
+
+  /// No description provided for @prefsUnpin.
+  ///
+  /// In ar, this message translates to:
+  /// **'فكّ التثبيت'**
+  String get prefsUnpin;
+
+  /// No description provided for @languageArabicShort.
+  ///
+  /// In ar, this message translates to:
+  /// **'عربي'**
+  String get languageArabicShort;
+
+  /// No description provided for @languageEnglishShort.
+  ///
+  /// In ar, this message translates to:
+  /// **'EN'**
+  String get languageEnglishShort;
+
+  /// No description provided for @unknownInitial.
+  ///
+  /// In ar, this message translates to:
+  /// **'؟'**
+  String get unknownInitial;
+
+  /// No description provided for @appVersionTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'إصدار التطبيق'**
+  String get appVersionTitle;
+
+  /// No description provided for @updateAvailableTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'إصدار أحدث متاح'**
+  String get updateAvailableTitle;
+
+  /// No description provided for @updateAvailableBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'التحديث اختياري الآن — افتح المتجر'**
+  String get updateAvailableBody;
+
+  /// No description provided for @supportTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'الدعم'**
+  String get supportTitle;
+
+  /// No description provided for @commentReply.
+  ///
+  /// In ar, this message translates to:
+  /// **'رد'**
+  String get commentReply;
+
+  /// No description provided for @listSeparator.
+  ///
+  /// In ar, this message translates to:
+  /// **'، '**
+  String get listSeparator;
+
+  /// No description provided for @percentValue.
+  ///
+  /// In ar, this message translates to:
+  /// **'{value}٪'**
+  String percentValue(int value);
+
+  /// No description provided for @diagnosticsSessionActive.
+  ///
+  /// In ar, this message translates to:
+  /// **'نشطة (id: {id})'**
+  String diagnosticsSessionActive(String id);
+
+  /// No description provided for @diagnosticsPushReadyNoToken.
+  ///
+  /// In ar, this message translates to:
+  /// **'ready (لا رمز)'**
+  String get diagnosticsPushReadyNoToken;
 }
 
 class _AppLocalizationsDelegate

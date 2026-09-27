@@ -34,6 +34,7 @@ import '../../features/members/client_members_repository.dart';
 import '../../features/messages/collab_repository.dart';
 import '../../features/messages/dm_repository.dart';
 import '../../features/modules/module_repository.dart';
+import '../../features/modules/sync_scheduler.dart';
 import '../../features/my_work/work_repository.dart';
 import '../../features/notifications/notification_repository.dart';
 import '../../features/portal/portal_repository.dart';
@@ -42,9 +43,11 @@ import '../../features/profile/prefs_repository.dart';
 import '../../features/scanner/identity_repository.dart';
 import '../../features/ask/ask_repository.dart';
 import '../../features/search/search_repository.dart';
+import '../../features/tracking/location_source.dart';
 import '../../features/tracking/tracking_repository.dart';
 import '../bootstrap/account_state.dart';
 import '../bootstrap/launch_controller.dart';
+import '../bootstrap/resume_coordinator.dart';
 
 class AppContainer {
   AppContainer._({
@@ -60,6 +63,8 @@ class AppContainer {
     required this.connectivity,
     required this.biometricGate,
     required this.biometricPref,
+    PushTokenProvider pushProvider = const NotConfiguredPushProvider(),
+    this.location = const GeolocatorLocationSource(),
   }) {
     auth = AuthRepository(api: api, installation: installation);
     // كسر الدور: التدوير ينفذه AuthRepository عبر العميل نفسه بلا اعتراض مصادقة.
@@ -85,7 +90,7 @@ class AppContainer {
     identity = IdentityRepository(api);
     tracking = TrackingRepository(api);
     serverPrefs = PrefsRepository(api);
-    push = PushRegistrar(api: api, provider: const NotConfiguredPushProvider());
+    push = PushRegistrar(api: api, provider: pushProvider);
     account = AccountState(
       bootstrapRepo: bootstrap,
       viewContext: viewContext,
@@ -97,6 +102,11 @@ class AppContainer {
       viewContext: viewContext,
       userIdOf: () => account.user?.id ?? '-',
     );
+    syncScheduler = SyncScheduler(
+      engine: sync,
+      modules: modules,
+      iaOf: () => account.ia,
+    );
     launch = LaunchController(
       env: env,
       appConfigRepo: appConfig,
@@ -106,6 +116,13 @@ class AppContainer {
       viewContext: viewContext,
       biometricPref: biometricPref,
       biometricGate: biometricGate,
+    );
+    resume = ResumeCoordinator(
+      launch: launch,
+      account: account,
+      appConfigRepo: appConfig,
+      notifications: notifications,
+      syncScheduler: syncScheduler,
     );
   }
 
@@ -163,6 +180,9 @@ class AppContainer {
     required SecureStore secureStore,
     required Directory rootDir,
     AppInfo? appInfo,
+    BiometricGate? biometricGate,
+    PushTokenProvider? pushProvider,
+    LocationSource? location,
   }) {
     final log = RedactingLogger();
     final prefs = PrefsStore(rootDir);
@@ -194,8 +214,10 @@ class AppContainer {
       viewContext: viewContext,
       api: api,
       connectivity: ConnectivityMonitor(source: const Stream.empty()),
-      biometricGate: _NoBiometrics(),
+      biometricGate: biometricGate ?? _NoBiometrics(),
       biometricPref: BiometricPreference(prefs),
+      pushProvider: pushProvider ?? const NotConfiguredPushProvider(),
+      location: location ?? const GeolocatorLocationSource(),
     );
   }
 
@@ -211,6 +233,9 @@ class AppContainer {
   final ConnectivityMonitor connectivity;
   final BiometricGate biometricGate;
   final BiometricPreference biometricPref;
+
+  /// مصدر الموقع (جلسة التتبع الصريحة فقط §71).
+  final LocationSource location;
 
   late final AuthRepository auth;
   late final AppConfigRepository appConfig;
@@ -236,7 +261,9 @@ class AppContainer {
   late final PushRegistrar push;
   late final AccountState account;
   late final SyncEngine sync;
+  late final SyncScheduler syncScheduler;
   late final LaunchController launch;
+  late final ResumeCoordinator resume;
 
   /// خروج كامل (§39): خادمياً ثم محلياً — دفع، رموز، خبيئة، سياق.
   Future<void> signOut({bool everywhere = false}) async {
@@ -246,6 +273,7 @@ class AppContainer {
     } on Object {
       // الخروج المحلي لا يُحجب بفشل شبكة — الخادم يبطل بالمهلة.
     }
+    syncScheduler.reset();
     await account.clearOnLogout();
     await session.end(SessionEndReason.loggedOut);
     launch.onSignedOut();

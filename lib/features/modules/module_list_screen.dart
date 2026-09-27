@@ -2,6 +2,8 @@
 /// إنشاء حيث `can.a`، وسقوط للخبيئة المشفرة عند الانقطاع للوحدات القابلة (§60).
 library;
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -71,6 +73,11 @@ class _ModuleListScreenState extends State<ModuleListScreen> {
         sort: _sort,
       );
       if (!mounted) return;
+      // القائمة الحية نجحت ⇒ تحديث الخبيئة في الخلفية للوحدات القابلة فقط
+      // (`CACHEABLE_*` من المخطط؛ الحساس لا يُطلب ويُمحى أثره) — §60 §62.
+      if (reset && _page == 1 && _query.isEmpty) {
+        unawaited(c.syncScheduler.syncOnOpen(widget.module, schema));
+      }
       setState(() {
         _schema = schema;
         if (reset) _records.clear();
@@ -83,11 +90,15 @@ class _ModuleListScreenState extends State<ModuleListScreen> {
       if (!mounted) return;
       // انقطاع ⇒ سقوط صادق للخبيئة إن كانت الوحدة قابلة للتخبئة (§60 §83).
       CachedModule? cached;
-      if (e is NetworkException && _query.isEmpty) {
+      final schema = _schema ?? c.modules.lastSchema?.modules[widget.module];
+      if (e is NetworkException &&
+          _query.isEmpty &&
+          (schema == null || isCacheableClass(schema.syncClass))) {
         cached = await c.sync.readCached(widget.module);
       }
       if (!mounted) return;
       setState(() {
+        _schema ??= schema;
         _error = e;
         _cachedFallback = cached;
         _loading = false;
@@ -176,7 +187,24 @@ class _ModuleListScreenState extends State<ModuleListScreen> {
       return Column(
         children: [
           MaterialBanner(
-            content: Text(l.stateOfflineCached),
+            content: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(l.stateOfflineCached),
+                if (cached.syncedAt != null)
+                  Text(
+                    l.syncedAt(
+                      MaterialLocalizations.of(context)
+                          .formatShortDate(cached.syncedAt!.toLocal()),
+                      MaterialLocalizations.of(context).formatTimeOfDay(
+                        TimeOfDay.fromDateTime(cached.syncedAt!.toLocal()),
+                      ),
+                    ),
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+              ],
+            ),
             leading: const Icon(Icons.cloud_off),
             actions: [TextButton(onPressed: _load, child: Text(l.actionRetry))],
           ),
@@ -239,7 +267,7 @@ class _RecordTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final s = schema;
-    final title = s == null ? record.id : record.display(s);
+    final title = record.display(s);
     String? subtitle;
     if (s != null) {
       final statusField = s.fields

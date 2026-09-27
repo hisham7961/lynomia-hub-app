@@ -47,3 +47,9 @@ kotlin {
 flutter {
     source = "../.."
 }
+
+dependencies {
+    // سمة LaunchTheme من AppCompat — شرط local_auth على Android 8 وما دونه
+    // (FlutterFragmentActivity + Theme.AppCompat).
+    implementation("androidx.appcompat:appcompat:1.6.1")
+}

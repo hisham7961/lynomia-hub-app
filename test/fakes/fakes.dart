@@ -8,8 +8,11 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:lynomia_hub_app/app/di/app_scope.dart';
 import 'package:lynomia_hub_app/core/config/app_env.dart';
+import 'package:lynomia_hub_app/core/push/push_registrar.dart';
+import 'package:lynomia_hub_app/core/security/biometric_gate.dart';
 import 'package:lynomia_hub_app/core/storage/secure_store.dart';
 import 'package:lynomia_hub_app/core/telemetry/app_info.dart';
+import 'package:lynomia_hub_app/features/tracking/location_source.dart';
 
 /// مخزن آمن في الذاكرة — بديل Keychain/Keystore للاختبار.
 class InMemorySecureStore implements SecureStore {
@@ -192,7 +195,12 @@ class TestHarness {
   final InMemorySecureStore secureStore;
   final Directory tempDir;
 
-  static TestHarness create({String env = 'dev'}) {
+  static TestHarness create({
+    String env = 'dev',
+    BiometricGate? biometricGate,
+    PushTokenProvider? pushProvider,
+    LocationSource? location,
+  }) {
     final transport = ScriptedHttpClient();
     final secureStore = InMemorySecureStore();
     final tempDir = Directory.systemTemp.createTempSync('lynomia_test_');
@@ -205,6 +213,9 @@ class TestHarness {
       secureStore: secureStore,
       rootDir: tempDir,
       appInfo: const AppInfo(platform: 'android', version: '0.1.0', build: '1'),
+      biometricGate: biometricGate,
+      pushProvider: pushProvider,
+      location: location,
     );
     return TestHarness._(container, transport, secureStore, tempDir);
   }

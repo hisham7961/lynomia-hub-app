@@ -24,7 +24,20 @@ class AccountState extends ChangeNotifier {
   Bootstrap? bootstrap;
 
   IaTree get ia => bootstrap?.ia ?? IaTree.empty;
-  int get unreadNotifications => bootstrap?.unreadNotifications ?? 0;
+
+  /// عدّاد غير المقروء الحي (`notifications/unread-count` أو رد القراءة) —
+  /// يتقدّم على لقطة bootstrap حتى إعادة جلبها.
+  int? _liveUnread;
+  int get unreadNotifications =>
+      _liveUnread ?? bootstrap?.unreadNotifications ?? 0;
+
+  /// تحديث الشارة من رقمٍ خادمي حيّ (لا حساب محلي).
+  void setUnread(int value) {
+    if (value < 0 || value == _liveUnread) return;
+    _liveUnread = value;
+    notifyListeners();
+  }
+
   bool flag(String name) => bootstrap?.flag(name) ?? false;
 
   /// قدرةٌ لا يُحجب بابها إلا بـ`false` صريح من الخادم (غيابُ العلم ⇒ يُجرَّب
@@ -40,6 +53,7 @@ class AccountState extends ChangeNotifier {
   Future<void> loadBootstrap({bool force = false}) async {
     bootstrap = await bootstrapRepo.fetch(force: force);
     user = bootstrap!.user;
+    _liveUnread = null;
     notifyListeners();
   }
 
@@ -70,6 +84,7 @@ class AccountState extends ChangeNotifier {
     final uid = user?.id;
     user = null;
     bootstrap = null;
+    _liveUnread = null;
     bootstrapRepo.invalidate();
     viewContext.clear();
     if (uid != null) await cache.deleteByPrefix('sync_u_${uid}_');

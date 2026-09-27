@@ -115,12 +115,16 @@ class FieldValueView extends StatelessWidget {
           ],
         );
       case 'ref':
-        if (v is List) return Text(v.map((e) => e.toString()).join('، '));
+        if (v is List) {
+          return Text(v.map((e) => e.toString()).join(l.listSeparator));
+        }
         return Text(v.toString());
       case 'ta':
         return Text(v.toString());
       default: // text وأي نوع مستقبلي مجهول — نص آمن (§93)
-        if (v is List) return Text(v.map((e) => e.toString()).join('، '));
+        if (v is List) {
+          return Text(v.map((e) => e.toString()).join(l.listSeparator));
+        }
         return Text(v.toString());
     }
   }

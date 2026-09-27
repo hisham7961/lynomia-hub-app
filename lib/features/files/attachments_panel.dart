@@ -3,6 +3,10 @@
 ///
 /// ملاحظة عقدية: لا نقطة جوال تسرد مرفقات سجل قائمة — المعروض هنا حقول
 /// file/img من السجل وما رُفع في هذه الجلسة (موثق في docs/backend-change-requests.md).
+///
+/// الفتح (§69): المرفق المرفوع يُنزَّل عبر `files/{id}/download` **إلى الذاكرة**؛
+/// الصورة تُعرض من البايتات ولا تلمس القرص، وما عداها يُفتح بصدقٍ من المنصة على
+/// الويب (لا عارض أصلي بلا كتابة ملف مؤقت — قاعدة عدم الإبقاء على القرص).
 library;
 
 import 'dart:io';
@@ -12,15 +16,64 @@ import 'dart:typed_data';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../app/di/app_scope.dart';
+import '../../core/errors/api_exception.dart';
 import '../../core/ui/async_view.dart';
 import '../../l10n/app_localizations.dart';
 import '../modules/module_repository.dart';
 import '../modules/module_schema.dart';
 import '../records/field_display.dart';
 import 'file_repository.dart';
+
+/// مصدر الإرفاق كما يختاره المستخدم.
+enum AttachmentSource { camera, gallery, document }
+
+/// ملف اختاره المستخدم من منصة الجهاز.
+class PickedAttachment {
+  const PickedAttachment(this.file, this.name);
+  final File file;
+  final String name;
+}
+
+typedef AttachmentPicker = Future<PickedAttachment?> Function(
+  AttachmentSource source,
+);
+
+/// المنتقي الحقيقي (كاميرا/مكتبة/مستندات) — خلف واجهة لها Fake في الاختبار.
+Future<PickedAttachment?> platformAttachmentPicker(
+  AttachmentSource source,
+) async {
+  switch (source) {
+    case AttachmentSource.camera:
+    case AttachmentSource.gallery:
+      final picked = await ImagePicker().pickImage(
+        source: source == AttachmentSource.camera
+            ? ImageSource.camera
+            : ImageSource.gallery,
+      );
+      return picked == null
+          ? null
+          : PickedAttachment(File(picked.path), picked.name);
+    case AttachmentSource.document:
+      final res = await FilePicker.platform.pickFiles();
+      final path = res?.files.single.path;
+      return path == null
+          ? null
+          : PickedAttachment(File(path), res!.files.single.name);
+  }
+}
+
+/// صيغة حجم مقروءة (بايت/ك.ب/م.ب) من ARB — لا وحدة صلبة.
+String formatFileSize(AppLocalizations l, int bytes) {
+  if (bytes < 1024) return l.fileSizeBytes(bytes);
+  if (bytes < 1024 * 1024) {
+    return l.fileSizeKb((bytes / 1024).toStringAsFixed(1));
+  }
+  return l.fileSizeMb((bytes / (1024 * 1024)).toStringAsFixed(1));
+}
 
 class AttachmentsPanel extends StatefulWidget {
   const AttachmentsPanel({
@@ -29,12 +82,14 @@ class AttachmentsPanel extends StatefulWidget {
     required this.recordId,
     required this.schema,
     required this.record,
+    this.picker = platformAttachmentPicker,
   });
 
   final String module;
   final String recordId;
   final ModuleSchema schema;
   final RecordData record;
+  final AttachmentPicker picker;
 
   @override
   State<AttachmentsPanel> createState() => _AttachmentsPanelState();
@@ -44,31 +99,11 @@ class _AttachmentsPanelState extends State<AttachmentsPanel> {
   final List<AttachmentInfo> _uploaded = [];
   _UploadJob? _job;
 
-  Future<void> _pickAndUpload(_PickSource source) async {
+  Future<void> _pickAndUpload(AttachmentSource source) async {
     final l = AppLocalizations.of(context)!;
-    File? file;
-    String? name;
+    PickedAttachment? picked;
     try {
-      switch (source) {
-        case _PickSource.camera:
-        case _PickSource.gallery:
-          final picked = await ImagePicker().pickImage(
-            source: source == _PickSource.camera
-                ? ImageSource.camera
-                : ImageSource.gallery,
-          );
-          if (picked != null) {
-            file = File(picked.path);
-            name = picked.name;
-          }
-        case _PickSource.document:
-          final res = await FilePicker.platform.pickFiles();
-          final path = res?.files.single.path;
-          if (path != null) {
-            file = File(path);
-            name = res!.files.single.name;
-          }
-      }
+      picked = await widget.picker(source);
     } on Object {
       // إذن مرفوض/منصة بلا قناة — لا انهيار.
       if (mounted) {
@@ -77,8 +112,57 @@ class _AttachmentsPanelState extends State<AttachmentsPanel> {
       }
       return;
     }
-    if (file == null || name == null || !mounted) return;
-    await _upload(file, name);
+    if (picked == null || !mounted) return;
+    await _upload(picked.file, picked.name);
+  }
+
+  /// فتح مرفق: صورة ⇒ معاينة من الذاكرة؛ غيرها ⇒ صدقٌ: يُفتح من الويب.
+  Future<void> _open(AttachmentInfo a) async {
+    if (a.isImage) {
+      await Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (_) => AttachmentPreviewScreen(attachment: a),
+        ),
+      );
+      return;
+    }
+    await _offerWeb(AppLocalizations.of(context)!.filesNoInAppPreview);
+  }
+
+  Future<void> _offerWeb(String message) async {
+    final l = AppLocalizations.of(context)!;
+    final webUri = _webRecordUri();
+    final go = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(l.actionClose),
+          ),
+          FilledButton.icon(
+            onPressed: () => Navigator.pop(ctx, true),
+            icon: const Icon(Icons.open_in_new),
+            label: Text(l.filesOpenOnWeb),
+          ),
+        ],
+      ),
+    );
+    if (go == true) {
+      await launchUrl(webUri, mode: LaunchMode.inAppBrowserView);
+    }
+  }
+
+  /// صفحة السجل على الويب (`/m/{module}/{id}`) — خلف دخول الويب نفسه.
+  Uri _webRecordUri() {
+    final root = AppScope.of(context).env.apiRoot;
+    final base = root.path.replaceAll(RegExp(r'/+$'), '');
+    return root.replace(
+      path:
+          '$base/m/${Uri.encodeComponent(widget.module)}/'
+          '${Uri.encodeComponent(widget.recordId)}',
+    );
   }
 
   Future<void> _upload(File file, String name) async {
@@ -180,17 +264,17 @@ class _AttachmentsPanelState extends State<AttachmentsPanel> {
             ActionChip(
               avatar: const Icon(Icons.photo_camera_outlined, size: 18),
               label: Text(l.filesCamera),
-              onPressed: () => _pickAndUpload(_PickSource.camera),
+              onPressed: () => _pickAndUpload(AttachmentSource.camera),
             ),
             ActionChip(
               avatar: const Icon(Icons.photo_library_outlined, size: 18),
               label: Text(l.filesGallery),
-              onPressed: () => _pickAndUpload(_PickSource.gallery),
+              onPressed: () => _pickAndUpload(AttachmentSource.gallery),
             ),
             ActionChip(
               avatar: const Icon(Icons.folder_outlined, size: 18),
               label: Text(l.filesDocument),
-              onPressed: () => _pickAndUpload(_PickSource.document),
+              onPressed: () => _pickAndUpload(AttachmentSource.document),
             ),
           ],
         ),
@@ -235,6 +319,13 @@ class _AttachmentsPanelState extends State<AttachmentsPanel> {
                     field: f,
                     value: widget.record[f.key],
                   ),
+                  // قيمة الحقل مسار تخزين لا معرّف مرفق — لا نقطة جوال لبايتاته،
+                  // فالفتح صادقٌ عبر صفحة السجل على الويب.
+                  trailing: IconButton(
+                    tooltip: l.filesOpenOnWeb,
+                    icon: const Icon(Icons.open_in_new),
+                    onPressed: () => _offerWeb(l.filesFieldOnWebOnly),
+                  ),
                 ),
               ),
           for (final a in _uploaded)
@@ -247,7 +338,18 @@ class _AttachmentsPanelState extends State<AttachmentsPanel> {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
-                subtitle: a.size == null ? null : Text('${a.size} B'),
+                subtitle: a.size == null
+                    ? null
+                    : Text(formatFileSize(l, a.size!)),
+                trailing: IconButton(
+                  key: Key('attachment-open-${a.id}'),
+                  tooltip: l.actionOpen,
+                  icon: Icon(
+                    a.isImage ? Icons.visibility_outlined : Icons.open_in_new,
+                  ),
+                  onPressed: () => _open(a),
+                ),
+                onTap: () => _open(a),
               ),
             ),
         ],
@@ -256,7 +358,82 @@ class _AttachmentsPanelState extends State<AttachmentsPanel> {
   }
 }
 
-enum _PickSource { camera, gallery, document }
+/// معاينة صورة مرفق من الذاكرة — البايتات تُترك مع الشاشة، لا ملف ولا خبيئة
+/// (نظير معاينة «وثائقي»؛ صالحة للحسّاس لأن لا شيء يهبط القرص).
+class AttachmentPreviewScreen extends StatefulWidget {
+  const AttachmentPreviewScreen({super.key, required this.attachment});
+
+  final AttachmentInfo attachment;
+
+  @override
+  State<AttachmentPreviewScreen> createState() =>
+      _AttachmentPreviewScreenState();
+}
+
+class _AttachmentPreviewScreenState extends State<AttachmentPreviewScreen> {
+  Uint8List? _bytes;
+  Object? _error;
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    try {
+      final bytes = await AppScope.of(context).files
+          .download(widget.attachment.id);
+      if (mounted) setState(() => _bytes = bytes);
+    } on Object catch (e) {
+      if (mounted) setState(() => _error = e);
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  @override
+  void dispose() {
+    _bytes = null;
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    final e = _error;
+    // الإصابة (٤٢٣ LOCKED) حالة معروفة بنصٍّ محلي من الرمز لا من الرسالة.
+    final infected = e is ApiException && e.code == ApiErrorCode.locked;
+    return Scaffold(
+      appBar: AppBar(title: Text(widget.attachment.name)),
+      body: infected
+          ? EmptyView(message: l.filesInfected, icon: Icons.gpp_bad_outlined)
+          : AsyncView<Uint8List>(
+              loading: _loading,
+              error: _error,
+              value: _bytes,
+              onRetry: _load,
+              emptyWhen: (b) => b.isEmpty,
+              builder: (context, bytes) => InteractiveViewer(
+                child: Center(
+                  child: Image.memory(
+                    bytes,
+                    key: const Key('attachment-image'),
+                    gaplessPlayback: true,
+                    errorBuilder: (_, _, _) =>
+                        EmptyView(message: l.filesNoInAppPreview),
+                  ),
+                ),
+              ),
+            ),
+    );
+  }
+}
 
 class _UploadJob {
   _UploadJob({required this.name});

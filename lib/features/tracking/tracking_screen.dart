@@ -5,12 +5,12 @@ library;
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:geolocator/geolocator.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../app/di/app_scope.dart';
 import '../../core/ui/async_view.dart';
 import '../../l10n/app_localizations.dart';
+import 'location_source.dart';
 import 'tracking_repository.dart';
 
 class TrackingScreen extends StatefulWidget {
@@ -24,7 +24,7 @@ class _TrackingScreenState extends State<TrackingScreen> {
   bool _consented = false;
   bool _busy = false;
   String? _sessionId;
-  StreamSubscription<Position>? _positions;
+  StreamSubscription<LocationFix>? _positions;
   final List<TrackPoint> _pending = [];
   Timer? _flushTimer;
   int _sent = 0;
@@ -46,12 +46,7 @@ class _TrackingScreenState extends State<TrackingScreen> {
     setState(() => _busy = true);
     final c = AppScope.of(context);
     try {
-      var permission = await Geolocator.checkPermission();
-      if (permission == LocationPermission.denied) {
-        permission = await Geolocator.requestPermission();
-      }
-      if (permission == LocationPermission.denied ||
-          permission == LocationPermission.deniedForever) {
+      if (!await c.location.ensurePermission()) {
         if (mounted) {
           ScaffoldMessenger.of(
             context,
@@ -66,12 +61,7 @@ class _TrackingScreenState extends State<TrackingScreen> {
         _sent = 0;
         _seq = 0;
       });
-      _positions = Geolocator.getPositionStream(
-        locationSettings: const LocationSettings(
-          accuracy: LocationAccuracy.high,
-          distanceFilter: 15,
-        ),
-      ).listen(_onPosition);
+      _positions = c.location.positions().listen(_onPosition);
       _flushTimer = Timer.periodic(
         const Duration(seconds: 30),
         (_) => _flush(),
@@ -86,12 +76,12 @@ class _TrackingScreenState extends State<TrackingScreen> {
     }
   }
 
-  void _onPosition(Position p) {
+  void _onPosition(LocationFix p) {
     _pending.add(
       TrackPoint(
-        lat: p.latitude,
-        lng: p.longitude,
-        at: p.timestamp,
+        lat: p.lat,
+        lng: p.lng,
+        at: p.at,
         accuracy: p.accuracy,
         seq: _seq++,
       ),

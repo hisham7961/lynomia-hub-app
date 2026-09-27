@@ -82,7 +82,7 @@ class _ClientHomeScreenState extends State<ClientHomeScreen> {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          home.clients.map((c) => c.name).join('، '),
+                          home.clients.map((c) => c.name).join(l.listSeparator),
                           style: Theme.of(context).textTheme.titleMedium,
                         ),
                       ],
@@ -112,7 +112,7 @@ class _ClientHomeScreenState extends State<ClientHomeScreen> {
                           name: p.name,
                           subtitle: [
                             ?p.status,
-                            if (p.progress != null) '${p.progress}٪',
+                            if (p.progress != null) l.percentValue(p.progress!),
                           ].join(' · '),
                           onTap: () => context.go('/portal/projects/${p.id}'),
                         ),

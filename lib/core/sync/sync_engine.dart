@@ -64,8 +64,9 @@ class SyncEngine {
       );
       syncClass = data['sync_class']?.toString() ?? 'ONLINE_ONLY';
 
-      if (data['cacheable'] != true) {
-        // سياسة صادقة بلا سجلات — ولا أثر قديماً على القرص (§61 §62).
+      if (data['cacheable'] != true || !isCacheableClass(syncClass)) {
+        // سياسة صادقة بلا سجلات — ولا أثر قديماً على القرص (§61 §62). ودفاعٌ
+        // في العمق: صنفٌ غير `CACHEABLE_*` لا يُكتب ولو ادّعى الرد `cacheable`.
         await cache.delete(_ns(module));
         return SyncResult(
           module: module,
@@ -132,10 +133,21 @@ class SyncEngine {
     );
   }
 
+  /// محو أثر وحدةٍ في السياق الحالي (صنفها صار غير قابل للتخبئة).
+  Future<void> purgeModule(String module) => cache.delete(_ns(module));
+
+  /// هل للوحدة أثرٌ على القرص في السياق الحالي؟ (لاختبارات إثبات عدم الهبوط)
+  Future<bool> hasDiskTrace(String module) => cache.existsOnDisk(_ns(module));
+
   /// إسقاط خبيئة السياق الحالي كله (تبديل سياق §43 أو خروج §39).
   Future<void> purgeCurrentUser() =>
       cache.deleteByPrefix('sync_u_${userIdOf()}_');
 }
+
+/// الأصناف القابلة للتخبئة حصراً `CACHEABLE_*` (§60) — وما عداها لا يلمس القرص.
+bool isCacheableClass(String syncClass) =>
+    syncClass.startsWith('CACHEABLE') &&
+    !EncryptedJsonCache.forbiddenClasses.contains(syncClass);
 
 class CachedModule {
   const CachedModule({

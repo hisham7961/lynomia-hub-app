@@ -16,6 +16,17 @@ class LaunchGateScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final launch = AppScope.of(context).launch;
     final l = AppLocalizations.of(context)!;
+    // رابط الدعم (§46) حين يهيّئه الخادم — على بوابات الحجب وحدها.
+    Widget? support() {
+      final uri = launch.appConfig?.supportUri;
+      if (uri == null) return null;
+      return TextButton.icon(
+        key: const Key('launch-support'),
+        onPressed: () => launchUrl(uri, mode: LaunchMode.externalApplication),
+        icon: const Icon(Icons.support_agent),
+        label: Text(l.supportTitle),
+      );
+    }
 
     return Scaffold(
       body: ListenableBuilder(
@@ -47,6 +58,7 @@ class LaunchGateScreen extends StatelessWidget {
                   onPressed: launch.start,
                   child: Text(l.actionRetry),
                 ),
+                footer: support(),
               ),
               LaunchMaintenance(:final message, :final lockdown) => _Gate(
                 icon: lockdown ? Icons.lock_outline : Icons.build_outlined,
@@ -58,6 +70,7 @@ class LaunchGateScreen extends StatelessWidget {
                   onPressed: launch.start,
                   child: Text(l.actionRetry),
                 ),
+                footer: support(),
               ),
               LaunchUpdateRequired(:final config) => _Gate(
                 icon: Icons.system_update_alt,
@@ -68,6 +81,7 @@ class LaunchGateScreen extends StatelessWidget {
                   iosUrl: config.storeUrlIos,
                   androidUrl: config.storeUrlAndroid,
                 ),
+                footer: support(),
               ),
               LaunchLocked() => _Gate(
                 icon: Icons.fingerprint,
@@ -93,12 +107,14 @@ class _Gate extends StatelessWidget {
     required this.title,
     required this.body,
     this.action,
+    this.footer,
   });
 
   final IconData icon;
   final String title;
   final String body;
   final Widget? action;
+  final Widget? footer;
 
   @override
   Widget build(BuildContext context) => Column(
@@ -110,6 +126,7 @@ class _Gate extends StatelessWidget {
       const SizedBox(height: 8),
       Text(body, textAlign: TextAlign.center),
       if (action != null) ...[const SizedBox(height: 24), action!],
+      if (footer != null) ...[const SizedBox(height: 8), footer!],
     ],
   );
 }

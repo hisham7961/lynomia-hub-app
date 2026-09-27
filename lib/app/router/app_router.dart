@@ -23,6 +23,7 @@ import '../../features/portal/portal_screens.dart';
 import '../../features/profile/account_screen.dart';
 import '../../features/profile/diagnostics_screen.dart';
 import '../../features/profile/my_documents_screen.dart';
+import '../../features/profile/prefs_screen.dart';
 import '../../features/profile/sessions_screen.dart';
 import '../../features/records/record_form_screen.dart';
 import '../../features/records/record_screen.dart';
@@ -133,6 +134,11 @@ GoRouter buildRouter(AppContainer c) => GoRouter(
               path: '/account',
               builder: (context, state) => const AccountScreen(),
               routes: [
+                // التفضيلات الخادمية — داخلية حصراً (prefs خارج قائمة العميل).
+                GoRoute(
+                  path: 'prefs',
+                  builder: (context, state) => const PrefsScreen(),
+                ),
                 GoRoute(
                   path: 'sessions',
                   builder: (context, state) => const SessionsScreen(),

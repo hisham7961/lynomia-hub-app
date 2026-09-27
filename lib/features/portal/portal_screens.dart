@@ -116,7 +116,7 @@ class PortalProjectsScreen extends StatelessWidget {
         subtitle: Text(
           [
             ?p.status,
-            if (p.progress != null) '${p.progress}٪',
+            if (p.progress != null) l.percentValue(p.progress!),
             ?p.launchExpected,
           ].join(' · '),
         ),
@@ -177,7 +177,7 @@ class _PortalProjectScreenState extends State<PortalProjectScreen> {
           children: [
             if (p.progress != null) ...[
               Text(
-                '${l.projectProgress}: ${p.progress}٪',
+                '${l.projectProgress}: ${l.percentValue(p.progress!)}',
                 style: Theme.of(context).textTheme.titleMedium,
               ),
               const SizedBox(height: 8),

@@ -36,6 +36,8 @@ class _LynomiaAppState extends State<LynomiaApp> {
   void initState() {
     super.initState();
     widget.container.launch.start();
+    // الإقلاع/الاستئناف: صحة مقيّدة، شارة حية، مزامنة القابل للتخبئة (§45 §51 §60).
+    widget.container.resume.attach();
     _restorePrefs();
     if (widget.listenAppLinks) _wireDeepLinks();
     // انتهاء/إبطال الجلسة أثناء الاستخدام ⇒ عودة للدخول (§38 §90).
@@ -44,6 +46,12 @@ class _LynomiaAppState extends State<LynomiaApp> {
         widget.container.launch.onSignedOut();
       }
     });
+  }
+
+  @override
+  void dispose() {
+    widget.container.resume.detach();
+    super.dispose();
   }
 
   Future<void> _restorePrefs() async {

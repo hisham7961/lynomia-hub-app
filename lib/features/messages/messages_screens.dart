@@ -74,7 +74,7 @@ class PresenceDot extends StatelessWidget {
 /// نص «فلان يكتب…» من أسماء يعيدها الخادم.
 String typingText(AppLocalizations l, List<String> names) => names.length == 1
     ? l.typingOne(names.single)
-    : l.typingMany(names.join('، '));
+    : l.typingMany(names.join(l.listSeparator));
 
 class DmThreadsScreen extends StatelessWidget {
   const DmThreadsScreen({super.key});
@@ -180,7 +180,9 @@ class _DirectThreadsTabState extends State<_DirectThreadsTab> {
                 children: [
                   CircleAvatar(
                     child: Text(
-                      t.userName.isEmpty ? '؟' : t.userName.characters.first,
+                      t.userName.isEmpty
+                          ? l.unknownInitial
+                          : t.userName.characters.first,
                     ),
                   ),
                   if (p != null)

@@ -48,6 +48,15 @@ class NotificationsPage {
   final bool hasMore;
 }
 
+/// نتيجة فتح إشعار: الوجهة القانونية (أو null ⇒ البقاء في القائمة) وعدّاد
+/// غير المقروء الخادمي بعد الفتح (null حين لم يُعِده الخادم).
+class NotificationOpenResult {
+  const NotificationOpenResult({this.target, this.unread});
+
+  final DeepTarget? target;
+  final int? unread;
+}
+
 class NotificationRepository {
   NotificationRepository(this.api);
 
@@ -83,6 +92,20 @@ class NotificationRepository {
   Future<DeepTarget?> markRead(String id) async => DeepTarget.fromJson(
     (await api.sendData('POST', 'notifications/$id/read'))['target'],
   );
+
+  /// فتح إشعار (§51): غير المقروء يُختم بـ`POST read` (يعيد الوجهة والعدّاد)؛
+  /// والمقروء سلفاً يُحلّ بـ`GET target` بلا أثر جانبي.
+  Future<NotificationOpenResult> open(
+    String id, {
+    required bool alreadyRead,
+  }) async {
+    if (alreadyRead) return NotificationOpenResult(target: await target(id));
+    final data = await api.sendData('POST', 'notifications/$id/read');
+    return NotificationOpenResult(
+      target: DeepTarget.fromJson(data['target']),
+      unread: (data['unread'] as num?)?.toInt(),
+    );
+  }
 
   Future<DeepTarget?> target(String id) async => DeepTarget.fromJson(
     (await api.getData('notifications/$id/target'))['target'],

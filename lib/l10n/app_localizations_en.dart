@@ -1036,4 +1036,114 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get savedRemoved => 'Removed from saved';
+
+  @override
+  String syncedAt(String date, String time) {
+    return 'Last synced $date $time';
+  }
+
+  @override
+  String get notificationNoTarget =>
+      'This notification has no destination — staying in the list';
+
+  @override
+  String fileSizeBytes(int count) {
+    return '$count B';
+  }
+
+  @override
+  String fileSizeKb(String size) {
+    return '$size KB';
+  }
+
+  @override
+  String fileSizeMb(String size) {
+    return '$size MB';
+  }
+
+  @override
+  String get filesNoInAppPreview =>
+      'In-app preview supports images only (from memory, never saved on the device) — open this file from the web platform';
+
+  @override
+  String get filesOpenOnWeb => 'Open on web';
+
+  @override
+  String get filesFieldOnWebOnly =>
+      'This field\'s file opens from the record page on the web platform';
+
+  @override
+  String get filesInfected => 'Blocked — flagged as infected by the virus scan';
+
+  @override
+  String get prefsTitle => 'Preferences';
+
+  @override
+  String get prefsSubtitle =>
+      'Mute notifications and pin favourites — saved on the server';
+
+  @override
+  String get prefsMuteHint =>
+      'Muted kinds are never created for you — on web and mobile alike';
+
+  @override
+  String get prefsMuted => 'Muted';
+
+  @override
+  String get prefsNotifying => 'Notifying';
+
+  @override
+  String prefsPinsCount(int count, int max) {
+    return '$count of $max pinned';
+  }
+
+  @override
+  String get prefsPinsFilter => 'Filter destinations';
+
+  @override
+  String get prefsPin => 'Pin';
+
+  @override
+  String get prefsUnpin => 'Unpin';
+
+  @override
+  String get languageArabicShort => 'عربي';
+
+  @override
+  String get languageEnglishShort => 'EN';
+
+  @override
+  String get unknownInitial => '?';
+
+  @override
+  String get appVersionTitle => 'App version';
+
+  @override
+  String get updateAvailableTitle => 'A newer version is available';
+
+  @override
+  String get updateAvailableBody =>
+      'Updating is optional for now — open the store';
+
+  @override
+  String get supportTitle => 'Support';
+
+  @override
+  String get commentReply => 'Reply';
+
+  @override
+  String get listSeparator => ', ';
+
+  @override
+  String percentValue(int value) {
+    return '$value%';
+  }
+
+  @override
+  String diagnosticsSessionActive(String id) {
+    return 'active (id: $id)';
+  }
+
+  @override
+  String get diagnosticsPushReadyNoToken => 'ready (no token)';
 }

@@ -193,7 +193,11 @@ class _ClientMembersScreenState extends State<ClientMembersScreen> {
               final m = members[i];
               return ListTile(
                 leading: CircleAvatar(
-                  child: Text(m.userName.isNotEmpty ? m.userName[0] : '؟'),
+                  child: Text(
+                    m.userName.isNotEmpty
+                        ? m.userName.characters.first
+                        : l.unknownInitial,
+                  ),
                 ),
                 title: Text(m.userName.isNotEmpty ? m.userName : m.userEmail),
                 subtitle: Text(

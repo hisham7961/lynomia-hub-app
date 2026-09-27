@@ -27,9 +27,10 @@ class RecordData {
 
   Object? operator [](String key) => fields[key];
 
-  String display(ModuleSchema schema) {
-    final f = schema.displayField;
-    final v = f == null ? null : fields[f.key];
+  String display(ModuleSchema? schema) {
+    final f = schema?.displayField;
+    // بلا مخطط (دون اتصال قبل أي جلب): الحقول الدلالية الشائعة ثم المعرّف.
+    final v = f == null ? (fields['name'] ?? fields['title']) : fields[f.key];
     final s = v?.toString() ?? '';
     return s.isEmpty ? id : s;
   }
@@ -117,6 +118,9 @@ class ModuleRepository {
     _schemaEtag = resp.etag;
     return _schema = SchemaSnapshot.fromJson(resp.dataMap);
   }
+
+  /// آخر لقطة مخطط في الذاكرة (قد تغيب) — لعرض الخبيئة دون اتصال بتسمياتها.
+  SchemaSnapshot? get lastSchema => _schema;
 
   void invalidateSchema() {
     _schema = null;

@@ -1,12 +1,16 @@
 /// الرئيسية (§47) — ما يتطلب انتباهك، مواعيد، مهامك، مشاريعك، آخر النشاط.
 library;
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../app/di/app_scope.dart';
 import '../../core/ui/async_view.dart';
 import '../../l10n/app_localizations.dart';
+import '../profile/prefs_repository.dart';
 import '../shell/app_shell.dart';
 import 'home_repository.dart';
 
@@ -22,13 +26,48 @@ class _HomeScreenState extends State<HomeScreen> {
   Object? _error;
   bool _loading = true;
 
+  /// مثبتاتي من `GET prefs` — تعرض حين يعيدها الخادم؛ وفشلها لا يسقط البيت.
+  List<PinTarget> _pins = const [];
+  late final ValueNotifier<int> _prefsRevision;
+
   @override
   void initState() {
     super.initState();
+    _prefsRevision = AppScope.of(context).serverPrefs.revision;
+    _prefsRevision.addListener(_loadPins);
     _load();
   }
 
+  @override
+  void dispose() {
+    _prefsRevision.removeListener(_loadPins);
+    super.dispose();
+  }
+
+  Future<void> _loadPins() async {
+    try {
+      final prefs = await AppScope.of(context).serverPrefs.fetch();
+      if (mounted) setState(() => _pins = prefs.pinned);
+    } on Object {
+      // قسمٌ ثانوي — يغيب بصدق ولا يحجب البيت.
+    }
+  }
+
+  void _openPin(PinTarget pin) {
+    final module = pin.module;
+    if (module != null && module.isNotEmpty) {
+      context.push('/m/$module');
+    } else {
+      // وجهة ويب (رابط علوي) — تُفتح في المتصفح المضمن لا شاشة زائفة (§16).
+      launchUrl(
+        AppScope.of(context).env.apiRoot,
+        mode: LaunchMode.inAppBrowserView,
+      );
+    }
+  }
+
   Future<void> _load() async {
+    unawaited(_loadPins());
     setState(() {
       _loading = true;
       _error = null;
@@ -98,6 +137,29 @@ class _HomeScreenState extends State<HomeScreen> {
                       onTap: () => context.push('/ask'),
                     ),
                   ),
+                ),
+              if (_pins.isNotEmpty)
+                _Section(
+                  title: l.pinnedTitle,
+                  children: _pins
+                      .map(
+                        (p) => ListTile(
+                          key: Key('home-pin-${p.token}'),
+                          leading: const Icon(Icons.push_pin_outlined),
+                          title: Text(
+                            p.label,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          trailing: Icon(
+                            p.module == null
+                                ? Icons.open_in_new
+                                : Icons.chevron_right,
+                          ),
+                          onTap: () => _openPin(p),
+                        ),
+                      )
+                      .toList(),
                 ),
               if (snap.attention.isNotEmpty)
                 _Section(

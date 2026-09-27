@@ -1023,4 +1023,112 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get savedRemoved => 'أُزيلت من المحفوظات';
+
+  @override
+  String syncedAt(String date, String time) {
+    return 'آخر مزامنة $date $time';
+  }
+
+  @override
+  String get notificationNoTarget => 'لا وجهة لهذا الإشعار — بقي في القائمة';
+
+  @override
+  String fileSizeBytes(int count) {
+    return '$count بايت';
+  }
+
+  @override
+  String fileSizeKb(String size) {
+    return '$size ك.ب';
+  }
+
+  @override
+  String fileSizeMb(String size) {
+    return '$size م.ب';
+  }
+
+  @override
+  String get filesNoInAppPreview =>
+      'المعاينة داخل التطبيق للصور فقط (من الذاكرة، بلا حفظ على الجهاز) — افتح هذا الملف من المنصة على الويب';
+
+  @override
+  String get filesOpenOnWeb => 'افتح على الويب';
+
+  @override
+  String get filesFieldOnWebOnly =>
+      'ملف هذا الحقل يُفتح من صفحة السجل على المنصة على الويب';
+
+  @override
+  String get filesInfected => 'محجوب — وُسم مصاباً بفحص الفيروسات';
+
+  @override
+  String get prefsTitle => 'التفضيلات';
+
+  @override
+  String get prefsSubtitle =>
+      'كتم الإشعارات وتثبيت المفضّلة — تُحفظ على الخادم';
+
+  @override
+  String get prefsMuteHint =>
+      'النوع المكتوم لا يُنشأ لك إشعاره أصلاً — على الويب والجوال معاً';
+
+  @override
+  String get prefsMuted => 'مكتوم';
+
+  @override
+  String get prefsNotifying => 'يُشعِرك';
+
+  @override
+  String prefsPinsCount(int count, int max) {
+    return 'مثبّت $count من $max';
+  }
+
+  @override
+  String get prefsPinsFilter => 'تصفية الوجهات';
+
+  @override
+  String get prefsPin => 'ثبّت';
+
+  @override
+  String get prefsUnpin => 'فكّ التثبيت';
+
+  @override
+  String get languageArabicShort => 'عربي';
+
+  @override
+  String get languageEnglishShort => 'EN';
+
+  @override
+  String get unknownInitial => '؟';
+
+  @override
+  String get appVersionTitle => 'إصدار التطبيق';
+
+  @override
+  String get updateAvailableTitle => 'إصدار أحدث متاح';
+
+  @override
+  String get updateAvailableBody => 'التحديث اختياري الآن — افتح المتجر';
+
+  @override
+  String get supportTitle => 'الدعم';
+
+  @override
+  String get commentReply => 'رد';
+
+  @override
+  String get listSeparator => '، ';
+
+  @override
+  String percentValue(int value) {
+    return '$value٪';
+  }
+
+  @override
+  String diagnosticsSessionActive(String id) {
+    return 'نشطة (id: $id)';
+  }
+
+  @override
+  String get diagnosticsPushReadyNoToken => 'ready (لا رمز)';
 }

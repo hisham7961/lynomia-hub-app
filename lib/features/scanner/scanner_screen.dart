@@ -10,17 +10,36 @@ import '../../core/errors/api_exception.dart';
 import '../../core/ui/async_view.dart';
 import '../../l10n/app_localizations.dart';
 
+/// مصدر الرموز المقروءة — الكاميرا حقيقةً، وبديلٌ مزيّف في الاختبار (§103).
+typedef ScanViewBuilder = Widget Function(
+  BuildContext context,
+  void Function(String code) onCode,
+);
+
+/// العارض الحقيقي: كاميرا `mobile_scanner` تسلّم أول قيمة خام غير فارغة.
+Widget cameraScanView(BuildContext context, void Function(String) onCode) =>
+    _CameraScanView(onCode: onCode);
+
 class ScannerScreen extends StatefulWidget {
-  const ScannerScreen({super.key});
+  const ScannerScreen({super.key, this.scanView = cameraScanView});
+
+  final ScanViewBuilder scanView;
 
   @override
   State<ScannerScreen> createState() => _ScannerScreenState();
 }
 
-class _ScannerScreenState extends State<ScannerScreen> {
+class _CameraScanView extends StatefulWidget {
+  const _CameraScanView({required this.onCode});
+
+  final void Function(String) onCode;
+
+  @override
+  State<_CameraScanView> createState() => _CameraScanViewState();
+}
+
+class _CameraScanViewState extends State<_CameraScanView> {
   final _controller = MobileScannerController();
-  bool _resolving = false;
-  String? _message;
 
   @override
   void dispose() {
@@ -28,14 +47,26 @@ class _ScannerScreenState extends State<ScannerScreen> {
     super.dispose();
   }
 
-  Future<void> _onDetect(BarcodeCapture capture) async {
-    if (_resolving) return;
-    final code = capture.barcodes
-        .map((b) => b.rawValue)
-        .whereType<String>()
-        .where((v) => v.isNotEmpty)
-        .firstOrNull;
-    if (code == null) return;
+  @override
+  Widget build(BuildContext context) => MobileScanner(
+    controller: _controller,
+    onDetect: (capture) {
+      final code = capture.barcodes
+          .map((b) => b.rawValue)
+          .whereType<String>()
+          .where((v) => v.isNotEmpty)
+          .firstOrNull;
+      if (code != null) widget.onCode(code);
+    },
+  );
+}
+
+class _ScannerScreenState extends State<ScannerScreen> {
+  bool _resolving = false;
+  String? _message;
+
+  Future<void> _onCode(String code) async {
+    if (_resolving || code.isEmpty) return;
 
     final l = AppLocalizations.of(context)!;
     setState(() {
@@ -78,7 +109,7 @@ class _ScannerScreenState extends State<ScannerScreen> {
       appBar: AppBar(title: Text(l.scannerTitle)),
       body: Stack(
         children: [
-          MobileScanner(controller: _controller, onDetect: _onDetect),
+          widget.scanView(context, _onCode),
           Align(
             alignment: Alignment.bottomCenter,
             child: Container(

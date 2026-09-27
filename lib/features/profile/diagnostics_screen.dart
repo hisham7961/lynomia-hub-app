@@ -28,13 +28,15 @@ class DiagnosticsScreen extends StatelessWidget {
       ('client context', c.viewContext.clientId ?? '—'),
       (
         'session',
-        c.session.hasSession ? 'نشطة (id: ${c.session.sessionId})' : '—',
+        c.session.hasSession
+            ? l.diagnosticsSessionActive(c.session.sessionId ?? '—')
+            : '—',
       ),
       (
         'push',
         switch (c.push.status) {
           PushSetupStatus.registered => 'registered',
-          PushSetupStatus.ready => 'ready (لا رمز)',
+          PushSetupStatus.ready => l.diagnosticsPushReadyNoToken,
           PushSetupStatus.notConfigured => 'NOT_CONFIGURED',
         },
       ),

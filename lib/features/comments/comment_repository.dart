@@ -4,6 +4,7 @@ library;
 import 'package:uuid/uuid.dart';
 
 import '../../core/api/api_client.dart';
+import 'reactions.dart';
 
 class CommentReaction {
   const CommentReaction({
@@ -80,6 +81,47 @@ class RecordComment {
   final List<CommentReaction> reactions;
   final List<RecordComment> replies;
   final DateTime? createdAt;
+
+  /// نسخةٌ بعد تطبيق حالة رمزٍ أعادها الخادم (عليه أو على أحد ردوده) —
+  /// العدد من الخادم لا حساباً محلياً.
+  RecordComment applyReaction(ReactionToggle t) {
+    List<CommentReaction> updated() {
+      final out = <CommentReaction>[];
+      var seen = false;
+      for (final r in reactions) {
+        if (r.emoji == t.emoji) {
+          seen = true;
+          if (t.count > 0) {
+            out.add(
+              CommentReaction(emoji: t.emoji, count: t.count, mine: t.mine),
+            );
+          }
+        } else {
+          out.add(r);
+        }
+      }
+      if (!seen && t.count > 0) {
+        out.add(CommentReaction(emoji: t.emoji, count: t.count, mine: t.mine));
+      }
+      return out;
+    }
+
+    return RecordComment(
+      id: id,
+      parentId: parentId,
+      userId: userId,
+      userName: userName,
+      body: body,
+      mentions: mentions,
+      internal: internal,
+      pinned: pinned,
+      resolved: resolved,
+      hasAttachment: hasAttachment,
+      reactions: t.targetId == id ? updated() : reactions,
+      replies: [for (final r in replies) r.applyReaction(t)],
+      createdAt: createdAt,
+    );
+  }
 }
 
 class CommentRepository {
@@ -124,4 +166,17 @@ class CommentRepository {
       (data['comment'] as Map?)?.cast<String, dynamic>() ?? const {},
     );
   }
+
+  /// `POST comments/{id}/react` — تبديل تفاعلي على تعليقٍ أراه. التبديل ليس
+  /// عديمَ الأثر (الإعادة تعكسه) والخادم لا يقبل مفتاح تكرارٍ له ⇒ لا مفتاح ولا
+  /// إعادة تلقائية أبداً.
+  Future<ReactionToggle> react(String commentId, String emoji) async =>
+      ReactionToggle.fromJson(
+        await api.sendData(
+          'POST',
+          'comments/$commentId/react',
+          body: {'emoji': emoji},
+        ),
+        'comment_id',
+      );
 }

@@ -90,9 +90,21 @@ void main() {
     expect(endpointsOf('notifications'), hasLength(5));
     // العددُ مثبَّتٌ عمداً: نقطةٌ جديدةٌ تُكشف هنا فتُسجَّل في مصفوفة التغطية.
     // (خلفية v2.614: التفاعلُ على التعليق، والتفاعلُ والكتابةُ و«منذ» في DM —
-    // مسجَّلةٌ PENDING_APP في docs/mobile-feature-coverage.md)
+    // مبنيّةٌ منذ v0.4.0 في CommentRepository/DmRepository)
     expect(endpointsOf('comments'), hasLength(3));
+    expect(
+      endpointsOf('comments'),
+      contains('POST /api/mobile/v1/comments/{id}/react'),
+    );
     expect(endpointsOf('dm'), hasLength(7));
+    expect(
+      endpointsOf('dm'),
+      containsAll([
+        'POST /api/mobile/v1/dm/messages/{id}/react',
+        'GET /api/mobile/v1/dm/threads/{user}/since',
+        'POST /api/mobile/v1/dm/threads/{user}/typing',
+      ]),
+    );
     expect(endpointsOf('approvals'), hasLength(4));
     expect(endpointsOf('search'), contains('GET /api/mobile/v1/search'));
     // «اسأل Hub» — كلُّ ما يناديه AskRepository في سجلّ القدرات
@@ -108,6 +120,47 @@ void main() {
     );
     expect(endpointsOf('home'), contains('GET /api/mobile/v1/home'));
   });
+
+  test(
+    'مركز التواصل وعملي اليوم ووثائقي — كل ما يناديه التطبيق منذ v0.4.0',
+    () {
+      // النقاط الثلاث عشرة التي كانت PENDING_APP — العددُ مثبَّتٌ لكل مجال.
+      expect(endpointsOf('conversations'), {
+        'GET /api/mobile/v1/conversations',
+        'GET /api/mobile/v1/conversations/{id}/since',
+        'POST /api/mobile/v1/conversations/{id}/typing',
+      });
+      expect(endpointsOf('presence'), {'GET /api/mobile/v1/presence'});
+      expect(endpointsOf('saved'), {'GET /api/mobile/v1/saved'});
+      expect(endpointsOf('work'), {
+        'GET /api/mobile/v1/work/today',
+        'GET /api/mobile/v1/work/daily-report',
+      });
+      expect(endpointsOf('me'), {
+        'GET /api/mobile/v1/me/documents',
+        'GET /api/mobile/v1/me/documents/{id}/file',
+      });
+      final paths = (openapi['paths'] as Map).keys.cast<String>().toSet();
+      expect(
+        paths,
+        containsAll([
+          '/api/mobile/v1/comments/{id}/react',
+          '/api/mobile/v1/dm/messages/{id}/react',
+          '/api/mobile/v1/dm/threads/{user}/since',
+          '/api/mobile/v1/dm/threads/{user}/typing',
+          '/api/mobile/v1/conversations',
+          '/api/mobile/v1/conversations/{id}/since',
+          '/api/mobile/v1/conversations/{id}/typing',
+          '/api/mobile/v1/presence',
+          '/api/mobile/v1/saved',
+          '/api/mobile/v1/work/today',
+          '/api/mobile/v1/work/daily-report',
+          '/api/mobile/v1/me/documents',
+          '/api/mobile/v1/me/documents/{id}/file',
+        ]),
+      );
+    },
+  );
 
   test('الملفات والماسح والتتبع والدفع', () {
     expect(endpointsOf('files'), hasLength(6));

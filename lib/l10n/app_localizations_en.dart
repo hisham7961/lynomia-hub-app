@@ -833,4 +833,189 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get askErrGeneric => 'Could not answer';
+
+  @override
+  String get reactionsPick => 'Pick a reaction';
+
+  @override
+  String get reactionsAdd => 'Add reaction';
+
+  @override
+  String typingOne(String name) {
+    return '$name is typing…';
+  }
+
+  @override
+  String typingMany(String names) {
+    return '$names are typing…';
+  }
+
+  @override
+  String get presenceOnline => 'Online';
+
+  @override
+  String get presenceRecent => 'Recently active';
+
+  @override
+  String get presenceAway => 'Away';
+
+  @override
+  String get presenceOffline => 'Offline';
+
+  @override
+  String get messagesTabDirect => 'Direct';
+
+  @override
+  String get messagesTabChannels => 'Channels';
+
+  @override
+  String get conversationsChannels => 'Channels';
+
+  @override
+  String get conversationsRooms => 'Project rooms';
+
+  @override
+  String get conversationsGroups => 'Groups';
+
+  @override
+  String get conversationsEmpty =>
+      'You are not a member of any channel or group';
+
+  @override
+  String get savedTitle => 'Saved';
+
+  @override
+  String get savedEmpty => 'Nothing saved';
+
+  @override
+  String get savedUnavailable => 'This is no longer available to you';
+
+  @override
+  String get savedTypeComment => 'Comment';
+
+  @override
+  String get savedTypeDm => 'Direct message';
+
+  @override
+  String savedAt(String date) {
+    return 'Saved $date';
+  }
+
+  @override
+  String get workTodayTitle => 'My day';
+
+  @override
+  String get workDailyReport => 'Daily report';
+
+  @override
+  String get workNoProfile =>
+      'No active employee profile is linked to your account — no workday to show';
+
+  @override
+  String get workAttendance => 'Attendance';
+
+  @override
+  String get workReport => 'Report';
+
+  @override
+  String workCheckIn(String time) {
+    return 'In $time';
+  }
+
+  @override
+  String workCheckOut(String time) {
+    return 'Out $time';
+  }
+
+  @override
+  String workReportedHours(String hours) {
+    return 'Reported hours: $hours';
+  }
+
+  @override
+  String workDeadline(String time) {
+    return 'Submission deadline: $time';
+  }
+
+  @override
+  String get workReportDue =>
+      'Today\'s report is required and not yet submitted';
+
+  @override
+  String get workVerdictPending => 'It is too early to judge the day';
+
+  @override
+  String get workNeedsReview => 'Entries are pending review or revision';
+
+  @override
+  String workEntries(int count) {
+    return 'Day entries ($count)';
+  }
+
+  @override
+  String get workNoEntries => 'No entries submitted for this day';
+
+  @override
+  String get workSubmit => 'Submit a work entry';
+
+  @override
+  String workEntryHours(String hours) {
+    return '$hours h';
+  }
+
+  @override
+  String workEntryProgress(String progress) {
+    return 'Progress $progress%';
+  }
+
+  @override
+  String get workReviewPending => 'Pending review';
+
+  @override
+  String get workReviewAccepted => 'Accepted';
+
+  @override
+  String get workReviewNeedsRevision => 'Needs revision';
+
+  @override
+  String get workPrevDay => 'Previous day';
+
+  @override
+  String get workNextDay => 'Next day';
+
+  @override
+  String get myDocumentsTitle => 'My documents';
+
+  @override
+  String get myDocumentsEmpty => 'No documents on your file';
+
+  @override
+  String myDocumentsExpires(String date) {
+    return 'Expires $date';
+  }
+
+  @override
+  String myDocumentsExpired(String date) {
+    return 'Expired $date';
+  }
+
+  @override
+  String myDocumentsNo(String no) {
+    return 'No. $no';
+  }
+
+  @override
+  String get myDocumentsInfected => 'Blocked — flagged by the virus scan';
+
+  @override
+  String get myDocumentsNoPreview =>
+      'In-app preview is for images only — open it from the web platform';
+
+  @override
+  String get myDocumentsRestricted =>
+      'Access to this document is restricted by an explicit rule';
+
+  @override
+  String get myDocumentsNoPersist =>
+      'Documents are shown from memory and never saved on the device';
 }

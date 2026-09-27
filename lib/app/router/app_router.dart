@@ -14,6 +14,7 @@ import '../../features/launch/launch_gate_screen.dart';
 import '../../features/members/client_members_screen.dart';
 import '../../features/messages/messages_screens.dart';
 import '../../features/modules/module_list_screen.dart';
+import '../../features/my_work/daily_report_screen.dart';
 import '../../features/my_work/my_work_screen.dart';
 import '../../features/notifications/notifications_screen.dart';
 import '../../features/portal/client_home_screen.dart';
@@ -21,6 +22,7 @@ import '../../features/portal/client_shell.dart';
 import '../../features/portal/portal_screens.dart';
 import '../../features/profile/account_screen.dart';
 import '../../features/profile/diagnostics_screen.dart';
+import '../../features/profile/my_documents_screen.dart';
 import '../../features/profile/sessions_screen.dart';
 import '../../features/records/record_form_screen.dart';
 import '../../features/records/record_screen.dart';
@@ -308,6 +310,25 @@ GoRouter buildRouter(AppContainer c) => GoRouter(
           ),
         ),
       ],
+    ),
+    // مركز التواصل (§106): قناة/غرفة/مجموعة، والمحفوظات.
+    GoRoute(
+      path: '/conversations/:id',
+      builder: (context, state) => ConversationScreen(
+        conversationId: state.pathParameters['id']!,
+        title: state.uri.queryParameters['title'] ?? '',
+      ),
+    ),
+    GoRoute(path: '/saved', builder: (context, state) => const SavedScreen()),
+    // عملي اليوم والتقرير اليومي (§93).
+    GoRoute(
+      path: '/work/daily-report',
+      builder: (context, state) => const DailyReportScreen(),
+    ),
+    // وثائقي — وثائق ملفّي الوظيفي.
+    GoRoute(
+      path: '/me/documents',
+      builder: (context, state) => const MyDocumentsScreen(),
     ),
     GoRoute(
       path: '/approvals',

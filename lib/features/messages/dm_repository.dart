@@ -5,6 +5,8 @@ library;
 import 'package:uuid/uuid.dart';
 
 import '../../core/api/api_client.dart';
+import '../comments/reactions.dart';
+import 'live_events.dart';
 
 class DmThread {
   const DmThread({
@@ -113,4 +115,30 @@ class DmRepository {
               as num?)
           ?.toInt() ??
       0;
+
+  /// `GET dm/threads/{user}/since?cursor=` — الجديد منذ مؤشرٍ مُعتَم + من يكتب.
+  /// الخادم يختم الوارد الجديد مقروءاً (المحادثة مفتوحة). قراءة ⇒ إعادة آمنة.
+  Future<DmSincePage> since(String otherUserId, {String cursor = ''}) async {
+    final data = await api.getData(
+      'dm/threads/$otherUserId/since',
+      query: cursor.isEmpty ? const {} : {'cursor': cursor},
+    );
+    return SincePage.parse(data, DmLiveEvent.fromJson, previousCursor: cursor);
+  }
+
+  /// `POST dm/threads/{user}/typing` — نبضة عابرة؛ لا مفتاح ولا إعادة.
+  Future<void> typing(String otherUserId) =>
+      api.sendData('POST', 'dm/threads/$otherUserId/typing');
+
+  /// `POST dm/messages/{id}/react` — تبديل تفاعلي على رسالةٍ أنا طرفٌ فيها.
+  /// ليس عديم الأثر ⇒ لا مفتاح ولا إعادة تلقائية.
+  Future<ReactionToggle> react(String messageId, String emoji) async =>
+      ReactionToggle.fromJson(
+        await api.sendData(
+          'POST',
+          'dm/messages/$messageId/react',
+          body: {'emoji': emoji},
+        ),
+        'dm_message_id',
+      );
 }

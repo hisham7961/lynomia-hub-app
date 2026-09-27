@@ -304,12 +304,25 @@ class ApiClient {
     final map = body is Map
         ? body.cast<String, dynamic>()
         : const <String, dynamic>{};
-    final rawCode = (map['code'] ?? resp.headers['x-error-code'])?.toString();
+    // بعض النقاط (مثل `work/today`) تردّ `{error: '<رمز_آلي>', message}` بلا
+    // `code`: الرمزُ الآليّ حينها هو `error` نفسه (snake_case لا نص عربي) —
+    // يُحفظ خاماً كي يتفرّع المستدعي عليه لا على الرسالة.
+    final errorToken = map['error']?.toString();
+    final rawCode =
+        (map['code'] ??
+                resp.headers['x-error-code'] ??
+                (errorToken != null &&
+                        RegExp(r'^[a-z][a-z0-9_]*$').hasMatch(errorToken)
+                    ? errorToken
+                    : null))
+            ?.toString();
     return ApiException(
       code: ApiErrorCode.parse(rawCode),
       rawCode: rawCode,
       httpStatus: resp.statusCode,
-      message: map['error']?.toString() ?? map['message']?.toString() ?? '',
+      message: rawCode != null && rawCode == errorToken && map['code'] == null
+          ? (map['message']?.toString() ?? '')
+          : (map['error']?.toString() ?? map['message']?.toString() ?? ''),
       details: map['details'] is Map
           ? (map['details'] as Map).cast<String, dynamic>()
           : const {},

@@ -1,23 +1,226 @@
-/// الرسائل المباشرة (§52) — الخيوط ثم المحادثة: إرسال idempotent وختم قراءة.
+/// الرسائل (§52 §106) — مركز التواصل على الجوال:
+///  • المباشرة: الخيوط بحضور الطرف (إن كانت القدرة مفعّلة خادمياً).
+///  • القنوات: قنواتي وغرفي ومجموعاتي من `conversations`.
+///  • المحادثة: إرسال idempotent وختم قراءة، واستطلاع «منذ» ومؤشر كتابة لا
+///    يعملان إلا والشاشة ظاهرة، وتفاعلات يحسمها الخادم.
 library;
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../app/di/app_scope.dart';
+import '../../core/errors/api_exception.dart';
 import '../../core/ui/async_view.dart';
+import '../../core/ui/dates.dart';
+import '../../core/ui/visible_poller.dart';
 import '../../l10n/app_localizations.dart';
+import '../comments/comments_panel.dart';
+import '../comments/reactions.dart';
+import 'collab_repository.dart';
 import 'dm_repository.dart';
+import 'live_events.dart';
 
-class DmThreadsScreen extends StatefulWidget {
+/// فاصل الاستطلاع في المحادثة المفتوحة.
+const kLivePollInterval = Duration(seconds: 4);
+
+bool _capabilityOff(Object e) =>
+    e is ApiException && e.code == ApiErrorCode.resourceNotFound;
+
+String presenceLabel(AppLocalizations l, PresenceState p) => switch (p) {
+  PresenceState.online => l.presenceOnline,
+  PresenceState.recent => l.presenceRecent,
+  PresenceState.away => l.presenceAway,
+  PresenceState.offline => l.presenceOffline,
+};
+
+Color presenceColor(BuildContext context, PresenceState p) => switch (p) {
+  PresenceState.online => Colors.green,
+  PresenceState.recent => Colors.lightGreen,
+  PresenceState.away => Colors.amber,
+  PresenceState.offline => Theme.of(context).colorScheme.outline,
+};
+
+/// نقطة حضور صغيرة بوصفٍ دلالي.
+class PresenceDot extends StatelessWidget {
+  const PresenceDot({super.key, required this.state});
+
+  final PresenceState state;
+
+  @override
+  Widget build(BuildContext context) {
+    final label = presenceLabel(AppLocalizations.of(context)!, state);
+    return Tooltip(
+      message: label,
+      child: Semantics(
+        label: label,
+        child: Container(
+          width: 10,
+          height: 10,
+          decoration: BoxDecoration(
+            color: presenceColor(context, state),
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: Theme.of(context).colorScheme.surface,
+              width: 1.5,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// نص «فلان يكتب…» من أسماء يعيدها الخادم.
+String typingText(AppLocalizations l, List<String> names) => names.length == 1
+    ? l.typingOne(names.single)
+    : l.typingMany(names.join('، '));
+
+class DmThreadsScreen extends StatelessWidget {
   const DmThreadsScreen({super.key});
 
   @override
-  State<DmThreadsScreen> createState() => _DmThreadsScreenState();
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(l.messagesTitle),
+          actions: [
+            IconButton(
+              key: const Key('open-saved'),
+              tooltip: l.savedTitle,
+              icon: const Icon(Icons.bookmark_outline),
+              onPressed: () => context.push('/saved'),
+            ),
+          ],
+          bottom: TabBar(
+            tabs: [
+              Tab(text: l.messagesTabDirect),
+              Tab(text: l.messagesTabChannels),
+            ],
+          ),
+        ),
+        body: const TabBarView(
+          children: [_DirectThreadsTab(), ConversationsTab()],
+        ),
+      ),
+    );
+  }
 }
 
-class _DmThreadsScreenState extends State<DmThreadsScreen> {
+class _DirectThreadsTab extends StatefulWidget {
+  const _DirectThreadsTab();
+
+  @override
+  State<_DirectThreadsTab> createState() => _DirectThreadsTabState();
+}
+
+class _DirectThreadsTabState extends State<_DirectThreadsTab> {
   List<DmThread>? _threads;
+  Map<String, PresenceState> _presence = const {};
+  Object? _error;
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    final c = AppScope.of(context);
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    try {
+      final res = await c.dm.threads();
+      if (mounted) setState(() => _threads = res.threads);
+      // الحضور ثانوي: القدرة المطفأة (٤٠٤) أو أي فشل ⇒ بلا نقاط، لا خطأ.
+      try {
+        final p = await c.collab.presence(res.threads.map((t) => t.userId));
+        if (mounted) setState(() => _presence = p);
+      } on Object {
+        if (mounted) setState(() => _presence = const {});
+      }
+    } on Object catch (e) {
+      if (mounted) setState(() => _error = e);
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    return AsyncView<List<DmThread>>(
+      loading: _loading,
+      error: _error,
+      value: _threads,
+      onRetry: _load,
+      emptyWhen: (t) => t.isEmpty,
+      emptyMessage: l.messagesEmpty,
+      builder: (context, threads) => RefreshIndicator(
+        onRefresh: _load,
+        child: ListView.builder(
+          itemCount: threads.length,
+          itemBuilder: (context, i) {
+            final t = threads[i];
+            final p = _presence[t.userId];
+            return ListTile(
+              leading: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  CircleAvatar(
+                    child: Text(
+                      t.userName.isEmpty ? '؟' : t.userName.characters.first,
+                    ),
+                  ),
+                  if (p != null)
+                    PositionedDirectional(
+                      bottom: 0,
+                      end: 0,
+                      child: PresenceDot(
+                        key: Key('presence-${t.userId}'),
+                        state: p,
+                      ),
+                    ),
+                ],
+              ),
+              title: Text(t.userName),
+              subtitle: t.lastExcerpt == null
+                  ? null
+                  : Text(
+                      '${t.lastMine ? '↩ ' : ''}${t.lastExcerpt}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+              trailing: t.unread > 0 ? Badge(label: Text('${t.unread}')) : null,
+              onTap: () async {
+                await context.push(
+                  '/messages/${t.userId}?name=${Uri.encodeComponent(t.userName)}',
+                );
+                _load();
+              },
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+/// تبويب القنوات/الغرف/المجموعات (`GET conversations`).
+class ConversationsTab extends StatefulWidget {
+  const ConversationsTab({super.key});
+
+  @override
+  State<ConversationsTab> createState() => _ConversationsTabState();
+}
+
+class _ConversationsTabState extends State<ConversationsTab> {
+  ConversationsRail? _rail;
   Object? _error;
   bool _loading = true;
 
@@ -33,8 +236,8 @@ class _DmThreadsScreenState extends State<DmThreadsScreen> {
       _error = null;
     });
     try {
-      final res = await AppScope.of(context).dm.threads();
-      if (mounted) setState(() => _threads = res.threads);
+      final rail = await AppScope.of(context).collab.conversations();
+      if (mounted) setState(() => _rail = rail);
     } on Object catch (e) {
       if (mounted) setState(() => _error = e);
     } finally {
@@ -45,51 +248,85 @@ class _DmThreadsScreenState extends State<DmThreadsScreen> {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
-    return Scaffold(
-      appBar: AppBar(title: Text(l.messagesTitle)),
-      body: AsyncView<List<DmThread>>(
-        loading: _loading,
-        error: _error,
-        value: _threads,
-        onRetry: _load,
-        emptyWhen: (t) => t.isEmpty,
-        emptyMessage: l.messagesEmpty,
-        builder: (context, threads) => RefreshIndicator(
-          onRefresh: _load,
-          child: ListView.builder(
-            itemCount: threads.length,
-            itemBuilder: (context, i) {
-              final t = threads[i];
-              return ListTile(
-                leading: CircleAvatar(
+    return AsyncView<ConversationsRail>(
+      loading: _loading,
+      error: _error,
+      value: _rail,
+      onRetry: _load,
+      emptyWhen: (r) => !r.hasContainers,
+      emptyMessage: l.conversationsEmpty,
+      builder: (context, rail) => RefreshIndicator(
+        onRefresh: _load,
+        child: ListView(
+          children: [
+            for (final (title, items, icon) in [
+              (l.conversationsChannels, rail.channels, Icons.tag),
+              (l.conversationsRooms, rail.rooms, Icons.meeting_room_outlined),
+              (l.conversationsGroups, rail.groups, Icons.group_outlined),
+            ])
+              if (items.isNotEmpty) ...[
+                Padding(
+                  padding: const EdgeInsetsDirectional.fromSTEB(16, 16, 16, 4),
                   child: Text(
-                    t.userName.isEmpty ? '؟' : t.userName.characters.first,
+                    title,
+                    style: Theme.of(context).textTheme.titleSmall,
                   ),
                 ),
-                title: Text(t.userName),
-                subtitle: t.lastExcerpt == null
-                    ? null
-                    : Text(
-                        '${t.lastMine ? '↩ ' : ''}${t.lastExcerpt}',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                trailing: t.unread > 0
-                    ? Badge(label: Text('${t.unread}'))
-                    : null,
-                onTap: () async {
-                  await context.push(
-                    '/messages/${t.userId}?name=${Uri.encodeComponent(t.userName)}',
-                  );
-                  _load();
-                },
-              );
-            },
-          ),
+                for (final c in items)
+                  ListTile(
+                    key: Key('conv-${c.id}'),
+                    leading: Icon(icon),
+                    title: Text(
+                      c.title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (c.favorite)
+                          const Padding(
+                            padding: EdgeInsetsDirectional.only(end: 8),
+                            child: Icon(Icons.star, size: 16),
+                          ),
+                        if (c.unread > 0) Badge(label: Text('${c.unread}')),
+                      ],
+                    ),
+                    onTap: () async {
+                      await context.push(
+                        '/conversations/${c.id}?title=${Uri.encodeComponent(c.title)}',
+                      );
+                      _load();
+                    },
+                  ),
+              ],
+          ],
         ),
       ),
     );
   }
+}
+
+/// قناة/غرفة/مجموعة: تعليقات الحاوية (`module=channel`) باستطلاع «منذ» وكتابة.
+class ConversationScreen extends StatelessWidget {
+  const ConversationScreen({
+    super.key,
+    required this.conversationId,
+    required this.title,
+  });
+
+  final String conversationId;
+  final String title;
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    appBar: AppBar(title: Text(title)),
+    body: CommentsPanel(
+      module: 'channel',
+      recordId: conversationId,
+      liveConversationId: conversationId,
+    ),
+  );
 }
 
 class DmChatScreen extends StatefulWidget {
@@ -113,14 +350,43 @@ class _DmChatScreenState extends State<DmChatScreen> {
   bool _loading = true;
   bool _sending = false;
 
+  /// حالات التفاعل كما أعادها الخادم في هذه الجلسة (قائمة الرسائل لا تحملها).
+  final Map<String, Map<String, ReactionToggle>> _reactions = {};
+  List<String> _typing = const [];
+  PresenceState? _presence;
+  bool _presenceOff = false;
+  int _ticks = 0;
+
+  late final SinceFeed<DmLiveEvent> _feed;
+  late final VisiblePoller _poller;
+  late final TypingThrottle _typingPing;
+
   @override
   void initState() {
     super.initState();
+    final c = AppScope.of(context);
+    _feed = SinceFeed(
+      (cursor) => c.dm.since(widget.otherUserId, cursor: cursor),
+    );
+    _poller = VisiblePoller(
+      interval: kLivePollInterval,
+      onTick: _poll,
+      isVisible: () => routeIsCurrent(context),
+    );
+    _typingPing = TypingThrottle(() async {
+      try {
+        await c.dm.typing(widget.otherUserId);
+      } on Object catch (e) {
+        // القدرة مطفأة خادمياً ⇒ نكفّ عن النبض لبقية الجلسة.
+        if (_capabilityOff(e)) _typingPing.disable();
+      }
+    });
     _load();
   }
 
   @override
   void dispose() {
+    _poller.dispose();
     _input.dispose();
     super.dispose();
   }
@@ -141,6 +407,80 @@ class _DmChatScreenState extends State<DmChatScreen> {
     } finally {
       if (mounted) setState(() => _loading = false);
     }
+    if (!mounted || _messages == null) return;
+    await _refreshPresence();
+    await _poll(catchUp: true);
+    if (mounted) _poller.start();
+  }
+
+  Future<void> _refreshPresence() async {
+    if (_presenceOff) return;
+    try {
+      final p = await AppScope.of(context).collab
+          .presence([widget.otherUserId]);
+      if (mounted) setState(() => _presence = p[widget.otherUserId]);
+    } on Object catch (e) {
+      if (_capabilityOff(e)) _presenceOff = true;
+    }
+  }
+
+  Future<void> _poll({bool catchUp = false}) async {
+    try {
+      final batch = await _feed.pull(maxPages: catchUp ? 20 : 5);
+      if (!mounted) return;
+      setState(() {
+        _merge(batch.events);
+        _typing = batch.typing;
+      });
+    } on Object catch (e) {
+      // لم يعد الخيط في متناولي (٤٠٤) ⇒ لا استطلاع بعده.
+      if (_capabilityOff(e)) _poller.stop();
+    }
+    if (++_ticks % 15 == 0) await _refreshPresence();
+  }
+
+  /// دمج أحداث «منذ»: الجديد يُلحق، والمحذوف يُعلَّم. والأقدم من أحدث رسالة
+  /// محمّلة يُتجاوز (تاريخ أبعد من نافذة الخيط، لا «جديد»).
+  void _merge(List<DmLiveEvent> events) {
+    final list = [...?_messages];
+    final index = {for (var i = 0; i < list.length; i++) list[i].id: i};
+    DateTime? newest;
+    for (final m in list) {
+      final t = m.createdAt;
+      if (t != null && (newest == null || t.isAfter(newest))) newest = t;
+    }
+    for (final e in events) {
+      final at = index[e.id];
+      if (at != null) {
+        if (e.deleted && !list[at].deleted) {
+          final old = list[at];
+          list[at] = DmMessage(
+            id: old.id,
+            mine: old.mine,
+            deleted: true,
+            read: old.read,
+            createdAt: old.createdAt,
+          );
+        }
+        continue;
+      }
+      if (newest != null &&
+          e.createdAt != null &&
+          e.createdAt!.isBefore(newest)) {
+        continue;
+      }
+      index[e.id] = list.length;
+      list.add(
+        DmMessage(
+          id: e.id,
+          mine: e.mine,
+          body: e.body,
+          deleted: e.deleted,
+          createdAt: e.createdAt,
+        ),
+      );
+    }
+    _messages = list;
   }
 
   Future<void> _send() async {
@@ -151,7 +491,17 @@ class _DmChatScreenState extends State<DmChatScreen> {
       final msg = await AppScope.of(context).dm.send(widget.otherUserId, body);
       if (!mounted) return;
       _input.clear();
-      setState(() => _messages = [...?_messages, msg]);
+      setState(
+        () => _merge([
+          DmLiveEvent(
+            type: kEvMessageCreated,
+            id: msg.id,
+            mine: true,
+            body: msg.body,
+            createdAt: msg.createdAt,
+          ),
+        ]),
+      );
     } on Object catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context)
@@ -161,11 +511,50 @@ class _DmChatScreenState extends State<DmChatScreen> {
     }
   }
 
+  Future<void> _react(DmMessage m, [String? emoji]) async {
+    final chosen = emoji ?? await pickReaction(context);
+    if (chosen == null || !mounted) return;
+    try {
+      final t = await AppScope.of(context).dm.react(m.id, chosen);
+      if (!mounted) return;
+      setState(() => (_reactions[m.id] ??= {})[t.emoji] = t);
+    } on Object catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(describeError(context, e))));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
     return Scaffold(
-      appBar: AppBar(title: Text(widget.otherName)),
+      appBar: AppBar(
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(widget.otherName),
+            if (_typing.isNotEmpty)
+              Text(
+                typingText(l, _typing),
+                key: const Key('dm-typing'),
+                style: Theme.of(context).textTheme.bodySmall,
+              )
+            else if (_presence != null)
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  PresenceDot(state: _presence!),
+                  const SizedBox(width: 4),
+                  Text(
+                    presenceLabel(l, _presence!),
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ],
+              ),
+          ],
+        ),
+      ),
       body: Column(
         children: [
           Expanded(
@@ -182,50 +571,13 @@ class _DmChatScreenState extends State<DmChatScreen> {
                 itemCount: messages.length,
                 itemBuilder: (context, i) {
                   final m = messages[messages.length - 1 - i];
-                  return Align(
-                    alignment: m.mine
-                        ? AlignmentDirectional.centerEnd
-                        : AlignmentDirectional.centerStart,
-                    child: Container(
-                      margin: const EdgeInsets.symmetric(vertical: 3),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
-                      ),
-                      constraints: BoxConstraints(
-                        maxWidth: MediaQuery.of(context).size.width * 0.75,
-                      ),
-                      decoration: BoxDecoration(
-                        color: m.mine
-                            ? Theme.of(context).colorScheme.primaryContainer
-                            : Theme.of(context)
-                                  .colorScheme
-                                  .surfaceContainerHighest,
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            m.deleted ? l.messageDeleted : (m.body ?? ''),
-                            style: m.deleted
-                                ? TextStyle(
-                                    fontStyle: FontStyle.italic,
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .outline,
-                                  )
-                                : null,
-                          ),
-                          if (m.hasAttachment)
-                            const Padding(
-                              padding: EdgeInsets.only(top: 2),
-                              child: Icon(Icons.attach_file, size: 14),
-                            ),
-                        ],
-                      ),
-                    ),
+                  return _Bubble(
+                    message: m,
+                    reactions: (_reactions[m.id]?.values ?? const [])
+                        .where((r) => r.count > 0)
+                        .toList(),
+                    onLongPress: m.deleted ? null : () => _react(m),
+                    onToggle: (emoji) => _react(m, emoji),
                   );
                 },
               ),
@@ -239,6 +591,7 @@ class _DmChatScreenState extends State<DmChatScreen> {
                 children: [
                   Expanded(
                     child: TextField(
+                      key: const Key('dm-input'),
                       controller: _input,
                       decoration: InputDecoration(
                         hintText: l.messagesHint,
@@ -249,6 +602,7 @@ class _DmChatScreenState extends State<DmChatScreen> {
                       ),
                       minLines: 1,
                       maxLines: 4,
+                      onChanged: (_) => _typingPing.onInput(),
                       onSubmitted: (_) => _send(),
                     ),
                   ),
@@ -269,6 +623,182 @@ class _DmChatScreenState extends State<DmChatScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _Bubble extends StatelessWidget {
+  const _Bubble({
+    required this.message,
+    required this.reactions,
+    required this.onLongPress,
+    required this.onToggle,
+  });
+
+  final DmMessage message;
+  final List<ReactionToggle> reactions;
+  final VoidCallback? onLongPress;
+  final void Function(String emoji) onToggle;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    final m = message;
+    final scheme = Theme.of(context).colorScheme;
+    return Align(
+      alignment: m.mine
+          ? AlignmentDirectional.centerEnd
+          : AlignmentDirectional.centerStart,
+      child: Column(
+        crossAxisAlignment: m.mine
+            ? CrossAxisAlignment.end
+            : CrossAxisAlignment.start,
+        children: [
+          GestureDetector(
+            key: Key('dm-msg-${m.id}'),
+            onLongPress: onLongPress,
+            child: Container(
+              margin: const EdgeInsets.symmetric(vertical: 3),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              constraints: BoxConstraints(
+                maxWidth: MediaQuery.of(context).size.width * 0.75,
+              ),
+              decoration: BoxDecoration(
+                color: m.mine
+                    ? scheme.primaryContainer
+                    : scheme.surfaceContainerHighest,
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    m.deleted ? l.messageDeleted : (m.body ?? ''),
+                    style: m.deleted
+                        ? TextStyle(
+                            fontStyle: FontStyle.italic,
+                            color: scheme.outline,
+                          )
+                        : null,
+                  ),
+                  if (m.hasAttachment)
+                    const Padding(
+                      padding: EdgeInsets.only(top: 2),
+                      child: Icon(Icons.attach_file, size: 14),
+                    ),
+                ],
+              ),
+            ),
+          ),
+          if (reactions.isNotEmpty && !m.deleted)
+            Wrap(
+              spacing: 4,
+              children: [
+                for (final r in reactions)
+                  ReactionChip(
+                    emoji: r.emoji,
+                    count: r.count,
+                    mine: r.mine,
+                    onTap: () => onToggle(r.emoji),
+                  ),
+              ],
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+/// المحفوظات (`GET saved`) — مُعادةُ التخويل عند كل فتح.
+class SavedScreen extends StatefulWidget {
+  const SavedScreen({super.key});
+
+  @override
+  State<SavedScreen> createState() => _SavedScreenState();
+}
+
+class _SavedScreenState extends State<SavedScreen> {
+  List<SavedItem>? _items;
+  Object? _error;
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    try {
+      final items = await AppScope.of(context).collab.saved();
+      if (mounted) setState(() => _items = items);
+    } on Object catch (e) {
+      if (mounted) setState(() => _error = e);
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    final locale = Localizations.localeOf(context).toString();
+    return Scaffold(
+      appBar: AppBar(title: Text(l.savedTitle)),
+      body: AsyncView<List<SavedItem>>(
+        loading: _loading,
+        error: _error,
+        value: _items,
+        onRetry: _load,
+        emptyWhen: (i) => i.isEmpty,
+        emptyMessage: l.savedEmpty,
+        builder: (context, items) => RefreshIndicator(
+          onRefresh: _load,
+          child: ListView.separated(
+            itemCount: items.length,
+            separatorBuilder: (_, _) => const Divider(height: 1),
+            itemBuilder: (context, i) {
+              final s = items[i];
+              final outline = Theme.of(context).colorScheme.outline;
+              final meta = [
+                s.type == 'dm' ? l.savedTypeDm : l.savedTypeComment,
+                if (s.available && s.author != null) s.author!,
+                if (s.savedAt != null)
+                  l.savedAt(formatShortDate(s.savedAt!, locale)),
+              ].join(' · ');
+              return ListTile(
+                key: Key('saved-${s.id}'),
+                leading: Icon(
+                  s.type == 'dm'
+                      ? Icons.chat_bubble_outline
+                      : Icons.comment_outlined,
+                  color: s.available ? null : outline,
+                ),
+                title: Text(
+                  s.available ? (s.title ?? '') : l.savedUnavailable,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: s.available
+                      ? null
+                      : TextStyle(fontStyle: FontStyle.italic, color: outline),
+                ),
+                subtitle: Text(
+                  [
+                    meta,
+                    if (s.note != null && s.note!.isNotEmpty) s.note!,
+                  ].join('\n'),
+                ),
+                isThreeLine: s.note != null && s.note!.isNotEmpty,
+              );
+            },
+          ),
+        ),
       ),
     );
   }

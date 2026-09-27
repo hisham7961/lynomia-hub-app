@@ -1645,6 +1645,312 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'تعذّر الجواب'**
   String get askErrGeneric;
+
+  /// No description provided for @reactionsPick.
+  ///
+  /// In ar, this message translates to:
+  /// **'اختر تفاعلاً'**
+  String get reactionsPick;
+
+  /// No description provided for @reactionsAdd.
+  ///
+  /// In ar, this message translates to:
+  /// **'أضف تفاعلاً'**
+  String get reactionsAdd;
+
+  /// No description provided for @typingOne.
+  ///
+  /// In ar, this message translates to:
+  /// **'{name} يكتب…'**
+  String typingOne(String name);
+
+  /// No description provided for @typingMany.
+  ///
+  /// In ar, this message translates to:
+  /// **'{names} يكتبون…'**
+  String typingMany(String names);
+
+  /// No description provided for @presenceOnline.
+  ///
+  /// In ar, this message translates to:
+  /// **'متصل الآن'**
+  String get presenceOnline;
+
+  /// No description provided for @presenceRecent.
+  ///
+  /// In ar, this message translates to:
+  /// **'نشط مؤخراً'**
+  String get presenceRecent;
+
+  /// No description provided for @presenceAway.
+  ///
+  /// In ar, this message translates to:
+  /// **'غير نشط'**
+  String get presenceAway;
+
+  /// No description provided for @presenceOffline.
+  ///
+  /// In ar, this message translates to:
+  /// **'غير متصل'**
+  String get presenceOffline;
+
+  /// No description provided for @messagesTabDirect.
+  ///
+  /// In ar, this message translates to:
+  /// **'المباشرة'**
+  String get messagesTabDirect;
+
+  /// No description provided for @messagesTabChannels.
+  ///
+  /// In ar, this message translates to:
+  /// **'القنوات'**
+  String get messagesTabChannels;
+
+  /// No description provided for @conversationsChannels.
+  ///
+  /// In ar, this message translates to:
+  /// **'القنوات'**
+  String get conversationsChannels;
+
+  /// No description provided for @conversationsRooms.
+  ///
+  /// In ar, this message translates to:
+  /// **'غرف المشاريع'**
+  String get conversationsRooms;
+
+  /// No description provided for @conversationsGroups.
+  ///
+  /// In ar, this message translates to:
+  /// **'المجموعات'**
+  String get conversationsGroups;
+
+  /// No description provided for @conversationsEmpty.
+  ///
+  /// In ar, this message translates to:
+  /// **'لست عضواً في أي قناة أو مجموعة'**
+  String get conversationsEmpty;
+
+  /// No description provided for @savedTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'المحفوظات'**
+  String get savedTitle;
+
+  /// No description provided for @savedEmpty.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا محفوظات'**
+  String get savedEmpty;
+
+  /// No description provided for @savedUnavailable.
+  ///
+  /// In ar, this message translates to:
+  /// **'لم يعد هذا متاحاً لك'**
+  String get savedUnavailable;
+
+  /// No description provided for @savedTypeComment.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعليق'**
+  String get savedTypeComment;
+
+  /// No description provided for @savedTypeDm.
+  ///
+  /// In ar, this message translates to:
+  /// **'رسالة مباشرة'**
+  String get savedTypeDm;
+
+  /// No description provided for @savedAt.
+  ///
+  /// In ar, this message translates to:
+  /// **'حُفظ {date}'**
+  String savedAt(String date);
+
+  /// No description provided for @workTodayTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'يومي'**
+  String get workTodayTitle;
+
+  /// No description provided for @workDailyReport.
+  ///
+  /// In ar, this message translates to:
+  /// **'التقرير اليومي'**
+  String get workDailyReport;
+
+  /// No description provided for @workNoProfile.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا ملفَّ موظفٍ نشطاً مربوطاً بحسابك — لا حالَ يومٍ لعرضه'**
+  String get workNoProfile;
+
+  /// No description provided for @workAttendance.
+  ///
+  /// In ar, this message translates to:
+  /// **'الحضور'**
+  String get workAttendance;
+
+  /// No description provided for @workReport.
+  ///
+  /// In ar, this message translates to:
+  /// **'التقرير'**
+  String get workReport;
+
+  /// No description provided for @workCheckIn.
+  ///
+  /// In ar, this message translates to:
+  /// **'دخول {time}'**
+  String workCheckIn(String time);
+
+  /// No description provided for @workCheckOut.
+  ///
+  /// In ar, this message translates to:
+  /// **'خروج {time}'**
+  String workCheckOut(String time);
+
+  /// No description provided for @workReportedHours.
+  ///
+  /// In ar, this message translates to:
+  /// **'الساعات المُبلَّغة: {hours}'**
+  String workReportedHours(String hours);
+
+  /// No description provided for @workDeadline.
+  ///
+  /// In ar, this message translates to:
+  /// **'مهلة التقديم: {time}'**
+  String workDeadline(String time);
+
+  /// No description provided for @workReportDue.
+  ///
+  /// In ar, this message translates to:
+  /// **'تقرير اليوم مطلوب ولم يُقدَّم بعد'**
+  String get workReportDue;
+
+  /// No description provided for @workVerdictPending.
+  ///
+  /// In ar, this message translates to:
+  /// **'لم يحِن وقت الحكم على اليوم بعد'**
+  String get workVerdictPending;
+
+  /// No description provided for @workNeedsReview.
+  ///
+  /// In ar, this message translates to:
+  /// **'بنودٌ بانتظار المراجعة أو التعديل'**
+  String get workNeedsReview;
+
+  /// No description provided for @workEntries.
+  ///
+  /// In ar, this message translates to:
+  /// **'بنود اليوم ({count})'**
+  String workEntries(int count);
+
+  /// No description provided for @workNoEntries.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا بنود مُقدَّمة لهذا اليوم'**
+  String get workNoEntries;
+
+  /// No description provided for @workSubmit.
+  ///
+  /// In ar, this message translates to:
+  /// **'قدّم بند عمل'**
+  String get workSubmit;
+
+  /// No description provided for @workEntryHours.
+  ///
+  /// In ar, this message translates to:
+  /// **'{hours} ساعة'**
+  String workEntryHours(String hours);
+
+  /// No description provided for @workEntryProgress.
+  ///
+  /// In ar, this message translates to:
+  /// **'التقدم {progress}٪'**
+  String workEntryProgress(String progress);
+
+  /// No description provided for @workReviewPending.
+  ///
+  /// In ar, this message translates to:
+  /// **'بانتظار المراجعة'**
+  String get workReviewPending;
+
+  /// No description provided for @workReviewAccepted.
+  ///
+  /// In ar, this message translates to:
+  /// **'مقبول'**
+  String get workReviewAccepted;
+
+  /// No description provided for @workReviewNeedsRevision.
+  ///
+  /// In ar, this message translates to:
+  /// **'يحتاج تعديلاً'**
+  String get workReviewNeedsRevision;
+
+  /// No description provided for @workPrevDay.
+  ///
+  /// In ar, this message translates to:
+  /// **'اليوم السابق'**
+  String get workPrevDay;
+
+  /// No description provided for @workNextDay.
+  ///
+  /// In ar, this message translates to:
+  /// **'اليوم التالي'**
+  String get workNextDay;
+
+  /// No description provided for @myDocumentsTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'وثائقي'**
+  String get myDocumentsTitle;
+
+  /// No description provided for @myDocumentsEmpty.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا وثائق على ملفّك'**
+  String get myDocumentsEmpty;
+
+  /// No description provided for @myDocumentsExpires.
+  ///
+  /// In ar, this message translates to:
+  /// **'تنتهي {date}'**
+  String myDocumentsExpires(String date);
+
+  /// No description provided for @myDocumentsExpired.
+  ///
+  /// In ar, this message translates to:
+  /// **'انتهت {date}'**
+  String myDocumentsExpired(String date);
+
+  /// No description provided for @myDocumentsNo.
+  ///
+  /// In ar, this message translates to:
+  /// **'رقم {no}'**
+  String myDocumentsNo(String no);
+
+  /// No description provided for @myDocumentsInfected.
+  ///
+  /// In ar, this message translates to:
+  /// **'محجوبة — وُسمت مصابة بفحص الفيروسات'**
+  String get myDocumentsInfected;
+
+  /// No description provided for @myDocumentsNoPreview.
+  ///
+  /// In ar, this message translates to:
+  /// **'المعاينة داخل التطبيق للصور فقط — افتحها من المنصة على الويب'**
+  String get myDocumentsNoPreview;
+
+  /// No description provided for @myDocumentsRestricted.
+  ///
+  /// In ar, this message translates to:
+  /// **'وصول هذه الوثيقة مقيَّد بقاعدة صريحة'**
+  String get myDocumentsRestricted;
+
+  /// No description provided for @myDocumentsNoPersist.
+  ///
+  /// In ar, this message translates to:
+  /// **'تُعرض الوثائق من الذاكرة ولا تُحفظ على الجهاز'**
+  String get myDocumentsNoPersist;
 }
 
 class _AppLocalizationsDelegate

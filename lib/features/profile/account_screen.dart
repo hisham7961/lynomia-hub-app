@@ -277,6 +277,15 @@ class _AccountScreenState extends State<AccountScreen> {
                   margin: const EdgeInsets.only(bottom: 16),
                   child: Column(
                     children: [
+                      // وثائقي — وثائق ملفّي الوظيفي (داخلي؛ الخادم يفوّض بارتباط الموظف).
+                      if (!isClient)
+                        ListTile(
+                          key: const Key('account-my-documents'),
+                          leading: const Icon(Icons.badge_outlined),
+                          title: Text(l.myDocumentsTitle),
+                          trailing: const Icon(Icons.chevron_right),
+                          onTap: () => context.push('/me/documents'),
+                        ),
                       if (!isClient)
                         ListTile(
                           leading: const Icon(Icons.location_on_outlined),

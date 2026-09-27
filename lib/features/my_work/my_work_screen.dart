@@ -1,5 +1,5 @@
 /// مهامي (§48) — تجميع قدرات المستخدم القائمة: مهامه، اعتماداته، إشعاراته،
-/// رسائله — عبر واجهات فعلية لا منطق أعمال مكرر.
+/// رسائله، وحال يومه (§93) — عبر واجهات فعلية لا منطق أعمال مكرر.
 library;
 
 import 'package:flutter/material.dart';
@@ -10,6 +10,8 @@ import '../../core/ui/async_view.dart';
 import '../../l10n/app_localizations.dart';
 import '../home/home_repository.dart';
 import '../shell/app_shell.dart';
+import 'daily_report_screen.dart';
+import 'work_repository.dart';
 
 class MyWorkScreen extends StatefulWidget {
   const MyWorkScreen({super.key});
@@ -21,6 +23,7 @@ class MyWorkScreen extends StatefulWidget {
 class _MyWorkScreenState extends State<MyWorkScreen> {
   HomeSnapshot? _snapshot;
   int _dmUnread = 0;
+  WorkDay? _workDay;
   Object? _error;
   bool _loading = true;
 
@@ -44,10 +47,18 @@ class _MyWorkScreenState extends State<MyWorkScreen> {
       } on Object {
         // الرسائل ثانوية هنا — فشلها لا يسقط الشاشة.
       }
+      WorkDay? workDay;
+      try {
+        // حال اليوم ثانوي: بلا ملف موظف (حالة صادقة) أو فشل ⇒ لا بطاقة.
+        workDay = await c.work.today();
+      } on Object {
+        workDay = null;
+      }
       if (mounted) {
         setState(() {
           _snapshot = snap;
           _dmUnread = dmUnread;
+          _workDay = workDay;
         });
       }
     } on Object catch (e) {
@@ -75,6 +86,15 @@ class _MyWorkScreenState extends State<MyWorkScreen> {
           child: ListView(
             padding: const EdgeInsets.all(16),
             children: [
+              if (_workDay?.compliance != null && !_workDay!.noEmployeeProfile)
+                WorkDayCard(
+                  key: const Key('mywork-today'),
+                  day: _workDay!.compliance!,
+                  onTap: () async {
+                    await context.push('/work/daily-report');
+                    if (mounted) _load();
+                  },
+                ),
               _EntryTile(
                 icon: Icons.approval_outlined,
                 title: l.myWorkApprovals,

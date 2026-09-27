@@ -3,7 +3,7 @@ description: "Lynomia Hub — تطبيقُ الجوال الأصيل لمنصّ�
 publish_to: 'none'
 
 # النسخةُ تُدار عبر VERSION/README/CHANGELOG (راجع CLAUDE.md) — تطابقُها هنا إلزاميّ.
-version: 0.3.0+3
+version: 0.4.0+4
 
 environment:
   sdk: ^3.13.2

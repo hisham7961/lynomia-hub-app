@@ -1,23 +1,35 @@
-/// لوحة تعليقات السجل (§53) — قراءة بردود وتفاعلات، ونشر برد. تُستخدم داخل
-/// شاشة السجل.
+/// لوحة التعليقات (§53) — قراءة بردود وتفاعلات (تبديلٌ يحسمه الخادم)، ونشر
+/// برد. تُستخدم داخل شاشة السجل، وفي القناة/المجموعة (`module=channel`) مع
+/// استطلاع «منذ» ومؤشر كتابة لا يعملان إلا والشاشة ظاهرة (§106).
 library;
 
 import 'package:flutter/material.dart';
 
 import '../../app/di/app_scope.dart';
+import '../../core/errors/api_exception.dart';
 import '../../core/ui/async_view.dart';
+import '../../core/ui/visible_poller.dart';
 import '../../l10n/app_localizations.dart';
+import '../messages/live_events.dart';
 import 'comment_repository.dart';
+import 'reactions.dart';
+
+/// فاصل استطلاع القناة المفتوحة.
+const kChannelPollInterval = Duration(seconds: 5);
 
 class CommentsPanel extends StatefulWidget {
   const CommentsPanel({
     super.key,
     required this.module,
     required this.recordId,
+    this.liveConversationId,
   });
 
   final String module;
   final String recordId;
+
+  /// حين تكون اللوحة لقناةٍ/مجموعة: معرّفها لاستطلاع «منذ» والكتابة.
+  final String? liveConversationId;
 
   @override
   State<CommentsPanel> createState() => _CommentsPanelState();
@@ -31,22 +43,55 @@ class _CommentsPanelState extends State<CommentsPanel> {
   bool _posting = false;
   String? _replyTo;
   String? _replyToName;
+  List<String> _typing = const [];
+
+  SinceFeed<ChannelLiveEvent>? _feed;
+  VisiblePoller? _poller;
+  TypingThrottle? _typingPing;
 
   @override
   void initState() {
     super.initState();
-    _load();
+    final convId = widget.liveConversationId;
+    if (convId != null) {
+      final c = AppScope.of(context);
+      _feed = SinceFeed(
+        (cursor) => c.collab.channelSince(convId, cursor: cursor),
+      );
+      _poller = VisiblePoller(
+        interval: kChannelPollInterval,
+        onTick: _poll,
+        isVisible: () => routeIsCurrent(context),
+      );
+      _typingPing = TypingThrottle(() async {
+        try {
+          await c.collab.channelTyping(convId);
+        } on ApiException catch (e) {
+          // القدرة مطفأة خادمياً (٤٠٤) أو ضيفٌ لا يكتب (٤٠٣) ⇒ نكفّ عن النبض.
+          if (e.code == ApiErrorCode.resourceNotFound ||
+              e.code == ApiErrorCode.forbidden) {
+            _typingPing?.disable();
+          }
+        }
+      });
+    }
+    _load().then((_) async {
+      if (!mounted || _poller == null || _comments == null) return;
+      await _poll();
+      if (mounted) _poller!.start();
+    });
   }
 
   @override
   void dispose() {
+    _poller?.dispose();
     _input.dispose();
     super.dispose();
   }
 
-  Future<void> _load() async {
+  Future<void> _load({bool quiet = false}) async {
     setState(() {
-      _loading = true;
+      if (!quiet) _loading = true;
       _error = null;
     });
     try {
@@ -54,9 +99,54 @@ class _CommentsPanelState extends State<CommentsPanel> {
           .forRecord(widget.module, widget.recordId);
       if (mounted) setState(() => _comments = comments);
     } on Object catch (e) {
-      if (mounted) setState(() => _error = e);
+      if (mounted && !quiet) setState(() => _error = e);
     } finally {
       if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  Set<String> _knownIds() => {
+    for (final c in _comments ?? const <RecordComment>[]) ...[
+      c.id,
+      for (final r in c.replies) r.id,
+    ],
+  };
+
+  /// نبضة «منذ»: حتى الذيل أولاً (المؤشر يبدأ من أول الحاوية)، ثم أي حدثٍ لا
+  /// نعرفه ⇒ إعادة جلب هادئة للقائمة (ردود وتفاعلات بشكلها الخادمي الكامل).
+  Future<void> _poll() async {
+    final feed = _feed;
+    if (feed == null) return;
+    try {
+      final wasCaughtUp = feed.caughtUp;
+      final batch = await feed.pull(maxPages: wasCaughtUp ? 5 : 20);
+      if (!mounted) return;
+      setState(() => _typing = batch.typing);
+      final known = _knownIds();
+      final fresh = batch.events.any((e) => !known.contains(e.id));
+      if (fresh && batch.caughtUp) await _load(quiet: true);
+    } on ApiException catch (e) {
+      // لم أعد عضواً (٤٠٤) ⇒ لا استطلاع بعده.
+      if (e.code == ApiErrorCode.resourceNotFound) _poller?.stop();
+    }
+  }
+
+  Future<void> _react(RecordComment c, [String? emoji]) async {
+    final chosen = emoji ?? await pickReaction(context);
+    if (chosen == null || !mounted) return;
+    try {
+      final t = await AppScope.of(context).comments.react(c.id, chosen);
+      if (!mounted) return;
+      setState(
+        () => _comments = [
+          for (final x in _comments ?? const <RecordComment>[])
+            x.applyReaction(t),
+        ],
+      );
+    } on Object catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(describeError(context, e))));
     }
   }
 
@@ -108,6 +198,7 @@ class _CommentsPanelState extends State<CommentsPanel> {
                   for (final c in comments) ...[
                     _CommentTile(
                       comment: c,
+                      onReact: (emoji) => _react(c, emoji),
                       onReply: () => setState(() {
                         _replyTo = c.id;
                         _replyToName = c.userName;
@@ -116,7 +207,10 @@ class _CommentsPanelState extends State<CommentsPanel> {
                     for (final r in c.replies)
                       Padding(
                         padding: const EdgeInsetsDirectional.only(start: 32),
-                        child: _CommentTile(comment: r),
+                        child: _CommentTile(
+                          comment: r,
+                          onReact: (emoji) => _react(r, emoji),
+                        ),
                       ),
                   ],
                 ],
@@ -130,6 +224,17 @@ class _CommentsPanelState extends State<CommentsPanel> {
             padding: const EdgeInsets.fromLTRB(12, 4, 12, 8),
             child: Column(
               children: [
+                if (_typing.isNotEmpty)
+                  Align(
+                    alignment: AlignmentDirectional.centerStart,
+                    child: Text(
+                      _typing.length == 1
+                          ? l.typingOne(_typing.single)
+                          : l.typingMany(_typing.join('، ')),
+                      key: const Key('channel-typing'),
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                  ),
                 if (_replyTo != null)
                   Row(
                     children: [
@@ -152,7 +257,9 @@ class _CommentsPanelState extends State<CommentsPanel> {
                   children: [
                     Expanded(
                       child: TextField(
+                        key: const Key('comment-input'),
                         controller: _input,
+                        onChanged: (_) => _typingPing?.onInput(),
                         decoration: InputDecoration(
                           hintText: l.commentsHint,
                           isDense: true,
@@ -188,9 +295,16 @@ class _CommentsPanelState extends State<CommentsPanel> {
 }
 
 class _CommentTile extends StatelessWidget {
-  const _CommentTile({required this.comment, this.onReply});
+  const _CommentTile({
+    required this.comment,
+    required this.onReact,
+    this.onReply,
+  });
 
   final RecordComment comment;
+
+  /// null ⇒ ورقة الاختيار؛ رمزٌ ⇒ تبديله مباشرة.
+  final void Function(String? emoji) onReact;
   final VoidCallback? onReply;
 
   @override
@@ -258,26 +372,27 @@ class _CommentTile extends StatelessWidget {
               ),
             Row(
               children: [
-                if (comment.reactions.isNotEmpty)
-                  Expanded(
-                    child: Wrap(
-                      spacing: 4,
-                      children: [
-                        for (final r in comment.reactions)
-                          Chip(
-                            label: Text('${r.emoji} ${r.count}'),
-                            visualDensity: VisualDensity.compact,
-                            materialTapTargetSize:
-                                MaterialTapTargetSize.shrinkWrap,
-                            side: r.mine
-                                ? BorderSide(color: theme.colorScheme.primary)
-                                : null,
-                          ),
-                      ],
-                    ),
-                  )
-                else
-                  const Spacer(),
+                Expanded(
+                  child: Wrap(
+                    spacing: 4,
+                    children: [
+                      for (final r in comment.reactions)
+                        ReactionChip(
+                          key: Key('reaction-${comment.id}-${r.emoji}'),
+                          emoji: r.emoji,
+                          count: r.count,
+                          mine: r.mine,
+                          onTap: () => onReact(r.emoji),
+                        ),
+                    ],
+                  ),
+                ),
+                IconButton(
+                  key: Key('react-${comment.id}'),
+                  tooltip: l.reactionsAdd,
+                  icon: const Icon(Icons.add_reaction_outlined, size: 18),
+                  onPressed: () => onReact(null),
+                ),
                 if (onReply != null)
                   TextButton(onPressed: onReply, child: const Text('↩')),
               ],

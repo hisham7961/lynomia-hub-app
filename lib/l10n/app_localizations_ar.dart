@@ -823,4 +823,186 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get askErrGeneric => 'تعذّر الجواب';
+
+  @override
+  String get reactionsPick => 'اختر تفاعلاً';
+
+  @override
+  String get reactionsAdd => 'أضف تفاعلاً';
+
+  @override
+  String typingOne(String name) {
+    return '$name يكتب…';
+  }
+
+  @override
+  String typingMany(String names) {
+    return '$names يكتبون…';
+  }
+
+  @override
+  String get presenceOnline => 'متصل الآن';
+
+  @override
+  String get presenceRecent => 'نشط مؤخراً';
+
+  @override
+  String get presenceAway => 'غير نشط';
+
+  @override
+  String get presenceOffline => 'غير متصل';
+
+  @override
+  String get messagesTabDirect => 'المباشرة';
+
+  @override
+  String get messagesTabChannels => 'القنوات';
+
+  @override
+  String get conversationsChannels => 'القنوات';
+
+  @override
+  String get conversationsRooms => 'غرف المشاريع';
+
+  @override
+  String get conversationsGroups => 'المجموعات';
+
+  @override
+  String get conversationsEmpty => 'لست عضواً في أي قناة أو مجموعة';
+
+  @override
+  String get savedTitle => 'المحفوظات';
+
+  @override
+  String get savedEmpty => 'لا محفوظات';
+
+  @override
+  String get savedUnavailable => 'لم يعد هذا متاحاً لك';
+
+  @override
+  String get savedTypeComment => 'تعليق';
+
+  @override
+  String get savedTypeDm => 'رسالة مباشرة';
+
+  @override
+  String savedAt(String date) {
+    return 'حُفظ $date';
+  }
+
+  @override
+  String get workTodayTitle => 'يومي';
+
+  @override
+  String get workDailyReport => 'التقرير اليومي';
+
+  @override
+  String get workNoProfile =>
+      'لا ملفَّ موظفٍ نشطاً مربوطاً بحسابك — لا حالَ يومٍ لعرضه';
+
+  @override
+  String get workAttendance => 'الحضور';
+
+  @override
+  String get workReport => 'التقرير';
+
+  @override
+  String workCheckIn(String time) {
+    return 'دخول $time';
+  }
+
+  @override
+  String workCheckOut(String time) {
+    return 'خروج $time';
+  }
+
+  @override
+  String workReportedHours(String hours) {
+    return 'الساعات المُبلَّغة: $hours';
+  }
+
+  @override
+  String workDeadline(String time) {
+    return 'مهلة التقديم: $time';
+  }
+
+  @override
+  String get workReportDue => 'تقرير اليوم مطلوب ولم يُقدَّم بعد';
+
+  @override
+  String get workVerdictPending => 'لم يحِن وقت الحكم على اليوم بعد';
+
+  @override
+  String get workNeedsReview => 'بنودٌ بانتظار المراجعة أو التعديل';
+
+  @override
+  String workEntries(int count) {
+    return 'بنود اليوم ($count)';
+  }
+
+  @override
+  String get workNoEntries => 'لا بنود مُقدَّمة لهذا اليوم';
+
+  @override
+  String get workSubmit => 'قدّم بند عمل';
+
+  @override
+  String workEntryHours(String hours) {
+    return '$hours ساعة';
+  }
+
+  @override
+  String workEntryProgress(String progress) {
+    return 'التقدم $progress٪';
+  }
+
+  @override
+  String get workReviewPending => 'بانتظار المراجعة';
+
+  @override
+  String get workReviewAccepted => 'مقبول';
+
+  @override
+  String get workReviewNeedsRevision => 'يحتاج تعديلاً';
+
+  @override
+  String get workPrevDay => 'اليوم السابق';
+
+  @override
+  String get workNextDay => 'اليوم التالي';
+
+  @override
+  String get myDocumentsTitle => 'وثائقي';
+
+  @override
+  String get myDocumentsEmpty => 'لا وثائق على ملفّك';
+
+  @override
+  String myDocumentsExpires(String date) {
+    return 'تنتهي $date';
+  }
+
+  @override
+  String myDocumentsExpired(String date) {
+    return 'انتهت $date';
+  }
+
+  @override
+  String myDocumentsNo(String no) {
+    return 'رقم $no';
+  }
+
+  @override
+  String get myDocumentsInfected => 'محجوبة — وُسمت مصابة بفحص الفيروسات';
+
+  @override
+  String get myDocumentsNoPreview =>
+      'المعاينة داخل التطبيق للصور فقط — افتحها من المنصة على الويب';
+
+  @override
+  String get myDocumentsRestricted => 'وصول هذه الوثيقة مقيَّد بقاعدة صريحة';
+
+  @override
+  String get myDocumentsNoPersist =>
+      'تُعرض الوثائق من الذاكرة ولا تُحفظ على الجهاز';
 }

@@ -213,11 +213,13 @@ class _AccountScreenState extends State<AccountScreen> {
                     ListTile(
                       leading: const Icon(Icons.notifications_outlined),
                       title: Text(l.accountPushStatus),
-                      subtitle: Text(
-                        c.push.status == PushSetupStatus.registered
-                            ? l.pushRegistered
-                            : l.pushNotConfigured,
-                      ),
+                      subtitle: Text(switch (c.push.status) {
+                        PushSetupStatus.registered => l.pushRegistered,
+                        PushSetupStatus.ready => l.pushAwaitingToken,
+                        PushSetupStatus.permissionDenied =>
+                          l.pushPermissionDenied,
+                        PushSetupStatus.notConfigured => l.pushNotConfigured,
+                      }),
                     ),
                   ],
                 ),

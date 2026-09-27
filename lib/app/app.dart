@@ -1,13 +1,17 @@
 /// جذر التطبيق — عربي RTL أولاً (§23 §24): الاتجاه يقوده locale لا قسر.
 library;
 
+import 'dart:async';
+
 import 'package:app_links/app_links.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:go_router/go_router.dart';
 
 import '../core/auth/session_manager.dart';
+import '../core/links/deep_link.dart';
 import '../l10n/app_localizations.dart';
+import 'bootstrap/push_coordinator.dart';
 import 'di/app_scope.dart';
 import 'router/app_router.dart';
 
@@ -29,6 +33,9 @@ class LynomiaApp extends StatefulWidget {
 
 class _LynomiaAppState extends State<LynomiaApp> {
   late final GoRouter _router = buildRouter(widget.container);
+  final _messenger = GlobalKey<ScaffoldMessengerState>();
+  StreamSubscription<PushBanner>? _bannerSub;
+  StreamSubscription<Uri>? _linkSub;
   Locale _locale = const Locale('ar');
   ThemeMode _themeMode = ThemeMode.system;
 
@@ -39,6 +46,11 @@ class _LynomiaAppState extends State<LynomiaApp> {
     // الإقلاع/الاستئناف: صحة مقيّدة، شارة حية، مزامنة القابل للتخبئة (§45 §51 §60).
     widget.container.resume.attach();
     _restorePrefs();
+    // الملاحة الواردة (رابط/إشعار) تُسلَّم عبر الصندوق بعد الجاهزية — دفعاً
+    // فوق الوجهة الحالية كي يبقى الرجوع ممكناً.
+    widget.container.inbox.attachNavigator((loc) => _router.push(loc));
+    _bannerSub = widget.container.pushCoordinator.banners.listen(_showBanner);
+    unawaited(widget.container.pushCoordinator.attach());
     if (widget.listenAppLinks) _wireDeepLinks();
     // انتهاء/إبطال الجلسة أثناء الاستخدام ⇒ عودة للدخول (§38 §90).
     widget.container.session.endEvents.listen((reason) {
@@ -51,6 +63,9 @@ class _LynomiaAppState extends State<LynomiaApp> {
   @override
   void dispose() {
     widget.container.resume.detach();
+    widget.container.pushCoordinator.detach();
+    _bannerSub?.cancel();
+    _linkSub?.cancel();
     super.dispose();
   }
 
@@ -78,14 +93,43 @@ class _LynomiaAppState extends State<LynomiaApp> {
     } on Object {
       // قناة غائبة (اختبار) — تجاهل صامت
     }
-    links.uriLinkStream.listen(_openLink, onError: (_) {});
+    _linkSub = links.uriLinkStream.listen(_openLink, onError: (_) {});
   }
 
+  /// غير المطابق (`foldDeepLink` ⇒ null) يُتجاهل؛ والمطابق ينتظر الجاهزية.
   void _openLink(Uri uri) {
-    final path = uri.path;
-    if (path.startsWith('/m/') || path.startsWith('/app/')) {
-      _router.go(path);
-    }
+    final location = foldDeepLink(uri);
+    if (location != null) widget.container.inbox.deliverLocation(location);
+  }
+
+  /// شريط الإشعار داخل التطبيق (رسالة في المقدّمة أو تجريبي) — نصّه من
+  /// الحمولة العامة للخادم، وزر «فتح» حين للإشعار وجهة.
+  void _showBanner(PushBanner banner) {
+    final messenger = _messenger.currentState;
+    final ctx = _messenger.currentContext;
+    if (messenger == null || ctx == null) return;
+    final l = AppLocalizations.of(ctx)!;
+    final p = banner.payload;
+    final title = p.isTest
+        ? l.pushTestReceived
+        : (p.title?.trim().isNotEmpty ?? false)
+        ? p.title!
+        : l.pushBannerDefaultTitle;
+    final body = p.isTest ? null : p.body;
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(
+          body == null || body.trim().isEmpty ? title : '$title\n$body',
+        ),
+        behavior: SnackBarBehavior.floating,
+        action: banner.openable
+            ? SnackBarAction(
+                label: l.pushBannerOpen,
+                onPressed: () => widget.container.pushCoordinator.open(p),
+              )
+            : null,
+      ),
+    );
   }
 
   /// تبديل لغة/مظهر من شاشة الحساب (تفضيل محلي §79).
@@ -110,6 +154,8 @@ class _LynomiaAppState extends State<LynomiaApp> {
       state: this,
       child: MaterialApp.router(
         title: 'Lynomia Hub',
+        onGenerateTitle: (context) => AppLocalizations.of(context)!.appTitle,
+        scaffoldMessengerKey: _messenger,
         routerConfig: _router,
         locale: _locale,
         supportedLocales: AppLocalizations.supportedLocales,

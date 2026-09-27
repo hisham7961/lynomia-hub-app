@@ -1,0 +1,3 @@
+/* اسم العرض بالعربية — يطابق appTitle في lib/l10n/app_ar.arb */
+"CFBundleDisplayName" = "لينوميا هب";
+"CFBundleName" = "لينوميا هب";

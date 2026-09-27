@@ -6,6 +6,7 @@ library;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/links/deep_link.dart';
 import '../../features/activation/activation_screen.dart';
 import '../../features/approvals/approvals_screen.dart';
 import '../../features/auth/login_screen.dart';
@@ -44,11 +45,7 @@ GoRouter buildRouter(AppContainer c) => GoRouter(
     final launchState = c.launch.state;
 
     // روابط الويب العالمية `/app/...` تُطوى على نظيرتها المحلية (§76).
-    if (path.startsWith('/app/')) {
-      return path.startsWith('/app/activate/')
-          ? path.replaceFirst('/app/', '/')
-          : path.replaceFirst('/app/', '/m/');
-    }
+    if (path.startsWith('/app/')) return foldAppPath(path);
 
     // تفعيل الحساب (§13) نقطة عامة تسبق الدخول — تمرّ بأي حالة إقلاع.
     if (path.startsWith('/activate/')) return null;

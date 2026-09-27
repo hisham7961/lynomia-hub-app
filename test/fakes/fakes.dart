@@ -2,12 +2,15 @@
 /// ناقل HTTP مبرمج يسجل كل طلب، ومخزن آمن في الذاكرة، وبناء حاوية اختبار.
 library;
 
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
 import 'package:http/http.dart' as http;
 import 'package:lynomia_hub_app/app/di/app_scope.dart';
 import 'package:lynomia_hub_app/core/config/app_env.dart';
+import 'package:lynomia_hub_app/core/push/messaging_adapter.dart';
+import 'package:lynomia_hub_app/core/push/push_message.dart';
 import 'package:lynomia_hub_app/core/push/push_registrar.dart';
 import 'package:lynomia_hub_app/core/security/biometric_gate.dart';
 import 'package:lynomia_hub_app/core/storage/secure_store.dart';
@@ -354,3 +357,84 @@ Map<String, dynamic> schemaPayload() => {
     },
   ],
 };
+
+/// مزوّد دفع مزيّف بسيط (رمز ثابت، بلا رسائل) — لاختبارات المسجِّل.
+class FakePushProvider implements PushTokenProvider {
+  FakePushProvider({this.token, this.configured = true});
+
+  String? token;
+  @override
+  final bool configured;
+
+  @override
+  Future<String?> currentToken() async => token;
+
+  @override
+  Stream<String> get tokenRotations => const Stream.empty();
+
+  @override
+  String get providerName => 'fcm';
+
+  @override
+  Future<bool> requestPermission() async => true;
+
+  @override
+  Stream<PushMessage> get foregroundMessages => const Stream.empty();
+
+  @override
+  Stream<PushMessage> get openedMessages => const Stream.empty();
+
+  @override
+  Future<PushMessage?> initialMessage() async => null;
+}
+
+/// محوِّل مراسلة مزيّف (بديل firebase_messaging) — يبثّ ما يدفعه الاختبار.
+class FakeMessagingAdapter implements MessagingAdapter {
+  FakeMessagingAdapter({
+    this.token,
+    this.grant = true,
+    this.initial,
+    this.tokenError,
+  });
+
+  String? token;
+  bool grant;
+  PushMessage? initial;
+
+  /// خطأ getToken (مثل رمز APNs غير المتاح بعد على iOS).
+  Object? tokenError;
+  int permissionRequests = 0;
+
+  final refresh = StreamController<String>.broadcast();
+  final foreground = StreamController<PushMessage>.broadcast();
+  final opened = StreamController<PushMessage>.broadcast();
+
+  @override
+  Future<bool> requestPermission() async {
+    permissionRequests++;
+    return grant;
+  }
+
+  @override
+  Future<String?> getToken() async {
+    final e = tokenError;
+    if (e != null) throw e;
+    return token;
+  }
+
+  @override
+  Stream<String> get onTokenRefresh => refresh.stream;
+
+  @override
+  Stream<PushMessage> get onForegroundMessage => foreground.stream;
+
+  @override
+  Stream<PushMessage> get onMessageOpenedApp => opened.stream;
+
+  @override
+  Future<PushMessage?> getInitialMessage() async {
+    final m = initial;
+    initial = null; // مرة واحدة كما في المنصة
+    return m;
+  }
+}

@@ -1,0 +1,5 @@
+// انسخه إلى ios/Flutter/AppIdentity.local.xcconfig (مُتجاهَل في git) وضع القيم النهائية.
+// راجع docs/OWNER_SETUP.md §٣.
+APP_BUNDLE_ID = com.example.lynomiahub
+APP_TEAM_ID = ABCDE12345
+APP_LINK_HOST = hub.example.com

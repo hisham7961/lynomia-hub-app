@@ -1,6 +1,6 @@
 {
   "@@locale": "ar",
-  "appTitle": "Lynomia Hub",
+  "appTitle": "لينوميا هب",
   "navHome": "الرئيسية",
   "navMyWork": "مهامي",
   "navDomains": "المجالات",
@@ -376,5 +376,11 @@
   "@percentValue": {"placeholders": {"value": {"type": "int"}}},
   "diagnosticsSessionActive": "نشطة (id: {id})",
   "@diagnosticsSessionActive": {"placeholders": {"id": {"type": "String"}}},
-  "diagnosticsPushReadyNoToken": "ready (لا رمز)"
+  "diagnosticsPushReadyNoToken": "ready (لا رمز)",
+  "pushPermissionDenied": "مرفوضة — فعّل إذن الإشعارات من إعدادات الجهاز",
+  "pushAwaitingToken": "مهيأة — بانتظار رمز الجهاز",
+  "pushBannerDefaultTitle": "إشعار جديد",
+  "pushBannerOpen": "فتح",
+  "pushTestReceived": "وصل إشعارٌ تجريبي من مركز منصة الجوال",
+  "diagnosticsPushPermissionDenied": "permission denied (الإذن مرفوض)"
 }

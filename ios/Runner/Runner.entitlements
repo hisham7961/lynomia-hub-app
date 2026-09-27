@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- الإشعارات (APNs ⇐ FCM) — development في Debug وproduction في Release (Flutter/*.xcconfig). -->
+	<key>aps-environment</key>
+	<string>$(APS_ENVIRONMENT)</string>
+	<!-- الروابط العالمية (§76 · المرحلة ٢.٢) — النطاق من APP_LINK_HOST (Flutter/AppIdentity.xcconfig)،
+	     والمسارات /m/* و/app/* يعلنها الخادم في apple-app-site-association. -->
+	<key>com.apple.developer.associated-domains</key>
+	<array>
+		<string>applinks:$(APP_LINK_HOST)</string>
+	</array>
+</dict>
+</plist>

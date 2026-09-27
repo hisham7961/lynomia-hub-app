@@ -12,23 +12,6 @@ import 'package:local_auth/local_auth.dart';
 import '../fakes/fakes.dart';
 import '../widget/rtl_app_test.dart' show appConfigPayload;
 
-class FakePushProvider implements PushTokenProvider {
-  FakePushProvider({this.token, this.configured = true});
-
-  String? token;
-  @override
-  final bool configured;
-
-  @override
-  Future<String?> currentToken() async => token;
-
-  @override
-  Stream<String> get tokenRotations => const Stream.empty();
-
-  @override
-  String get providerName => 'fcm';
-}
-
 class FakeBiometricGate implements BiometricGate {
   FakeBiometricGate({this.isAvailable = true, this.succeed = true});
 

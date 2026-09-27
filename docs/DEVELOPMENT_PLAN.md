@@ -3,6 +3,9 @@
 > **مرجع الحالة:** التطبيق v0.5.0 (`869f90d`+) · الخادم v2.617.0 (`d02525c`) · تاريخ الجرد 2026-09-27.
 > **تحديث v0.6.0 (2026-09-27):** المرحلة ١ مُنجزة — راجع «§٥ المرحلة ١» لكل بندٍ ودليله؛ والجداول أدناه
 > معلَّمةٌ بما تغيّر (✅ v0.6.0).
+> **تحديث v0.7.0 (2026-09-27):** بنود التطبيق في المرحلة ٢ (2.2 الروابط العالمية، 2.3 FCM) وبنود المرحلة ٥ التي لا
+> تحتاج نقاطاً خلفية (5.1–5.5 وتوثيق 5.6) **مبنيّة وقابلة للضبط**؛ والمُدخلات الخارجية الغائبة موثّقة خطوةً خطوة في
+> `docs/OWNER_SETUP.md` — التطبيق يُبنى ويعمل بدونها بحالات صادقة. العلامة: (✅ v0.7.0).
 > **منهج الجرد:** ثلاث قراءات مستقلة للشيفرة لا للوثائق: (١) قسم «منصّة تطبيق الهاتف» في الخادم
 > تبويباً تبويباً، (٢) التطبيق شاشةً شاشة ونقطةً نقطة، (٣) كل ميزة ويب مقابل سطح `/api/mobile/v1`.
 > وكل ادّعاءٍ حاسم هنا تُحقِّق منه يدوياً في الملف المذكور.
@@ -13,9 +16,10 @@
 
 | المكوّن | الحالة | ملاحظة |
 |---|---|---|
-| Flutter 3.47.5 / Dart 3.13.4 | ✅ جاهز | `/opt/flutter` — `flutter analyze` و`flutter test` خضراء (136 اختباراً في v0.5.0 ⇒ **196** في v0.6.0) |
+| Flutter 3.47.5 / Dart 3.13.4 | ✅ جاهز | `/opt/flutter` — `flutter analyze` و`flutter test` خضراء (136 اختباراً في v0.5.0 ⇒ 196 في v0.6.0 ⇒ **232** في v0.7.0) |
 | Android SDK 36 + build-tools 36.0.0 + JDK 17 | ✅ مُنصَّب | `/opt/android-sdk` · `flutter doctor`: Android toolchain ✓ |
-| بناء APK (debug) | ✅ نجح | `flutter build apk --debug` ⇒ `app-debug.apk` (174MB) — بعد إعادة محاولة (Maven Central خنق الطلبات بـ429 أولاً) |
+| بناء APK (debug) | ✅ نجح | `flutter build apk --debug` ⇒ `app-debug.apk` (174MB) — بعد إعادة محاولة (Maven Central خنق الطلبات بـ429 أولاً). v0.7.0: ناجح مع Firebase، والـmanifest المدموج مُتحقَّق (`aapt2`): intent-filter بالنطاق المحقون، `allowBackup=false`، الاسم العربي؛ و`-P lynomia.applicationId/appLinkHost` يغيّران الحزمة والنطاق فعلاً |
+| CI | ✅ v0.7.0 | `.github/workflows/app.yml`: بوابة + APK debug + AAB موقَّع عند توفر الأسرار + iOS بلا توقيع على macOS runner |
 | iOS | ✗ غير ممكن هنا | يتطلب macOS + Xcode — يُبنى على جهاز Mac أو CI بـmacOS runner |
 | Web / Linux desktop | غير مطلوب | التطبيق يستهدف iOS + Android فقط (لا مجلد `web/`) |
 
@@ -35,10 +39,10 @@
 
 | التبويب | ما يقدّمه | سطح الخادم | ما على التطبيق | الحالة في التطبيق |
 |---|---|---|---|---|
-| **نظرة عامة** | عدّ المسارات، الجلسات النشطة، التثبيتات iOS/Android، رموز الإشعار الحيّة، بطاقة جاهزية (25 صفاً) | `auth/login` (بيانات الجهاز)، `push/register` | إرسال `installation_uuid` وحقول الجهاز عند الدخول | ✅ الدخول يرسلها · ✗ رموز الإشعار (لا مزوّد) |
+| **نظرة عامة** | عدّ المسارات، الجلسات النشطة، التثبيتات iOS/Android، رموز الإشعار الحيّة، بطاقة جاهزية (25 صفاً) | `auth/login` (بيانات الجهاز)، `push/register` | إرسال `installation_uuid` وحقول الجهاز عند الدخول | ✅ الدخول يرسلها · ✅ v0.7.0 رموز الإشعار (FCM حين تُمرَّر خيارات Firebase) |
 | **المستخدمون والأجهزة** | قائمة الجلسات والتثبيتات، عرض 360 للجهاز، **إلغاء جلسة** | الإلغاء ⇒ `401 SESSION_REVOKED` في الطلب التالي | مسح الرموز والعودة للدخول؛ شاشة «أجهزتي» | ✅ `SESSION_REVOKED` مُعالَج · ✅ شاشة الجلسات |
-| **الإشعارات** | حالة المزوّد، الرموز، سجل التسليم، **إشعار تجريبي** | `push/register`, `push/unregister`؛ الحمولة `{notification_id, category, unread, module, id, action}` | تسجيل رمز FCM، فتح الهدف من الحمولة، تحديث الشارة | ✗ **المزوّد `NotConfiguredPushProvider`** — لا يصل تسجيلٌ للخادم |
-| **التطبيق والإصدار** | جدول الإصدارات (أدنى/أحدث/متجر)، التحديث الإجباري، معاينة `app-config`، روابط عميقة AASA/assetlinks، قائمة إطلاق (7 بنود) | `GET app-config` بترويستي `X-Lynomia-App-Platform/Version`؛ `/.well-known/*` | بوابة تحديث إجباري/اختياري، احترام الصيانة والإغلاق، التقاط `/m/*` و`/app/*` | ✅ بوابة الإطلاق والترويستان · ✗ **لا intent-filter ولا associated-domains** ⇒ الروابط لا تصل |
+| **الإشعارات** | حالة المزوّد، الرموز، سجل التسليم، **إشعار تجريبي** | `push/register`, `push/unregister`؛ الحمولة `{notification_id, category, unread, module, id, action}` | تسجيل رمز FCM، فتح الهدف من الحمولة، تحديث الشارة | ✅ v0.7.0 — `FcmPushProvider` + `PushCoordinator` (إذن، تسجيل، تدوير، فتح الهدف، الشارة، التجريبي)؛ يعمل حين تُمرَّر خيارات Firebase، وإلا `NotConfiguredPushProvider` صادقاً |
+| **التطبيق والإصدار** | جدول الإصدارات (أدنى/أحدث/متجر)، التحديث الإجباري، معاينة `app-config`، روابط عميقة AASA/assetlinks، قائمة إطلاق (7 بنود) | `GET app-config` بترويستي `X-Lynomia-App-Platform/Version`؛ `/.well-known/*` | بوابة تحديث إجباري/اختياري، احترام الصيانة والإغلاق، التقاط `/m/*` و`/app/*` | ✅ بوابة الإطلاق والترويستان · ✅ v0.7.0 intent-filter (`autoVerify`) + `applinks:` بنطاقٍ قابل للضبط |
 | **API والقدرات** | مستكشف المسارات، OpenAPI حيّة، فئات المزامنة، رموز الأخطاء، `If-Match`/`Idempotency-Key` | كل السطح | التفرّع على `code`، إرسال المفاتيح | ✅ مطبَّق في `api_client` · ⚠️ المزامنة لا تُشغَّل (§٢-ب) |
 | **الأمن والقياس** | وضع المصادقة، بوابات الحساب، سجل تدقيق الجوال، تبنّي الإصدارات | `ACCOUNT_RESTRICTED`, `LOCKDOWN`, `STEP_UP_REQUIRED` | عرض السبب، تدفق التحقق الإضافي، تخزين آمن | ✅ step-up · ✅ التخزين الآمن · ⚠️ البصمة معطوبة على Android (§٢-ج) |
 | **الملفات والماسح والتتبّع** | إحصاءات الملفات والفحص، الماسح، جلسات التتبّع (بموافقة) | `files/*`, `identity/resolve`, `tracking/*` | رفع مقطّع، مسح، تتبّع بموافقة | ✅ الرفع · ✅ الماسح · ✅ التتبّع (أمامي فقط) · ✗ التنزيل بلا واجهة |
@@ -84,9 +88,9 @@
 
 1. ✅ v0.6.0 — **البصمة على Android**: `MainActivity : FlutterFragmentActivity()` + سمة إقلاع AppCompat (حارس في `governance_test`).
 2. ✅ v0.6.0 — **المزامنة تُشغَّل** (أعلاه).
-3. **الروابط العميقة لا تصل** — لا `intent-filter` بـ`autoVerify` في `AndroidManifest.xml`، ولا `.entitlements` بـassociated-domains في iOS.
-4. **الإشعارات** — لا `firebase_messaging` ولا ملفات Firebase (محجوب على اعتمادات المالك).
-5. **الإصدار موقَّع بمفتاح debug**، ومعرّفات مؤقتة (`REPLACE_BEFORE_STORE_RELEASE`)، أيقونات افتراضية، و`allowBackup` غير مُعطَّل.
+3. ✅ v0.7.0 — **الروابط العميقة**: `intent-filter` بـ`autoVerify` (`/m/`, `/app/`) ونطاقٌ من Gradle؛ `Runner.entitlements` بـ`applinks:$(APP_LINK_HOST)` موصول في `project.pbxproj`؛ والرابط قبل الدخول يُحفظ.
+4. ✅ v0.7.0 — **الإشعارات**: `firebase_messaging` بخيارات `--dart-define` (لا ملفات Firebase في المستودع)؛ يبقى على المالك المشروع ومفتاح APNs.
+5. ✅ v0.7.0 — **التوقيع** من `key.properties` (debug محلياً بتحذير)، **المعرّفات** قابلة للضبط (قيمها النهائية على المالك)، **أيقونة العلامة**، و`allowBackup=false` + `dataExtractionRules`.
 6. ✅ v0.6.0 — **النصوص الصلبة** نُقلت إلى ARB (عربي/إنجليزي)، وحارسٌ في `governance_test` يُسقط أي سلسلةٍ عربيةٍ حرفيةٍ جديدة في `lib/app` و`lib/features`.
 7. ✅ v0.6.0 — **`GET health`** عند الاستئناف ⇒ صيانة/إغلاق/تحديث حاجب أثناء الاستعمال.
 
@@ -97,8 +101,10 @@
 
 ✅ v0.6.0: **196 اختباراً خضراء.** لكل شاشةٍ مما سبق اختبار واجهة (`test/features/screens_widget_test.dart`)،
 والماسح بعارضٍ مزيّف بدل الكاميرا، والتتبّع بمصدر موقعٍ مزيّف؛ ومسجِّل الإشعارات وبوابة البصمة
-(`test/core/push_biometric_test.dart`)، والتفضيلات (`test/widget/phase1_app_test.dart`). **يبقى:** الروابط العميقة
-على المنصة (intent-filter/associated-domains — المرحلة ٢.٢؛ الطيّ `/app/*`→`/m/*` داخل الموجّه مختبر).
+(`test/core/push_biometric_test.dart`)، والتفضيلات (`test/widget/phase1_app_test.dart`). ~~**يبقى:** الروابط العميقة
+على المنصة~~ ✅ v0.7.0: **232 اختباراً** — `deep_link_test` (الطيّ دالةً صرفة)، `push_app_test` (الشريط و«فتح» على التطبيق الكامل)، `push_fcm_test` (المزوّد والمنسّق بمحوِّل
+مراسلة مزيّف، وصندوق الملاحة)، وحرّاس `governance_test` لإعداد المنصتين (intent-filter، الاستحقاقات وربطها في
+`project.pbxproj`، النسخ الاحتياطي، التوقيع، الأيقونات، الأسماء). **يبقى:** التحقق الحيّ على جهاز (محاكٍ/iPhone) — المرحلة ٥.٦.
 
 ---
 
@@ -150,9 +156,9 @@
 | `maintenance.on/msg`, `security.lockdown` | `app-config`, `health`, `503 LOCKDOWN` | شاشة صيانة/إغلاق، **فحص عند الاستئناف** | ✅ v0.6.0 — الإقلاع + الاستئناف |
 | `mobile.access_ttl_min`, `refresh_ttl_days` | انتهاء الرموز | تحديث متسلسل واحد | ✅ |
 | إلغاء جلسة من المركز | `401 SESSION_REVOKED` | خروج + مسح | ✅ |
-| `mobile.dl_*` (الروابط العميقة) | `/.well-known/*` | intent-filter + associated-domains | ✗ |
-| `mobile.push_*` (FCM) | `push/register` + الحمولة | تسجيل الرمز، فتح الهدف، الشارة | ✗ محجوب |
-| إشعار تجريبي من المركز | `category:'test'` | عرضه بلا تنقّل | ✗ |
+| `mobile.dl_*` (الروابط العميقة) | `/.well-known/*` | intent-filter + associated-domains | ✅ v0.7.0 (يكتمل بمعرّفات المالك — OWNER_SETUP §٣–§٤) |
+| `mobile.push_*` (FCM) | `push/register` + الحمولة | تسجيل الرمز، فتح الهدف، الشارة | ✅ v0.7.0 (يعمل بخيارات Firebase — OWNER_SETUP §١؛ خادمياً طلبا #9/#10) |
+| إشعار تجريبي من المركز | `category:'test'` | عرضه بلا تنقّل | ✅ v0.7.0 — شريط «وصل إشعارٌ تجريبي» بلا ملاحة ولا طلب |
 | `hub.mobile.stepup_actions` | `428 STEP_UP_REQUIRED` | تدفق التحقق ثم الإعادة | ✅ |
 | `approval.rules` | `202 APPROVAL_REQUIRED` | «أُرسل للاعتماد» بدل «حُفظ» | ✅ متحقَّق — النموذج/الحذف/الإجراءات تعرض «صُفَّ للمعتمدين» بوجهة الطلب (اختبار واجهة v0.6.0) |
 | `mobile_sync` (فئات المزامنة) | `schema.sync_class`, `sync/{module}` | مزامنة التخزين المسموح، **لا تخزين لـSENSITIVE** | ✅ v0.6.0 — تُشغَّل لـ`CACHEABLE_*` وحدها |
@@ -184,15 +190,15 @@
 **بوابة الإغلاق:** `dart format --set-exit-if-changed .` ✓ · `flutter analyze` بلا ملاحظات ✓ · `flutter test` ‏196 ✓ ·
 `flutter build apk --debug` ✓.
 
-### المرحلة ٢ — الترابط مع المنصة (v0.7.0) · [ت] + [خ] + [م]
+### المرحلة ٢ — الترابط مع المنصة (v0.7.0) · [ت] + [خ] + [م] · ⚙️ **بنود التطبيق مُنجزة** — الخادم والمالك متبقّيان
 
-| # | البند | الجهة |
-|---|---|---|
-| 2.1 | **شاشة إعدادات الجوال في مركز المنصة** (الإصدارات، المتاجر، الدعم، الروابط العميقة، FCM) — بدل `hub:set` | [خ] |
-| 2.2 | **الروابط العميقة**: `intent-filter` بـ`autoVerify` لـ`/m/*` و`/app/*`، و`Runner.entitlements` بـ`applinks:` | [ت] + [م] (Team ID، البصمة SHA-256، الحزمة) |
-| 2.3 | **الإشعارات FCM**: `firebase_messaging`، مزوّدٌ حقيقي خلف الواجهة القائمة، فتح الهدف من `data`، تحديث الشارة، معالجة `category:test`، إعادة التسجيل عند تجديد الرمز، إلغاء التسجيل عند الخروج | [ت] + [م] (مشروع Firebase + ملفاته) |
-| 2.4 | إصلاح عدم الاتساق في المركز: فلتر «نشطة» يقرأ `refresh_expires_at` والعدّاد يقرأ `access_expires_at` | [خ] |
-| 2.5 | تحديث `10-mobile-app-handoff.md` (يقول ٧٥ مساراً والصحيح ٩٥) | [خ] |
+| # | البند | الجهة | الحالة (v0.7.0) |
+|---|---|---|---|
+| 2.1 | **شاشة إعدادات الجوال في مركز المنصة** (الإصدارات، المتاجر، الدعم، الروابط العميقة، FCM) — بدل `hub:set` | [خ] | ⏳ خادمي — حتى ذلك `hub:set` (أوامره في OWNER_SETUP §٩) |
+| 2.2 | **الروابط العميقة**: `intent-filter` بـ`autoVerify` لـ`/m/*` و`/app/*`، و`Runner.entitlements` بـ`applinks:` | [ت] + [م] (Team ID، البصمة SHA-256، الحزمة) | ✅ [ت]: `AndroidManifest.xml` (VIEW/DEFAULT/BROWSABLE، https، النطاق `${appLinkHost}` من `lynomia.appLinkHost`/`LYNOMIA_APP_LINK_HOST`)؛ `Runner.entitlements` بـ`applinks:$(APP_LINK_HOST)` + `CODE_SIGN_ENTITLEMENTS` في Debug/Release/Profile؛ `foldDeepLink` + `NavigationInbox` (الرابط قبل الدخول يُفتح بعده). `deep_link_test` + حرّاس `governance_test`؛ الـmanifest المدموج مُتحقَّق بـ`aapt2`. ⏳ [م]: المعرّفات والبصمات (OWNER_SETUP §٣–§٤) |
+| 2.3 | **الإشعارات FCM**: `firebase_messaging`، مزوّدٌ حقيقي خلف الواجهة القائمة، فتح الهدف من `data`، تحديث الشارة، معالجة `category:test`، إعادة التسجيل عند تجديد الرمز، إلغاء التسجيل عند الخروج | [ت] + [م] (مشروع Firebase + ~~ملفاته~~ خياراته) | ✅ [ت]: `FcmPushProvider`/`MessagingAdapter`/`FirebaseEnv` (خيارات `--dart-define` — **لا** `google-services.json` ولا إضافة Gradle)، `PushCoordinator` (إذن Android 13/iOS، تسجيل عند الجاهزية وللجلسة المستعادة، تدوير، إلغاء، شريط المقدّمة، الهدف أو `notifications/{id}/target`، التجريبي، الشارة)؛ iOS `aps-environment` + `remote-notification`. `push_fcm_test` (٢١). ⏳ [م]: مشروع Firebase + مفتاح APNs (OWNER_SETUP §١–§٢)؛ [خ]: طلبا #9 (تجديد رمز FCM) و#10 (`apns.badge`/القناة) |
+| 2.4 | إصلاح عدم الاتساق في المركز: فلتر «نشطة» يقرأ `refresh_expires_at` والعدّاد يقرأ `access_expires_at` | [خ] | ⏳ خادمي |
+| 2.5 | تحديث `10-mobile-app-handoff.md` (يقول ٧٥ مساراً والصحيح ٩٥) | [خ] | ⏳ خادمي |
 
 ### المرحلة ٣ — أفعال الميدان والموظف (v0.8.0) · [خ] ثم [ت]
 
@@ -219,16 +225,16 @@
 | 4.6 | أفعال مالية مختارة بتحقق إضافي: تسجيل دفعة، إرسال/قبول عرض السعر، استلام أمر شراء — **كلها عبر المحرّكات الموحّدة** (`JournalPosting` · `QuoteAcceptance`) |
 | 4.7 | «اسأل Hub» بالبثّ (SSE) بدل الانتظار |
 
-### المرحلة ٥ — جاهزية المتاجر والأمن (v1.0.0) · [م] + [ت]
+### المرحلة ٥ — جاهزية المتاجر والأمن (v1.0.0) · [م] + [ت] · ⚙️ **الجزء البنيوي مُنجز في v0.7.0** — القيم النهائية على المالك
 
-| # | البند |
-|---|---|
-| 5.1 | المعرّفات النهائية (`applicationId`, Bundle ID, Team ID) — إزالة كل `REPLACE_BEFORE_STORE_RELEASE` |
-| 5.2 | توقيع الإصدار (keystore خارج المستودع، أسرار CI) · `allowBackup=false` + `dataExtractionRules` |
-| 5.3 | الأيقونات وشاشة البداية والاسم المعروض · `CFBundleLocalizations` |
-| 5.4 | CI للتطبيق: بناء APK/AAB على Linux، وIPA على macOS runner |
-| 5.5 | قرارات أمنية [م]: فرض Play Integrity/App Attest؟ تثبيت الشهادات؟ سياسة بصمة إلزامية؟ |
-| 5.6 | اختبار تكاملي على محاكٍ (Android) وجهاز iOS، وقائمة `docs/release-checklist.md` كاملة |
+| # | البند | الحالة (v0.7.0) |
+|---|---|---|
+| 5.1 | المعرّفات النهائية (`applicationId`, Bundle ID, Team ID) — إزالة كل `REPLACE_BEFORE_STORE_RELEASE` | ✅ [ت] **قابلة للضبط بلا تحرير شيفرة**: Android `lynomia.applicationId`/`LYNOMIA_ANDROID_APP_ID` (`namespace` حزمة الشيفرة ثابتة عمداً)، iOS `APP_BUNDLE_ID`/`APP_TEAM_ID`/`APP_LINK_HOST` في `ios/Flutter/AppIdentity.xcconfig` + ملف `.local` متجاهَل يغلبه؛ الاسم معرَّب (`strings.xml`، `InfoPlist.strings`) + `CFBundleLocalizations`؛ الخريطة في `app_identifiers.dart` وحارسٌ يطابقها. ⏳ [م] القيم النهائية — الوسم `REPLACE_BEFORE_STORE_RELEASE` باقٍ على **الافتراضيات** عمداً |
+| 5.2 | توقيع الإصدار (keystore خارج المستودع، أسرار CI) · `allowBackup=false` + `dataExtractionRules` | ✅ [ت] `android/key.properties` (قالب `.example`)، debug محلياً بتحذير، `requireReleaseSigning` ⇒ فشل (مُتحقَّق: `gradlew -m assembleRelease`)؛ `allowBackup=false` + `dataExtractionRules` + `fullBackupContent` تستثني الكل. ⏳ [م] keystore + أسرار CI (OWNER_SETUP §٥–§٦) |
+| 5.3 | الأيقونات وشاشة البداية والاسم المعروض · `CFBundleLocalizations` | ✅ مونوغرام العلامة مولَّد برمجياً (`tool/generate_brand_assets.py`): كل كثافات Android + تكيّفية/monochrome، وكل مقاسات iOS بلا ألفا؛ شاشة بداية بلون العلامة (Android ≤11 و12+، iOS). ⏳ [م] (اختياري) تصميم المصمم النهائي |
+| 5.4 | CI للتطبيق: بناء APK/AAB على Linux، وIPA على macOS runner | ✅ `.github/workflows/app.yml`: البوابة، APK debug، AAB موقَّع عند توفر الأسرار (وإلا يُتخطّى)، `flutter build ios --no-codesign` على macOS؛ كاشات pub/Gradle. ⏳ IPA موقَّع + رفع TestFlight آلياً يحتاج شهادات Apple في CI |
+| 5.5 | قرارات أمنية [م]: فرض Play Integrity/App Attest؟ تثبيت الشهادات؟ سياسة بصمة إلزامية؟ | ✅ موثّقة خياراتٍ بتوصيات افتراضية في `docs/security.md` (رصدٌ لا فرض للسلامة، لا تثبيت، بصمة اختيارية) — **لا فرض مبني**. ⏳ [م] القرار |
+| 5.6 | اختبار تكاملي على محاكٍ (Android) وجهاز iOS، وقائمة `docs/release-checklist.md` كاملة | ✅ التوثيق: `docs/OWNER_SETUP.md` + `release-checklist.md` محدَّثة. ⏳ الاختبار الحيّ على محاكٍ/جهاز (لا محاكي ولا Mac في هذه البيئة) |
 
 ### يبقى على الويب عمداً
 التوقيع الإلكتروني، غرفة البيانات، لوحات الأداء والتحليلات، بانيا KPI/OKR، الإدارة والإعدادات، التصدير
@@ -238,7 +244,8 @@
 
 ## ٦) ما يحتاجه المالك (لا يستطيعه المطوّر)
 
-1. **مشروع Firebase** + `google-services.json` + `GoogleService-Info.plist` + مفتاح APNs (للإشعارات).
+1. **مشروع Firebase** + خياراته (من `google-services.json`/`GoogleService-Info.plist` **دون إدخالهما المستودع** —
+   تُنقل إلى `firebase.defines.json` المتجاهَل) + مفتاح APNs (للإشعارات). كل مُدخلٍ وموضعه: `docs/OWNER_SETUP.md`.
 2. **Apple Team ID** وحساب مطوّر Apple؛ **حساب Google Play Console**.
 3. **المعرّفات النهائية** للحزمة، و**بصمة SHA-256** لمفتاح توقيع Android.
 4. **مفتاح التوقيع** (keystore) يُحفظ خارج المستودع.

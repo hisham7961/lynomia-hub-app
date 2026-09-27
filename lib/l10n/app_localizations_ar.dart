@@ -10,7 +10,7 @@ class AppLocalizationsAr extends AppLocalizations {
   AppLocalizationsAr([String locale = 'ar']) : super(locale);
 
   @override
-  String get appTitle => 'Lynomia Hub';
+  String get appTitle => 'لينوميا هب';
 
   @override
   String get navHome => 'الرئيسية';
@@ -1131,4 +1131,24 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get diagnosticsPushReadyNoToken => 'ready (لا رمز)';
+
+  @override
+  String get pushPermissionDenied =>
+      'مرفوضة — فعّل إذن الإشعارات من إعدادات الجهاز';
+
+  @override
+  String get pushAwaitingToken => 'مهيأة — بانتظار رمز الجهاز';
+
+  @override
+  String get pushBannerDefaultTitle => 'إشعار جديد';
+
+  @override
+  String get pushBannerOpen => 'فتح';
+
+  @override
+  String get pushTestReceived => 'وصل إشعارٌ تجريبي من مركز منصة الجوال';
+
+  @override
+  String get diagnosticsPushPermissionDenied =>
+      'permission denied (الإذن مرفوض)';
 }

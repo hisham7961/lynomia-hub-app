@@ -1,0 +1,21 @@
+// هوية تطبيق iOS — المركز الوحيد لقيم Xcode القابلة للضبط (المرحلة ٥.١).
+// نظيرها في Dart: lib/core/config/app_identifiers.dart؛ وفي Android: android/app/build.gradle.kts.
+//
+// لا تحرّر القيم النهائية هنا: أنشئ ios/Flutter/AppIdentity.local.xcconfig (مُتجاهَل في git)
+// بالقيم الحقيقية — يُضمَّن أدناه فيغلب. القالب: AppIdentity.local.xcconfig.example
+// والتفاصيل: docs/OWNER_SETUP.md §٢ و§٣.
+
+// REPLACE_BEFORE_STORE_RELEASE — معرّف الحزمة (يطابق setting('mobile.dl_apple_bundle_id')).
+APP_BUNDLE_ID = dev.lynomia.lynomiaHubApp
+
+// REPLACE_BEFORE_STORE_RELEASE — Apple Team ID (10 محارف). فارغ ⇒ يختاره Xcode/التوقيع.
+APP_TEAM_ID =
+
+// REPLACE_BEFORE_STORE_RELEASE — نطاق الروابط العالمية (applinks:) — `.invalid` محجوزٌ لا يُحلّ،
+// فالبناء الافتراضي لا يدّعي ربطاً. يطابق مضيف /.well-known/apple-app-site-association بالخادم.
+APP_LINK_HOST = app-links.lynomia.invalid
+
+// الاسم المعروض الافتراضي — المُعرَّب في Runner/{ar,en}.lproj/InfoPlist.strings يغلبه.
+APP_DISPLAY_NAME = Lynomia Hub
+
+#include? "AppIdentity.local.xcconfig"

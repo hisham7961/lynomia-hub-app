@@ -231,7 +231,7 @@ $ flutter test                           # 00:05 +81: All tests passed!
 
 ## CI
 
-`.github/workflows/ci.yml`: format + analyze + test + بناء APK تجريبي
+`.github/workflows/app.yml` (كان `ci.yml` حتى v0.6.0): format + analyze + test + بناء APK تجريبي
 (subosito/flutter-action@3.47.2) — لا سر إنتاجي مطلوب. (سيجري على أول دفعة
 لهذا المستودع.)
 

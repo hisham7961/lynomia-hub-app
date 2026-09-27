@@ -27,7 +27,7 @@
 | عملي اليوم والتقرير اليومي (٢) | `work/today`, `work/daily-report` | `WorkRepository.today/dailyReport` · `isNoEmployeeProfile` | مهامي ← بطاقة «يومي» ← التقرير اليومي (تنقّل بالأيام) + زر تقديم بندٍ في وحدة `submit_hint` حين `can.a` في المخطط | ONLINE | collab_work_docs + collab_v2 + contract | IMPLEMENTED (الغلاف `data` مقروء، و«لا ملف موظف» بـ`BUSINESS_RULE_VIOLATION` + `details.reason` مع بديل الرمز الخام للخادم الأقدم — #5 محلول إضافياً) |
 | وثائقي (٢) | `me/documents[,/{id}/file]` | `MyDocumentsRepository` | حسابي ← وثائقي ← معاينة | ONLINE — البايتات في الذاكرة فقط، لا قرص ولا خبيئة | collab_work_docs + contract | IMPLEMENTED (المعاينة للصور؛ غيرها يُذكر بصدق أنه يُفتح من الويب — لا عارض PDF بلا كتابة قرص) |
 | «اسأل Hub» (سؤال · متابعة · محادثات · حذف) | `ask`, `ask/threads[,/{id}]` | `AskRepository` | بطاقة الرئيسية (بعلَم `can_ask`) ← المحادثة + محادثاتك | ONLINE (لا إعادة تلقائية — نداءٌ مدفوع) | ask_test + contract | IMPLEMENTED |
-| الإشعارات (٥) | `notifications…` | `NotificationRepository` + `ResumeCoordinator` | شاشة الإشعارات: غير المقروء يُختم بـ`read` والمقروء يُحلّ بـ`GET target` ⇒ `/r/{module}/{id}`، وnull ⇒ البقاء في القائمة · الشارة حيّة من `unread-count` عند الجاهزية/الاستئناف وبعد القراءة | ONLINE (مؤشر) | comm + widget + phase1_app + resume_coordinator | IMPLEMENTED (فتح الهدف من حمولة الدفع ينتظر مزوّد FCM — المرحلة ٢) |
+| الإشعارات (٥) | `notifications…` | `NotificationRepository` + `ResumeCoordinator` + `PushCoordinator` | شاشة الإشعارات: غير المقروء يُختم بـ`read` والمقروء يُحلّ بـ`GET target` ⇒ `/r/{module}/{id}`، وnull ⇒ البقاء في القائمة · الشارة حيّة من `unread-count` عند الجاهزية/الاستئناف وبعد القراءة ومن `data.unread` في الدفع · نقرة إشعار الدفع بلا وجهة مباشرة ⇒ `GET target` | ONLINE (مؤشر) | comm + widget + phase1_app + resume_coordinator + push_fcm | IMPLEMENTED |
 | التعليقات (٢) | `comments` | `CommentRepository` | تبويب تعليقات السجل | ONLINE | comm | IMPLEMENTED |
 | DM (٤) | `dm/threads…` | `DmRepository` | الرسائل | ONLINE | comm | IMPLEMENTED |
 | الاعتمادات (٤) | `approvals…` | `ApprovalRepository` | طابور/تفصيل/حسم · والكتابة المحمية (`202 APPROVAL_REQUIRED`) تُعرض «صُفَّ للمعتمدين» بوجهة الطلب في النموذج والتعديل والحذف والإجراءات | ONLINE | comm + screens_widget | IMPLEMENTED |
@@ -35,7 +35,7 @@
 | الملفات (٦) | `files/…` | `FileRepository` + `AttachmentsPanel` + `AttachmentPreviewScreen` | تبويب المرفقات: رفع مقطّع، و«فتح» للمرفوع — الصورة تُنزَّل (`files/{id}/download`) وتُعرض **من الذاكرة** بلا قرص، وغيرها يُفتح بصدقٍ من صفحة السجل على الويب (لا ملف مؤقت) · حقول file/img تُفتح من الويب (قيمتها مسار تخزين لا معرّف مرفق) | ONLINE — لا بايت يهبط القرص | comm + widget + screens_widget | IMPLEMENTED (سرد المرفقات القائمة: BACKEND_GAP #1؛ `files/{id}/stream` غير مستعمل — التنزيل يكفي للصور؛ لا عارض PDF أصلي بلا كتابة قرص) |
 | الماسح | `identity/resolve/{q}` | `IdentityRepository` + الماسح (`ScanViewBuilder` قابل للاستبدال) | أيقونة الرأس | ONLINE | comm + screens_widget | IMPLEMENTED |
 | التتبع (٣) | `tracking/…` | `TrackingRepository` + `LocationSource` + شاشة التتبع | حسابي ← التتبع | ONLINE (دفعات) | comm + screens_widget | IMPLEMENTED |
-| تسجيل الدفع (٢) | `push/register,unregister` | `PushRegistrar` | تلقائي عند الدخول/الخروج | ONLINE | push_biometric (بمزوّد مزيّف) | BLOCKED_EXTERNAL_CONFIG (لا اعتماد FCM/APNs — المزود الصفري صادق؛ المنطق مختبر بمزوّد مزيّف) |
+| تسجيل الدفع (٢) | `push/register,unregister` | `PushRegistrar` + `PushCoordinator` + `FcmPushProvider` (v0.7.0) | تلقائي: إذن ثم تسجيل عند الجاهزية (دخول/جلسة مستعادة)، وعند تدوير الرمز، وإلغاء عند الخروج؛ حالة صادقة في حسابي/التشخيص (غير مهيأ · الإذن مرفوض · بانتظار الرمز · مفعلة) | ONLINE | push_biometric + push_fcm (محوِّل مراسلة مزيّف) | IMPLEMENTED — **يعمل على الجهاز فقط حين تُمرَّر خيارات Firebase** (`--dart-define`، OWNER_SETUP §١)؛ بدونها المزوّد الصفري صادقاً (BLOCKED_EXTERNAL_CONFIG للاعتماد لا للشيفرة) |
 | إدارة الدفع (٢) | `push/admin/status,test` | — | — | — | — | NOT_APPLICABLE (إدارة مالك — مركز المنصة ويب §98) |
 | openapi.json | `openapi.json` | `contracts/mobile-openapi.json` | لقطة عقد + أداة تحديث | عامة | contract tests | IMPLEMENTED (لقطة) |
 | تفعيل حساب العميل (٢) | `activation/{token}[,/complete]` | `ActivationRepository` + شاشة التفعيل | رابط عميق `/activate/{token}` (عام) | ONLINE (عامة) | client_experience | IMPLEMENTED |
@@ -52,7 +52,9 @@
   الاستئناف). يبقى بلا واجهة عن قصد: `GET navigation` (الشجرة من `bootstrap.ia`)، و`PATCH {module}/{id}` (PUT
   يكفي)، و`files/{id}/stream` (التنزيل يكفي للصور).
 - NOT_APPLICABLE: **1** (إدارة الدفع للمالك — سطح ويب إداري)
-- BLOCKED_EXTERNAL_CONFIG: **1** (تفعيل مزود الدفع الحقيقي)
+- BLOCKED_EXTERNAL_CONFIG: **0 شيفرةً** — **v0.7.0:** مزوّد FCM والروابط العالمية مبنيّان ومختبران؛ ما بقي
+  **مُدخلات المالك** وحدها (خيارات Firebase + مفتاح APNs + المعرّفات والبصمات + إعدادات الخادم) — `docs/OWNER_SETUP.md`.
+  والخادم: طلبا #9 (تجديد رمز FCM) و#10 (`apns.badge`/القناة).
 - BACKEND_GAP: بندان فرعيان مفتوحان (سرد مرفقات سجل #1، ومعرّف مرفق الرسالة #2) — #4–#8 حُلّت في خلفية v2.617.0 وبُنيت في v0.5.0
 - PENDING_APP: **0** (النقاط الثلاث عشرة التي أُضيفت في الخلفية بعد v2.447 مبنيّةٌ في v0.4.0)
 - **غير مفسر: 0**

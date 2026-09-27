@@ -3,7 +3,7 @@ description: "Lynomia Hub — تطبيقُ الجوال الأصيل لمنصّ�
 publish_to: 'none'
 
 # النسخةُ تُدار عبر VERSION/README/CHANGELOG (راجع CLAUDE.md) — تطابقُها هنا إلزاميّ.
-version: 0.6.0+6
+version: 0.7.0+7
 
 environment:
   sdk: ^3.13.2
@@ -33,6 +33,10 @@ dependencies:
   # مصادر الملفات (§68)
   image_picker: ^1.2.0
   file_picker: ^10.0.0
+  # الإشعارات عبر FCM (§73–§75) — تُهيَّأ من Dart بخيارات --dart-define فقط
+  # (lib/core/push/firebase_env.dart)؛ بلا خيارات ⇒ NotConfiguredPushProvider.
+  firebase_core: ^4.15.0
+  firebase_messaging: ^16.7.0
   # الروابط العميقة /m/* و /app/* (§76)
   app_links: ^6.4.0
   # إصدار التطبيق ورقم البناء لترويسات العقد (§30)

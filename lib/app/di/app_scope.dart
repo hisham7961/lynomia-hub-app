@@ -15,6 +15,7 @@ import '../../core/auth/installation_id.dart';
 import '../../core/auth/session_manager.dart';
 import '../../core/auth/token_store.dart';
 import '../../core/config/app_env.dart';
+import '../../core/push/firebase_push_boot.dart';
 import '../../core/push/push_registrar.dart';
 import '../../core/security/biometric_gate.dart';
 import '../../core/security/redacting_logger.dart';
@@ -47,6 +48,8 @@ import '../../features/tracking/location_source.dart';
 import '../../features/tracking/tracking_repository.dart';
 import '../bootstrap/account_state.dart';
 import '../bootstrap/launch_controller.dart';
+import '../bootstrap/navigation_inbox.dart';
+import '../bootstrap/push_coordinator.dart';
 import '../bootstrap/resume_coordinator.dart';
 
 class AppContainer {
@@ -124,6 +127,16 @@ class AppContainer {
       notifications: notifications,
       syncScheduler: syncScheduler,
     );
+    inbox = NavigationInbox(launch: launch);
+    pushCoordinator = PushCoordinator(
+      launch: launch,
+      account: account,
+      registrar: push,
+      provider: pushProvider,
+      notifications: notifications,
+      inbox: inbox,
+      log: log,
+    );
   }
 
   /// التركيب الحقيقي (منصة) — الاختبارات تبني البدائل يدوياً.
@@ -164,6 +177,8 @@ class AppContainer {
       connectivity: ConnectivityMonitor(),
       biometricGate: LocalAuthBiometricGate(),
       biometricPref: BiometricPreference(prefs),
+      // FCM حين تكتمل خيارات Firebase في --dart-define، وإلا NOT_CONFIGURED.
+      pushProvider: await bootPushProvider(log),
     );
     try {
       api.appInfo = await AppInfo.load();
@@ -264,6 +279,10 @@ class AppContainer {
   late final SyncScheduler syncScheduler;
   late final LaunchController launch;
   late final ResumeCoordinator resume;
+
+  /// الملاحة الواردة (رابط عميق/نقرة إشعار) المؤجَّلة حتى الجاهزية.
+  late final NavigationInbox inbox;
+  late final PushCoordinator pushCoordinator;
 
   /// خروج كامل (§39): خادمياً ثم محلياً — دفع، رموز، خبيئة، سياق.
   Future<void> signOut({bool everywhere = false}) async {

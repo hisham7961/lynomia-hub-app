@@ -1,1 +1,5 @@
 #include "Generated.xcconfig"
+#include "AppIdentity.xcconfig"
+
+// بيئة APNs للإصدار/TestFlight/App Store (يُقرأ في Runner/Runner.entitlements).
+APS_ENVIRONMENT = production

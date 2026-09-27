@@ -4,6 +4,7 @@ library;
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:lynomia_hub_app/core/config/app_identifiers.dart';
 
 void main() {
   test('النسخة متطابقة في مواضعها الأربعة', () {
@@ -91,4 +92,151 @@ void main() {
       expect(offenders, isEmpty, reason: offenders.join('\n'));
     },
   );
+
+  group('المرحلة ٢.٢/٢.٣/٥ — إعداد المنصتين (حرّاس ثابتة)', () {
+    String read(String p) => File(p).readAsStringSync();
+
+    test('Android: intent-filter للروابط العالمية بنطاقٍ محقون', () {
+      final m = read('android/app/src/main/AndroidManifest.xml');
+      expect(m, contains('<intent-filter android:autoVerify="true">'));
+      expect(m, contains('android.intent.action.VIEW'));
+      expect(m, contains('android.intent.category.BROWSABLE'));
+      expect(m, contains('android:scheme="https"'));
+      expect(m, contains(r'android:host="${appLinkHost}"'));
+      for (final prefix in AppIdentifiers.deepLinkPathPrefixes) {
+        expect(m, contains('android:pathPrefix="$prefix"'));
+      }
+      final g = read('android/app/build.gradle.kts');
+      expect(g, contains('manifestPlaceholders["appLinkHost"]'));
+      expect(g, contains('"${AppIdentifiers.defaultAppLinkHost}"'));
+      expect(g, contains('"${AppIdentifiers.androidApplicationId}"'));
+    });
+
+    test('Android: لا نسخ احتياطي، والاسم مُعرَّب، والإذن للإشعار', () {
+      final m = read('android/app/src/main/AndroidManifest.xml');
+      expect(m, contains('android:allowBackup="false"'));
+      expect(
+        m,
+        contains('android:dataExtractionRules="@xml/data_extraction_rules"'),
+      );
+      expect(m, contains('android:fullBackupContent="@xml/backup_rules"'));
+      expect(m, contains('android.permission.POST_NOTIFICATIONS'));
+      expect(m, contains('android:label="@string/app_name"'));
+      final rules = read(
+        'android/app/src/main/res/xml/data_extraction_rules.xml',
+      );
+      expect(rules, contains('<cloud-backup>'));
+      expect(rules, contains('<device-transfer>'));
+      expect(rules, isNot(contains('<include')));
+      expect(
+        read('android/app/src/main/res/values/strings.xml'),
+        contains('>${AppIdentifiers.displayName}<'),
+      );
+      expect(
+        read('android/app/src/main/res/values-ar/strings.xml'),
+        contains('>${AppIdentifiers.displayNameAr}<'),
+      );
+    });
+
+    test('Android: توقيع من key.properties، ولا إضافة google-services', () {
+      final g = read('android/app/build.gradle.kts');
+      expect(g, contains('rootProject.file("key.properties")'));
+      expect(g, contains('lynomia.requireReleaseSigning'));
+      expect(g, isNot(contains('id("com.google.gms.google-services")')));
+      expect(
+        read('android/settings.gradle.kts'),
+        isNot(contains('com.google.gms')),
+      );
+      expect(File('android/key.properties.example').existsSync(), isTrue);
+      final ignore = read('.gitignore');
+      for (final secret in [
+        '/android/key.properties',
+        '*.jks',
+        '/firebase.defines.json',
+        '/ios/Flutter/AppIdentity.local.xcconfig',
+      ]) {
+        expect(ignore, contains(secret), reason: secret);
+      }
+    });
+
+    test('iOS: الاستحقاقات (applinks + aps) موصولة لكل إعدادات Runner', () {
+      final e = read('ios/Runner/Runner.entitlements');
+      expect(e, contains('applinks:\$(APP_LINK_HOST)'));
+      expect(e, contains('<key>aps-environment</key>'));
+      expect(e, contains('\$(APS_ENVIRONMENT)'));
+      final pbx = read('ios/Runner.xcodeproj/project.pbxproj');
+      expect(
+        'CODE_SIGN_ENTITLEMENTS = Runner/Runner.entitlements;'
+            .allMatches(pbx)
+            .length,
+        3,
+        reason: 'Debug + Release + Profile',
+      );
+      expect(
+        'PRODUCT_BUNDLE_IDENTIFIER = "\$(APP_BUNDLE_ID)";'
+            .allMatches(pbx)
+            .length,
+        3,
+      );
+      final identity = read('ios/Flutter/AppIdentity.xcconfig');
+      expect(
+        identity,
+        contains('APP_BUNDLE_ID = ${AppIdentifiers.iosBundleId}'),
+      );
+      expect(
+        identity,
+        contains('APP_LINK_HOST = ${AppIdentifiers.defaultAppLinkHost}'),
+      );
+      expect(identity, contains('#include? "AppIdentity.local.xcconfig"'));
+      expect(
+        read('ios/Flutter/Debug.xcconfig'),
+        contains('APS_ENVIRONMENT = development'),
+      );
+      expect(
+        read('ios/Flutter/Release.xcconfig'),
+        contains('APS_ENVIRONMENT = production'),
+      );
+    });
+
+    test('iOS: خلفية الإشعار، واللغتان، والاسم المُعرَّب', () {
+      final plist = read('ios/Runner/Info.plist');
+      expect(plist, contains('<string>remote-notification</string>'));
+      expect(plist, contains('<key>CFBundleLocalizations</key>'));
+      expect(plist, contains('<string>\$(APP_DISPLAY_NAME)</string>'));
+      expect(
+        read('ios/Runner/ar.lproj/InfoPlist.strings'),
+        contains('"CFBundleDisplayName" = "${AppIdentifiers.displayNameAr}";'),
+      );
+      expect(
+        read('ios/Runner/en.lproj/InfoPlist.strings'),
+        contains('"CFBundleDisplayName" = "${AppIdentifiers.displayName}";'),
+      );
+    });
+
+    test('الأيقونات: كل ملفات AppIcon موجودة، والتكيّفية لـAndroid', () {
+      final dir = 'ios/Runner/Assets.xcassets/AppIcon.appiconset';
+      final names = RegExp(r'"filename" : "([^"]+)"')
+          .allMatches(read('$dir/Contents.json'))
+          .map((m) => m.group(1)!)
+          .toSet();
+      expect(names, isNotEmpty);
+      for (final n in names) {
+        expect(File('$dir/$n').existsSync(), isTrue, reason: n);
+      }
+      for (final d in ['mdpi', 'hdpi', 'xhdpi', 'xxhdpi', 'xxxhdpi']) {
+        for (final f in [
+          'ic_launcher.png',
+          'ic_launcher_round.png',
+          'ic_launcher_foreground.png',
+        ]) {
+          final p = 'android/app/src/main/res/mipmap-$d/$f';
+          expect(File(p).existsSync(), isTrue, reason: p);
+        }
+      }
+      expect(
+        read('android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml'),
+        contains('<adaptive-icon'),
+      );
+    });
+  });
 }

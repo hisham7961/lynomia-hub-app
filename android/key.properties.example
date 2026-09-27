@@ -1,0 +1,11 @@
+# قالب توقيع إصدار Android — انسخه إلى android/key.properties (مُتجاهَل في git)
+# ولا تُدخِل القيم الحقيقية هنا أبداً. راجع docs/OWNER_SETUP.md §٥.
+#
+#   keytool -genkeypair -v -keystore ~/keys/lynomia-upload.jks -alias upload \
+#           -keyalg RSA -keysize 4096 -validity 10000
+#
+# storeFile نسبيٌّ إلى مجلد android/ أو مسارٌ مطلق (خارج المستودع مفضَّل).
+storeFile=/ABSOLUTE/PATH/OUTSIDE/REPO/lynomia-upload.jks
+storePassword=REPLACE_BEFORE_STORE_RELEASE
+keyAlias=upload
+keyPassword=REPLACE_BEFORE_STORE_RELEASE

@@ -25,3 +25,17 @@ flutter build apk --release \
 
 لا تعطيل TLS ولا «قبول كل الشهادات» في أي بيئة (§87). لا تثبيت شهادات
 (pinning) بلا تصميم تدوير تشغيلي — غير مفعّل عمداً.
+
+## خيارات الدفع وهوية المنصة (v0.7.0)
+
+| المتغير | النوع | ملاحظات |
+|---|---|---|
+| `FIREBASE_PROJECT_ID`, `FIREBASE_MESSAGING_SENDER_ID`, `FIREBASE_STORAGE_BUCKET` | `--dart-define` | مشتركة بين المنصتين |
+| `FIREBASE_ANDROID_API_KEY`, `FIREBASE_ANDROID_APP_ID` | `--dart-define` | Android — معرّف التطبيق يحمل `:android:` |
+| `FIREBASE_IOS_API_KEY`, `FIREBASE_IOS_APP_ID`, `FIREBASE_IOS_BUNDLE_ID` | `--dart-define` | iOS — معرّف التطبيق يحمل `:ios:` |
+| `lynomia.applicationId` / `LYNOMIA_ANDROID_APP_ID` | Gradle `-P` / بيئة | حزمة Android |
+| `lynomia.appLinkHost` / `LYNOMIA_APP_LINK_HOST` | Gradle `-P` / بيئة | نطاق App Links |
+| `APP_BUNDLE_ID`, `APP_TEAM_ID`, `APP_LINK_HOST` | `ios/Flutter/AppIdentity.local.xcconfig` | هوية iOS |
+
+الأسهل: `--dart-define-from-file=firebase.defines.json` (القالب `firebase.defines.example.json`، والملف متجاهَل).
+أي خيارٍ إلزاميٍّ ناقص ⇒ الدفع «غير مهيأ» ولا يتعطل شيء. التفاصيل: `docs/OWNER_SETUP.md`.

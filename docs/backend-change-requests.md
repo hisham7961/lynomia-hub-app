@@ -106,4 +106,22 @@
   بلا خطأ — لا واجهة ميتة. (`since` يعيد `typing` فارغاً حين الإطفاء.)
 - **المقترح:** `feature_flags.collab_typing`/`collab_presence` في الإقلاع.
 
+## 9. رمز وصول FCM ثابتٌ ينتهي خلال ساعة (v0.7.0)
+
+- **الواقع:** `App\Support\Push\FcmPushProvider` يرسل بـ`setting('mobile.push_fcm_access_token')` كما هو
+  (`Http::withToken`). رموز OAuth لـFCM HTTP v1 (من حساب خدمة) **صالحة ساعةً واحدة** — بعدها كل إرسالٍ يفشل
+  (`ERR_PROVIDER_ERROR`/401) حتى يُحدَّث الإعداد يدوياً.
+- **سلوك التطبيق:** لا أثر عليه — يسجّل الرمز ويستقبل ما يصله؛ المشكلة في الإرسال الخادمي.
+- **المقترح:** إعدادٌ حساس `mobile.push_fcm_service_account` (JSON حساب الخدمة، مشفّر) يُسكّ منه رمز الوصول ويُخبّأ
+  حتى قبيل انتهائه (JWT bearer grant، نطاق `firebase.messaging`) — والرمز الثابت يبقى بديلاً للتوافق.
+- **حتى يُحلّ:** cron يجدّده (OWNER_SETUP §١-٦).
+
+## 10. حمولة FCM بلا `apns.badge` ولا قناة Android (v0.7.0)
+
+- **الواقع:** الرسالة `{token, notification{title,body}, data}` فقط — لا `apns.payload.aps.badge` (فشارة أيقونة
+  التطبيق على iOS لا تتحدّث)، ولا `android.notification.channel_id` (فيستعمل Android القناة الاحتياطية «Miscellaneous»).
+- **سلوك التطبيق:** الشارة **داخل** التطبيق حيّة من `data.unread` و`unread-count`؛ لا يُختلق عدّادٌ على الأيقونة.
+- **المقترح (إضافيٌّ لا كاسر):** `apns.payload.aps.badge = unread` و`android.notification.channel_id` (قناة يعرّفها
+  التطبيق لاحقاً باسمٍ مُعلن في العقد).
+
 لا فجوات أخرى: كل قدرة أعلنها سجل القدرات وجدت نقطتها تعمل كما وثقت.

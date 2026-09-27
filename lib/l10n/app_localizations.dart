@@ -101,7 +101,7 @@ abstract class AppLocalizations {
   /// No description provided for @appTitle.
   ///
   /// In ar, this message translates to:
-  /// **'Lynomia Hub'**
+  /// **'لينوميا هب'**
   String get appTitle;
 
   /// No description provided for @navHome.
@@ -2167,6 +2167,42 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'ready (لا رمز)'**
   String get diagnosticsPushReadyNoToken;
+
+  /// No description provided for @pushPermissionDenied.
+  ///
+  /// In ar, this message translates to:
+  /// **'مرفوضة — فعّل إذن الإشعارات من إعدادات الجهاز'**
+  String get pushPermissionDenied;
+
+  /// No description provided for @pushAwaitingToken.
+  ///
+  /// In ar, this message translates to:
+  /// **'مهيأة — بانتظار رمز الجهاز'**
+  String get pushAwaitingToken;
+
+  /// No description provided for @pushBannerDefaultTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'إشعار جديد'**
+  String get pushBannerDefaultTitle;
+
+  /// No description provided for @pushBannerOpen.
+  ///
+  /// In ar, this message translates to:
+  /// **'فتح'**
+  String get pushBannerOpen;
+
+  /// No description provided for @pushTestReceived.
+  ///
+  /// In ar, this message translates to:
+  /// **'وصل إشعارٌ تجريبي من مركز منصة الجوال'**
+  String get pushTestReceived;
+
+  /// No description provided for @diagnosticsPushPermissionDenied.
+  ///
+  /// In ar, this message translates to:
+  /// **'permission denied (الإذن مرفوض)'**
+  String get diagnosticsPushPermissionDenied;
 }
 
 class _AppLocalizationsDelegate

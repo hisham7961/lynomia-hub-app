@@ -37,6 +37,7 @@ class DiagnosticsScreen extends StatelessWidget {
         switch (c.push.status) {
           PushSetupStatus.registered => 'registered',
           PushSetupStatus.ready => l.diagnosticsPushReadyNoToken,
+          PushSetupStatus.permissionDenied => l.diagnosticsPushPermissionDenied,
           PushSetupStatus.notConfigured => 'NOT_CONFIGURED',
         },
       ),

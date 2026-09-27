@@ -1146,4 +1146,24 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get diagnosticsPushReadyNoToken => 'ready (no token)';
+
+  @override
+  String get pushPermissionDenied =>
+      'Denied — enable notification permission in device settings';
+
+  @override
+  String get pushAwaitingToken => 'Configured — waiting for the device token';
+
+  @override
+  String get pushBannerDefaultTitle => 'New notification';
+
+  @override
+  String get pushBannerOpen => 'Open';
+
+  @override
+  String get pushTestReceived =>
+      'Test notification received from the Mobile Platform center';
+
+  @override
+  String get diagnosticsPushPermissionDenied => 'permission denied';
 }

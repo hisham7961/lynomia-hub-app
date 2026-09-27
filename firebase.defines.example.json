@@ -1,0 +1,11 @@
+{
+  "_comment": "انسخه إلى firebase.defines.json (مُتجاهَل في git) واملأ القيم من Firebase Console > Project settings > Your apps. الاستعمال: flutter build ... --dart-define-from-file=firebase.defines.json — راجع docs/OWNER_SETUP.md §١",
+  "FIREBASE_PROJECT_ID": "REPLACE_BEFORE_STORE_RELEASE",
+  "FIREBASE_MESSAGING_SENDER_ID": "REPLACE_BEFORE_STORE_RELEASE",
+  "FIREBASE_STORAGE_BUCKET": "",
+  "FIREBASE_ANDROID_API_KEY": "REPLACE_BEFORE_STORE_RELEASE",
+  "FIREBASE_ANDROID_APP_ID": "1:000000000000:android:REPLACE_BEFORE_STORE_RELEASE",
+  "FIREBASE_IOS_API_KEY": "REPLACE_BEFORE_STORE_RELEASE",
+  "FIREBASE_IOS_APP_ID": "1:000000000000:ios:REPLACE_BEFORE_STORE_RELEASE",
+  "FIREBASE_IOS_BUNDLE_ID": "REPLACE_BEFORE_STORE_RELEASE"
+}

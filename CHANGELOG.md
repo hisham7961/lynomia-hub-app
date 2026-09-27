@@ -2,6 +2,46 @@
 
 كل التغييرات الملحوظة تُدوَّن هنا. الترقيم semver، والقاعدة في `CLAUDE.md`.
 
+## v0.7.0 — 2026-09-27
+
+**المرحلة ٢ (بنود التطبيق) والمرحلة ٥ (ما لا يحتاج نقاطاً خلفية جديدة)** من `docs/DEVELOPMENT_PLAN.md` — كل شيء
+مبنيٌّ وقابلٌ للضبط، والمُدخلات الغائبة (حسابات/ملفات المالك) موثّقةٌ في **`docs/OWNER_SETUP.md`**، والتطبيق يُبنى
+ويعمل بدونها بحالاتٍ صادقة:
+
+- **الروابط العالمية (2.2):** Android `intent-filter` بـ`autoVerify` (VIEW/BROWSABLE، https) للمسارين `/m/` و`/app/`
+  بنطاقٍ يُحقن من Gradle (`lynomia.appLinkHost` / `LYNOMIA_APP_LINK_HOST`)؛ iOS `Runner/Runner.entitlements` بـ
+  `applinks:$(APP_LINK_HOST)` موصولٌ عبر `CODE_SIGN_ENTITLEMENTS` لإعدادات Runner الثلاثة. الافتراضي نطاقٌ محجوز
+  `.invalid` لا يدّعي ربطاً. الطيّ صار دالةً صرفة مختبرة (`foldDeepLink`)، والرابط الوارد قبل الدخول/فتح القفل
+  **يُحفظ ويُفتح بعد الجاهزية** (`NavigationInbox`) بدل أن يضيع في إعادة التوجيه.
+- **الإشعارات عبر FCM (2.3):** `firebase_core` + `firebase_messaging`؛ `FcmPushProvider` خلف `PushTokenProvider`
+  القائمة ومحوِّل `MessagingAdapter` (مختبرٌ بمحوِّلٍ مزيّف). Firebase يُهيَّأ **فقط** بخيارات `--dart-define`
+  (`FIREBASE_*` — أو `--dart-define-from-file`)، بلا `google-services.json`/`GoogleService-Info.plist` ولا إضافة
+  Gradle؛ الغياب أو قيم القالب أو فشل التهيئة ⇒ `NotConfiguredPushProvider`. `PushCoordinator`: الإذن (Android 13
+  `POST_NOTIFICATIONS` وiOS) ثم `push/register {platform, provider:'fcm', token}` عند الجاهزية (بعد الدخول **وللجلسة
+  المستعادة**)، إعادة التسجيل عند تدوير الرمز (والقديم يُلغى)، الإلغاء عند الخروج، رسالة المقدّمة ⇒ شريطٌ داخلي بزر
+  «فتح»، النقرة/إشعار الإطلاق ⇒ `/r/{module}/{id}` أو `notifications/{id}/target` حين لا يحمل إلا `notification_id`،
+  `category:'test'` ⇒ يُعرض بلا ملاحة، والشارة من `data.unread`. حالة «الإذن مرفوض» صادقة في حسابي والتشخيص. iOS:
+  `aps-environment` (development/production آلياً من xcconfig) و`UIBackgroundModes: remote-notification`.
+- **المعرّفات قابلة للضبط (5.1):** Android `applicationId` من `lynomia.applicationId` / `LYNOMIA_ANDROID_APP_ID`
+  (`namespace` حزمة الشيفرة ثابتة عمداً)؛ iOS `PRODUCT_BUNDLE_IDENTIFIER`/`DEVELOPMENT_TEAM`/`APP_LINK_HOST` من
+  `ios/Flutter/AppIdentity.xcconfig` مع ملفٍ محليٍّ متجاهَل يغلبه. الاسم المعروض معرَّب «لينوميا هب»/«Lynomia Hub»
+  (`strings.xml` و`InfoPlist.strings`) و`CFBundleLocalizations` = ar, en.
+- **التوقيع والنسخ الاحتياطي (5.2):** توقيع الإصدار من `android/key.properties` (قالب `key.properties.example`)،
+  وغيابه ⇒ debug للتجربة المحلية **بتحذيرٍ صاخب**، و`requireReleaseSigning` يحوّله فشلاً (CI). `allowBackup=false`
+  + `dataExtractionRules` + `fullBackupContent` تستثني كل النطاقات.
+- **الأيقونة وشاشة البداية (5.3):** مونوغرام «L» على لون العلامة مولَّدٌ برمجياً (`tool/generate_brand_assets.py`) لكل
+  كثافات Android + أيقونة تكيّفية/monochrome، وكل مقاسات iOS AppIcon (بلا ألفا)؛ شاشة بداية بلون العلامة (Android
+  ≤11 و12+ عبر `windowSplashScreen*`، وiOS `LaunchImage`).
+- **CI للتطبيق (5.4):** `.github/workflows/app.yml` (بدل `ci.yml`): البوابة، APK debug، AAB موقَّع حين تتوفر أسرار
+  keystore (وإلا يُتخطّى)، و`flutter build ios --no-codesign` على macOS؛ كاشات pub وGradle.
+- **قرارات الأمن (5.5):** موثّقةٌ خياراتٍ بتوصيات افتراضية في `docs/security.md` — بلا فرضٍ مبني.
+- **دليل المالك (5.6):** `docs/OWNER_SETUP.md` خطوةً خطوة، و`docs/release-checklist.md` محدَّثة.
+- **حرّاس:** `governance_test` يتحقق من intent-filter والاستحقاقات وربطها في `project.pbxproj` والنسخ الاحتياطي والتوقيع
+  وغياب إضافة google-services والأيقونات والأسماء المعرَّبة وتطابقها مع `AppIdentifiers`.
+- **الاختبارات 196 ⇒ 232:** `push_fcm_test` (الخيارات، الحمولة، المزوّد، المنسّق: إذن/تسجيل/رفض/تدوير/رمز iOS
+  المتأخر/المقدّمة/النقرة/الهدف/التجريبي/إشعار الإطلاق قبل الجاهزية) و`deep_link_test` و`push_app_test` (الشريط و«فتح» على التطبيق الكامل) وحرّاس المنصتين.
+- **طلبا خلفية جديدان:** #9 رمز وصول FCM الثابت ينتهي خلال ساعة، و#10 لا `apns.badge`/قناة Android في الحمولة.
+
 ## v0.6.0 — 2026-09-27
 
 **المرحلة ١ من خطة التطوير — تصحيح الموجود** (`docs/DEVELOPMENT_PLAN.md` §٥، كل بندٍ بدليله):

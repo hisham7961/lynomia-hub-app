@@ -9,10 +9,17 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-feature android:name="android.hardware.camera" android:required="false" />
 
+    <!-- النسخ الاحتياطي معطَّل كلياً (§5.2): الرموز في Keystore، والخبيئة مشفّرة بمفتاحٍ
+         فيه — استعادتها على جهازٍ آخر لا تنفع وقد تكشف بيانات. القاعدتان تستثنيان كل
+         النطاقات (سحابي + نقل جهاز) لـ Android 12+ وما دونه. -->
     <application
-        android:label="Lynomia Hub"
+        android:label="@string/app_name"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:allowBackup="false"
+        android:fullBackupContent="@xml/backup_rules"
+        android:dataExtractionRules="@xml/data_extraction_rules">
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -33,6 +40,19 @@
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+            <!-- الروابط العالمية (App Links §76 · المرحلة ٢.٢): https على نطاقٍ يُحقن من Gradle
+                 (lynomia.appLinkHost ⇒ ${appLinkHost})، ومساراه هما ما يعلنه الخادم في
+                 /.well-known/assetlinks.json (hub.mobile.deep_links.paths). autoVerify ⇒
+                 يتحقق النظام من assetlinks (الحزمة + بصمة SHA-256) فيفتحها التطبيق مباشرة. -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https" />
+                <data android:host="${appLinkHost}" />
+                <data android:pathPrefix="/m/" />
+                <data android:pathPrefix="/app/" />
             </intent-filter>
         </activity>
         <!-- Don't delete the meta-data below.

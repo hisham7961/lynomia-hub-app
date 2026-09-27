@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- اسم العرض بالعربية — يطابق appTitle في lib/l10n/app_ar.arb وInfoPlist.strings (ar). -->
+    <string name="app_name">لينوميا هب</string>
+</resources>

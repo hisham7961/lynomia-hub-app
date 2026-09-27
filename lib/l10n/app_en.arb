@@ -354,5 +354,11 @@
   "listSeparator": ", ",
   "percentValue": "{value}%",
   "diagnosticsSessionActive": "active (id: {id})",
-  "diagnosticsPushReadyNoToken": "ready (no token)"
+  "diagnosticsPushReadyNoToken": "ready (no token)",
+  "pushPermissionDenied": "Denied — enable notification permission in device settings",
+  "pushAwaitingToken": "Configured — waiting for the device token",
+  "pushBannerDefaultTitle": "New notification",
+  "pushBannerOpen": "Open",
+  "pushTestReceived": "Test notification received from the Mobile Platform center",
+  "diagnosticsPushPermissionDenied": "permission denied"
 }

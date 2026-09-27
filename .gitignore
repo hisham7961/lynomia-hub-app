@@ -49,3 +49,12 @@ app.*.map.json
 
 # مخرجات Gradle في جذر android (بناء APK محلياً)
 /android/build/
+
+# هوية/اعتمادات المالك — لا تُدفع أبداً (docs/OWNER_SETUP.md)
+/firebase.defines.json
+/ios/Flutter/AppIdentity.local.xcconfig
+/android/key.properties
+*.jks
+*.keystore
+google-services.json
+GoogleService-Info.plist

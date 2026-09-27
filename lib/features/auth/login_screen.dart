@@ -68,13 +68,10 @@ class _LoginScreenState extends State<LoginScreen> {
         case final LoginMfaChallenge challenge:
           setState(() => _challenge = challenge);
         case LoginSession(:final tokens):
-          final platform = Theme.of(context).platform == TargetPlatform.iOS
-              ? 'ios'
-              : 'android';
           await c.session.adopt(tokens);
+          // الجاهزية تُطلق تسجيل الدفع (إذن + push/register) عبر
+          // PushCoordinator — صامتاً وصادقاً (§74)، وللجلسة المستعادة أيضاً.
           await c.launch.onSignedIn();
-          // تسجيل الدفع إن كان المزود مهيأ — صامت وصادق (§74).
-          await c.push.registerIfPossible(platform: platform);
       }
     } on ApiException catch (e) {
       setState(() {

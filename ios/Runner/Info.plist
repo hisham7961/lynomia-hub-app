@@ -7,7 +7,18 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Lynomia Hub</string>
+	<string>$(APP_DISPLAY_NAME)</string>
+	<!-- اللغتان المدعومتان (المُعرَّب في {ar,en}.lproj/InfoPlist.strings) -->
+	<key>CFBundleLocalizations</key>
+	<array>
+		<string>ar</string>
+		<string>en</string>
+	</array>
+	<!-- الإشعارات عن بُعد (FCM/APNs) — تسليم data في الخلفية -->
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>remote-notification</string>
+	</array>
 	<!-- نصوص الأغراض للقدرات المستخدمة فعلاً فقط (§89) -->
 	<key>NSCameraUsageDescription</key>
 	<string>تستخدم الكاميرا لمسح رموز QR/الباركود ولالتقاط مرفقات السجلات. Camera is used to scan QR/barcodes and capture record attachments.</string>

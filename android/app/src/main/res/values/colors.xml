@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- لون العلامة — يطابق colorSchemeSeed في lib/app/app.dart (0xFF0F5E59). -->
+    <color name="brand_primary">#0F5E59</color>
+    <color name="ic_launcher_background">#0F5E59</color>
+</resources>

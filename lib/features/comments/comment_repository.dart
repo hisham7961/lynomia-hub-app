@@ -6,23 +6,7 @@ import 'package:uuid/uuid.dart';
 import '../../core/api/api_client.dart';
 import 'reactions.dart';
 
-class CommentReaction {
-  const CommentReaction({
-    required this.emoji,
-    required this.count,
-    required this.mine,
-  });
-
-  factory CommentReaction.fromJson(Map<String, dynamic> j) => CommentReaction(
-    emoji: j['emoji']?.toString() ?? '',
-    count: (j['count'] as num?)?.toInt() ?? 0,
-    mine: j['mine'] == true,
-  );
-
-  final String emoji;
-  final int count;
-  final bool mine;
-}
+export 'reactions.dart' show CommentReaction, ReactionToggle;
 
 class RecordComment {
   const RecordComment({
@@ -56,10 +40,7 @@ class RecordComment {
       pinned: j['pinned'] == true,
       resolved: j['resolved'] == true,
       hasAttachment: j['has_attachment'] == true,
-      reactions: (j['reactions'] as List? ?? const [])
-          .whereType<Map>()
-          .map((e) => CommentReaction.fromJson(e.cast<String, dynamic>()))
-          .toList(),
+      reactions: parseReactions(j['reactions']),
       replies: (j['replies'] as List? ?? const [])
           .whereType<Map>()
           .map((e) => RecordComment.fromJson(e.cast<String, dynamic>()))
@@ -85,27 +66,6 @@ class RecordComment {
   /// نسخةٌ بعد تطبيق حالة رمزٍ أعادها الخادم (عليه أو على أحد ردوده) —
   /// العدد من الخادم لا حساباً محلياً.
   RecordComment applyReaction(ReactionToggle t) {
-    List<CommentReaction> updated() {
-      final out = <CommentReaction>[];
-      var seen = false;
-      for (final r in reactions) {
-        if (r.emoji == t.emoji) {
-          seen = true;
-          if (t.count > 0) {
-            out.add(
-              CommentReaction(emoji: t.emoji, count: t.count, mine: t.mine),
-            );
-          }
-        } else {
-          out.add(r);
-        }
-      }
-      if (!seen && t.count > 0) {
-        out.add(CommentReaction(emoji: t.emoji, count: t.count, mine: t.mine));
-      }
-      return out;
-    }
-
     return RecordComment(
       id: id,
       parentId: parentId,
@@ -117,11 +77,20 @@ class RecordComment {
       pinned: pinned,
       resolved: resolved,
       hasAttachment: hasAttachment,
-      reactions: t.targetId == id ? updated() : reactions,
+      reactions: t.targetId == id ? applyToggle(reactions, t) : reactions,
       replies: [for (final r in replies) r.applyReaction(t)],
       createdAt: createdAt,
     );
   }
+}
+
+class CommentThread {
+  const CommentThread({required this.comments, this.cursor});
+
+  final List<RecordComment> comments;
+
+  /// مؤشر الذيل المُعتَم (القناة وحدها)؛ '' لخيطٍ فارغ؛ null حين لا يعيده الخادم.
+  final String? cursor;
 }
 
 class CommentRepository {
@@ -129,15 +98,24 @@ class CommentRepository {
 
   final ApiClient api;
 
-  Future<List<RecordComment>> forRecord(String module, String recordId) async {
+  Future<List<RecordComment>> forRecord(String module, String recordId) async =>
+      (await thread(module, recordId)).comments;
+
+  /// `GET comments` بمؤشر الذيل: للقناة (`module=channel`) يعيد الخادم `cursor`
+  /// بترميز `conversations/{id}/since` — نقطة بدء الاستطلاع (خلفية ≥ v2.617)؛
+  /// null لغيرها أو لخادمٍ أقدم.
+  Future<CommentThread> thread(String module, String recordId) async {
     final data = await api.getData(
       'comments',
       query: {'module': module, 'record': recordId},
     );
-    return (data['comments'] as List? ?? const [])
-        .whereType<Map>()
-        .map((e) => RecordComment.fromJson(e.cast<String, dynamic>()))
-        .toList();
+    return CommentThread(
+      comments: (data['comments'] as List? ?? const [])
+          .whereType<Map>()
+          .map((e) => RecordComment.fromJson(e.cast<String, dynamic>()))
+          .toList(),
+      cursor: data['cursor']?.toString(),
+    );
   }
 
   Future<RecordComment> post({

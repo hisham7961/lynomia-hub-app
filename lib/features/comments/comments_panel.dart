@@ -11,6 +11,7 @@ import '../../core/ui/async_view.dart';
 import '../../core/ui/visible_poller.dart';
 import '../../l10n/app_localizations.dart';
 import '../messages/live_events.dart';
+import '../messages/save_action.dart';
 import 'comment_repository.dart';
 import 'reactions.dart';
 
@@ -63,17 +64,21 @@ class _CommentsPanelState extends State<CommentsPanel> {
         onTick: _poll,
         isVisible: () => routeIsCurrent(context),
       );
-      _typingPing = TypingThrottle(() async {
-        try {
-          await c.collab.channelTyping(convId);
-        } on ApiException catch (e) {
-          // القدرة مطفأة خادمياً (٤٠٤) أو ضيفٌ لا يكتب (٤٠٣) ⇒ نكفّ عن النبض.
-          if (e.code == ApiErrorCode.resourceNotFound ||
-              e.code == ApiErrorCode.forbidden) {
-            _typingPing?.disable();
+      // علم الخادم `collab_typing=false` ⇒ لا نبض أصلاً؛ غيابه (خادمٌ أقدم) ⇒
+      // يُجرَّب والـ٤٠٤ يوقفه.
+      if (c.account.capabilityAllowed('collab_typing')) {
+        _typingPing = TypingThrottle(() async {
+          try {
+            await c.collab.channelTyping(convId);
+          } on ApiException catch (e) {
+            // القدرة مطفأة خادمياً (٤٠٤) أو ضيفٌ لا يكتب (٤٠٣) ⇒ نكفّ عن النبض.
+            if (e.code == ApiErrorCode.resourceNotFound ||
+                e.code == ApiErrorCode.forbidden) {
+              _typingPing?.disable();
+            }
           }
-        }
-      });
+        });
+      }
     }
     _load().then((_) async {
       if (!mounted || _poller == null || _comments == null) return;
@@ -95,9 +100,13 @@ class _CommentsPanelState extends State<CommentsPanel> {
       _error = null;
     });
     try {
-      final comments = await AppScope.of(context).comments
-          .forRecord(widget.module, widget.recordId);
-      if (mounted) setState(() => _comments = comments);
+      final thread = await AppScope.of(context).comments
+          .thread(widget.module, widget.recordId);
+      // أول تحميل للقناة يبذر «منذ» بمؤشر الذيل الخادمي — النبضات تبدأ من الآن.
+      final cursor = thread.cursor;
+      final feed = _feed;
+      if (feed != null && !feed.caughtUp && cursor != null) feed.seed(cursor);
+      if (mounted) setState(() => _comments = thread.comments);
     } on Object catch (e) {
       if (mounted && !quiet) setState(() => _error = e);
     } finally {
@@ -112,14 +121,14 @@ class _CommentsPanelState extends State<CommentsPanel> {
     ],
   };
 
-  /// نبضة «منذ»: حتى الذيل أولاً (المؤشر يبدأ من أول الحاوية)، ثم أي حدثٍ لا
-  /// نعرفه ⇒ إعادة جلب هادئة للقائمة (ردود وتفاعلات بشكلها الخادمي الكامل).
+  /// نبضة «منذ» من مؤشر الذيل: أي حدثٍ لا نعرفه ⇒ إعادة جلب هادئة للقائمة
+  /// (ردود وتفاعلات بشكلها الخادمي الكامل). خادمٌ أقدم بلا مؤشر ⇒ اللحاق بالذيل
+  /// صفحاتٍ محدودةً في كل نبضة، ولا إعادة جلب قبل بلوغه.
   Future<void> _poll() async {
     final feed = _feed;
     if (feed == null) return;
     try {
-      final wasCaughtUp = feed.caughtUp;
-      final batch = await feed.pull(maxPages: wasCaughtUp ? 5 : 20);
+      final batch = await feed.pull(maxPages: 5);
       if (!mounted) return;
       setState(() => _typing = batch.typing);
       final known = _knownIds();
@@ -199,6 +208,11 @@ class _CommentsPanelState extends State<CommentsPanel> {
                     _CommentTile(
                       comment: c,
                       onReact: (emoji) => _react(c, emoji),
+                      onSave: () => saveWithUndo(
+                        context,
+                        targetType: 'comment',
+                        targetId: c.id,
+                      ),
                       onReply: () => setState(() {
                         _replyTo = c.id;
                         _replyToName = c.userName;
@@ -210,6 +224,11 @@ class _CommentsPanelState extends State<CommentsPanel> {
                         child: _CommentTile(
                           comment: r,
                           onReact: (emoji) => _react(r, emoji),
+                          onSave: () => saveWithUndo(
+                            context,
+                            targetType: 'comment',
+                            targetId: r.id,
+                          ),
                         ),
                       ),
                   ],
@@ -298,6 +317,7 @@ class _CommentTile extends StatelessWidget {
   const _CommentTile({
     required this.comment,
     required this.onReact,
+    required this.onSave,
     this.onReply,
   });
 
@@ -305,6 +325,7 @@ class _CommentTile extends StatelessWidget {
 
   /// null ⇒ ورقة الاختيار؛ رمزٌ ⇒ تبديله مباشرة.
   final void Function(String? emoji) onReact;
+  final VoidCallback onSave;
   final VoidCallback? onReply;
 
   @override
@@ -386,6 +407,12 @@ class _CommentTile extends StatelessWidget {
                         ),
                     ],
                   ),
+                ),
+                IconButton(
+                  key: Key('save-${comment.id}'),
+                  tooltip: l.savedAction,
+                  icon: const Icon(Icons.bookmark_add_outlined, size: 18),
+                  onPressed: onSave,
                 ),
                 IconButton(
                   key: Key('react-${comment.id}'),

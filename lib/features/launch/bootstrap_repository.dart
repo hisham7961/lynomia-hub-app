@@ -118,6 +118,13 @@ class Bootstrap {
   final String? appVersionOnServer;
 
   bool flag(String name) => featureFlags[name] == true;
+
+  /// علمُ قدرةٍ اختياريّ: `false` صريحٌ ⇒ مطفأة؛ غائبٌ (خادمٌ أقدم) ⇒ null
+  /// فيُجرَّب النداء ويُعتمد ٤٠٤ بديلاً.
+  bool? optionalFlag(String name) => switch (featureFlags[name]) {
+    final bool b => b,
+    _ => null,
+  };
 }
 
 class BootstrapRepository {

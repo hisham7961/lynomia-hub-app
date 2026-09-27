@@ -48,6 +48,7 @@ class DmMessage {
     this.hasAttachment = false,
     this.read = false,
     this.createdAt,
+    this.reactions = const [],
   });
 
   factory DmMessage.fromJson(Map<String, dynamic> j) => DmMessage(
@@ -58,6 +59,7 @@ class DmMessage {
     hasAttachment: j['has_attachment'] == true,
     read: j['read'] == true,
     createdAt: DateTime.tryParse(j['created_at']?.toString() ?? ''),
+    reactions: j['deleted'] == true ? const [] : parseReactions(j['reactions']),
   );
 
   final String id;
@@ -67,6 +69,38 @@ class DmMessage {
   final bool hasAttachment;
   final bool read;
   final DateTime? createdAt;
+
+  /// ملخّص التفاعلات من الخادم (خلفية ≥ v2.617؛ فارغ لما قبلها وللمحذوفة).
+  final List<CommentReaction> reactions;
+
+  DmMessage copyWith({bool? deleted, List<CommentReaction>? reactions}) {
+    final gone = deleted ?? this.deleted;
+    return DmMessage(
+      id: id,
+      mine: mine,
+      body: gone ? null : body,
+      deleted: gone,
+      hasAttachment: gone ? false : hasAttachment,
+      read: read,
+      createdAt: createdAt,
+      reactions: gone ? const [] : (reactions ?? this.reactions),
+    );
+  }
+}
+
+/// خيطي مع طرفٍ: اسمه ورسائله ومؤشر الذيل لبدء «منذ».
+class DmThreadPage {
+  const DmThreadPage({
+    required this.userName,
+    required this.messages,
+    this.cursor,
+  });
+
+  final String userName;
+  final List<DmMessage> messages;
+
+  /// مؤشر آخر رسالة بترميز `since` ('' لخيطٍ فارغ؛ null من خادمٍ أقدم).
+  final String? cursor;
 }
 
 class DmRepository {
@@ -85,12 +119,20 @@ class DmRepository {
     );
   }
 
-  Future<List<DmMessage>> messages(String otherUserId) async {
+  Future<List<DmMessage>> messages(String otherUserId) async =>
+      (await thread(otherUserId)).messages;
+
+  /// `GET dm/threads/{user}/messages` بالاسم ومؤشر الذيل.
+  Future<DmThreadPage> thread(String otherUserId) async {
     final data = await api.getData('dm/threads/$otherUserId/messages');
-    return (data['messages'] as List? ?? const [])
-        .whereType<Map>()
-        .map((e) => DmMessage.fromJson(e.cast<String, dynamic>()))
-        .toList();
+    return DmThreadPage(
+      userName: ((data['user'] as Map?)?['name'])?.toString() ?? '',
+      messages: (data['messages'] as List? ?? const [])
+          .whereType<Map>()
+          .map((e) => DmMessage.fromJson(e.cast<String, dynamic>()))
+          .toList(),
+      cursor: data['cursor']?.toString(),
+    );
   }
 
   /// الإرسال قابل لإعادة المحاولة ⇒ مفتاح idempotency للرسالة الواحدة (§58).

@@ -1005,4 +1005,22 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get myDocumentsNoPersist =>
       'تُعرض الوثائق من الذاكرة ولا تُحفظ على الجهاز';
+
+  @override
+  String get savedAction => 'احفظ';
+
+  @override
+  String get savedDone => 'حُفظت في المحفوظات';
+
+  @override
+  String get savedAlready => 'محفوظة سلفاً';
+
+  @override
+  String get savedUndo => 'تراجع';
+
+  @override
+  String get savedRemove => 'إزالة من المحفوظات';
+
+  @override
+  String get savedRemoved => 'أُزيلت من المحفوظات';
 }

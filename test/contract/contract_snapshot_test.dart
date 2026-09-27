@@ -122,7 +122,7 @@ void main() {
   });
 
   test(
-    'مركز التواصل وعملي اليوم ووثائقي — كل ما يناديه التطبيق منذ v0.4.0',
+    'مركز التواصل وعملي اليوم ووثائقي — كل ما يناديه التطبيق (v0.4.0 + v0.5.0)',
     () {
       // النقاط الثلاث عشرة التي كانت PENDING_APP — العددُ مثبَّتٌ لكل مجال.
       expect(endpointsOf('conversations'), {
@@ -131,7 +131,12 @@ void main() {
         'POST /api/mobile/v1/conversations/{id}/typing',
       });
       expect(endpointsOf('presence'), {'GET /api/mobile/v1/presence'});
-      expect(endpointsOf('saved'), {'GET /api/mobile/v1/saved'});
+      // خلفية v2.617 (طلب #7): الحفظ والإزالة من الجوال.
+      expect(endpointsOf('saved'), {
+        'GET /api/mobile/v1/saved',
+        'POST /api/mobile/v1/saved',
+        'DELETE /api/mobile/v1/saved/{id}',
+      });
       expect(endpointsOf('work'), {
         'GET /api/mobile/v1/work/today',
         'GET /api/mobile/v1/work/daily-report',
@@ -161,6 +166,32 @@ void main() {
       );
     },
   );
+
+  test('حقول v2.617 التي يقرؤها التطبيق معلنة في المواصفة (طلبات #4–#8)', () {
+    final schemas = ((openapi['components'] as Map)['schemas'] as Map)
+        .cast<String, dynamic>();
+    Set<String> props(String name) =>
+        ((schemas[name] as Map)['properties'] as Map).keys
+            .cast<String>()
+            .toSet();
+    expect(props('DmMessage'), contains('reactions'));
+    expect(props('DmEvent'), contains('reactions'));
+    expect(props('SavedItem'), contains('target'));
+    // أعلام الإقلاع/التنقل (additionalProperties في Bootstrap؛ مسمّاةٌ في navigation)
+    final flags = jsonEncode(
+      (openapi['paths'] as Map)['/api/mobile/v1/navigation'],
+    );
+    expect(flags, contains('collab_typing'));
+    expect(flags, contains('collab_presence'));
+    final dmMsgs = jsonEncode(
+      (openapi['paths'] as Map)['/api/mobile/v1/dm/threads/{user}/messages'],
+    );
+    expect(dmMsgs, contains('"cursor"'));
+    final comments = jsonEncode(
+      (openapi['paths'] as Map)['/api/mobile/v1/comments'],
+    );
+    expect(comments, contains('"cursor"'));
+  });
 
   test('الملفات والماسح والتتبع والدفع', () {
     expect(endpointsOf('files'), hasLength(6));

@@ -1951,6 +1951,42 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'تُعرض الوثائق من الذاكرة ولا تُحفظ على الجهاز'**
   String get myDocumentsNoPersist;
+
+  /// No description provided for @savedAction.
+  ///
+  /// In ar, this message translates to:
+  /// **'احفظ'**
+  String get savedAction;
+
+  /// No description provided for @savedDone.
+  ///
+  /// In ar, this message translates to:
+  /// **'حُفظت في المحفوظات'**
+  String get savedDone;
+
+  /// No description provided for @savedAlready.
+  ///
+  /// In ar, this message translates to:
+  /// **'محفوظة سلفاً'**
+  String get savedAlready;
+
+  /// No description provided for @savedUndo.
+  ///
+  /// In ar, this message translates to:
+  /// **'تراجع'**
+  String get savedUndo;
+
+  /// No description provided for @savedRemove.
+  ///
+  /// In ar, this message translates to:
+  /// **'إزالة من المحفوظات'**
+  String get savedRemove;
+
+  /// No description provided for @savedRemoved.
+  ///
+  /// In ar, this message translates to:
+  /// **'أُزيلت من المحفوظات'**
+  String get savedRemoved;
 }
 
 class _AppLocalizationsDelegate

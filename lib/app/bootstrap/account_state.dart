@@ -27,6 +27,10 @@ class AccountState extends ChangeNotifier {
   int get unreadNotifications => bootstrap?.unreadNotifications ?? 0;
   bool flag(String name) => bootstrap?.flag(name) ?? false;
 
+  /// قدرةٌ لا يُحجب بابها إلا بـ`false` صريح من الخادم (غيابُ العلم ⇒ يُجرَّب
+  /// والخادم يحسم بـ٤٠٤) — `collab_typing`/`collab_presence`.
+  bool capabilityAllowed(String name) => bootstrap?.optionalFlag(name) ?? true;
+
   /// نمط الحساب — يختار القشرة (بوابة العميل أو اللوحة الداخلية). عرضٌ من
   /// المصنِّف الخادمي؛ الحرس الحقيقي `MobilePortalGuard` على الخادم (§10).
   bool get isClient => user?.isClient ?? false;

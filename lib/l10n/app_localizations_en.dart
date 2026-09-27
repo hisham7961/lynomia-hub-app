@@ -1018,4 +1018,22 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get myDocumentsNoPersist =>
       'Documents are shown from memory and never saved on the device';
+
+  @override
+  String get savedAction => 'Save';
+
+  @override
+  String get savedDone => 'Saved';
+
+  @override
+  String get savedAlready => 'Already saved';
+
+  @override
+  String get savedUndo => 'Undo';
+
+  @override
+  String get savedRemove => 'Remove from saved';
+
+  @override
+  String get savedRemoved => 'Removed from saved';
 }

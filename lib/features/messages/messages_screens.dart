@@ -19,6 +19,7 @@ import '../comments/reactions.dart';
 import 'collab_repository.dart';
 import 'dm_repository.dart';
 import 'live_events.dart';
+import 'save_action.dart';
 
 /// فاصل الاستطلاع في المحادثة المفتوحة.
 const kLivePollInterval = Duration(seconds: 4);
@@ -137,7 +138,12 @@ class _DirectThreadsTabState extends State<_DirectThreadsTab> {
     try {
       final res = await c.dm.threads();
       if (mounted) setState(() => _threads = res.threads);
-      // الحضور ثانوي: القدرة المطفأة (٤٠٤) أو أي فشل ⇒ بلا نقاط، لا خطأ.
+      // الحضور ثانوي: علم الخادم `collab_presence=false` ⇒ لا نداء؛ والقدرة
+      // المطفأة (٤٠٤ من خادمٍ بلا العلم) أو أي فشل ⇒ بلا نقاط، لا خطأ.
+      if (!c.account.capabilityAllowed('collab_presence')) {
+        if (mounted) setState(() => _presence = const {});
+        return;
+      }
       try {
         final p = await c.collab.presence(res.threads.map((t) => t.userId));
         if (mounted) setState(() => _presence = p);
@@ -349,9 +355,8 @@ class _DmChatScreenState extends State<DmChatScreen> {
   Object? _error;
   bool _loading = true;
   bool _sending = false;
+  String _fetchedName = '';
 
-  /// حالات التفاعل كما أعادها الخادم في هذه الجلسة (قائمة الرسائل لا تحملها).
-  final Map<String, Map<String, ReactionToggle>> _reactions = {};
   List<String> _typing = const [];
   PresenceState? _presence;
   bool _presenceOff = false;
@@ -359,7 +364,10 @@ class _DmChatScreenState extends State<DmChatScreen> {
 
   late final SinceFeed<DmLiveEvent> _feed;
   late final VisiblePoller _poller;
-  late final TypingThrottle _typingPing;
+  TypingThrottle? _typingPing;
+
+  String get _name =>
+      widget.otherName.isNotEmpty ? widget.otherName : _fetchedName;
 
   @override
   void initState() {
@@ -373,14 +381,18 @@ class _DmChatScreenState extends State<DmChatScreen> {
       onTick: _poll,
       isVisible: () => routeIsCurrent(context),
     );
-    _typingPing = TypingThrottle(() async {
-      try {
-        await c.dm.typing(widget.otherUserId);
-      } on Object catch (e) {
-        // القدرة مطفأة خادمياً ⇒ نكفّ عن النبض لبقية الجلسة.
-        if (_capabilityOff(e)) _typingPing.disable();
-      }
-    });
+    // أعلام الخادم: `false` صريح ⇒ لا نداء أصلاً؛ غيابها (خادمٌ أقدم) ⇒ يُجرَّب
+    // والـ٤٠٤ يوقفه لبقية الجلسة.
+    _presenceOff = !c.account.capabilityAllowed('collab_presence');
+    if (c.account.capabilityAllowed('collab_typing')) {
+      _typingPing = TypingThrottle(() async {
+        try {
+          await c.dm.typing(widget.otherUserId);
+        } on Object catch (e) {
+          if (_capabilityOff(e)) _typingPing?.disable();
+        }
+      });
+    }
     _load();
   }
 
@@ -398,10 +410,18 @@ class _DmChatScreenState extends State<DmChatScreen> {
       _error = null;
     });
     try {
-      final msgs = await c.dm.messages(widget.otherUserId);
+      final page = await c.dm.thread(widget.otherUserId);
       // ختم القراءة عند فتح الخيط (§52).
       c.dm.markRead(widget.otherUserId).catchError((_) => 0);
-      if (mounted) setState(() => _messages = msgs);
+      // «منذ» يبدأ من مؤشر الذيل الخادمي (لا مشيَ صفحاتٍ من أول الخيط).
+      final cursor = page.cursor;
+      if (cursor != null && !_feed.caughtUp) _feed.seed(cursor);
+      if (mounted) {
+        setState(() {
+          _messages = page.messages;
+          _fetchedName = page.userName;
+        });
+      }
     } on Object catch (e) {
       if (mounted) setState(() => _error = e);
     } finally {
@@ -409,7 +429,7 @@ class _DmChatScreenState extends State<DmChatScreen> {
     }
     if (!mounted || _messages == null) return;
     await _refreshPresence();
-    await _poll(catchUp: true);
+    await _poll();
     if (mounted) _poller.start();
   }
 
@@ -424,9 +444,9 @@ class _DmChatScreenState extends State<DmChatScreen> {
     }
   }
 
-  Future<void> _poll({bool catchUp = false}) async {
+  Future<void> _poll() async {
     try {
-      final batch = await _feed.pull(maxPages: catchUp ? 20 : 5);
+      final batch = await _feed.pull(maxPages: 5);
       if (!mounted) return;
       setState(() {
         _merge(batch.events);
@@ -439,8 +459,8 @@ class _DmChatScreenState extends State<DmChatScreen> {
     if (++_ticks % 15 == 0) await _refreshPresence();
   }
 
-  /// دمج أحداث «منذ»: الجديد يُلحق، والمحذوف يُعلَّم. والأقدم من أحدث رسالة
-  /// محمّلة يُتجاوز (تاريخ أبعد من نافذة الخيط، لا «جديد»).
+  /// دمج أحداث «منذ»: الجديد يُلحق بتفاعلاته، والمحذوف يُعلَّم. والأقدم من أحدث
+  /// رسالة محمّلة يُتجاوز (يحدث فقط مع خادمٍ أقدم بلا مؤشر ذيل).
   void _merge(List<DmLiveEvent> events) {
     final list = [...?_messages];
     final index = {for (var i = 0; i < list.length; i++) list[i].id: i};
@@ -453,14 +473,7 @@ class _DmChatScreenState extends State<DmChatScreen> {
       final at = index[e.id];
       if (at != null) {
         if (e.deleted && !list[at].deleted) {
-          final old = list[at];
-          list[at] = DmMessage(
-            id: old.id,
-            mine: old.mine,
-            deleted: true,
-            read: old.read,
-            createdAt: old.createdAt,
-          );
+          list[at] = list[at].copyWith(deleted: true);
         }
         continue;
       }
@@ -477,6 +490,7 @@ class _DmChatScreenState extends State<DmChatScreen> {
           body: e.body,
           deleted: e.deleted,
           createdAt: e.createdAt,
+          reactions: e.reactions,
         ),
       );
     }
@@ -511,13 +525,65 @@ class _DmChatScreenState extends State<DmChatScreen> {
     }
   }
 
-  Future<void> _react(DmMessage m, [String? emoji]) async {
-    final chosen = emoji ?? await pickReaction(context);
-    if (chosen == null || !mounted) return;
+  /// ضغطٌ مطوّل: ورقة الرموز + «احفظ الرسالة».
+  Future<void> _actions(DmMessage m) async {
+    final l = AppLocalizations.of(context)!;
+    const save = '__save__';
+    final choice = await showModalBottomSheet<String>(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Wrap(
+                spacing: 8,
+                alignment: WrapAlignment.center,
+                children: [
+                  for (final e in kReactionEmojis)
+                    InkWell(
+                      key: Key('react-$e'),
+                      borderRadius: BorderRadius.circular(24),
+                      onTap: () => Navigator.pop(ctx, e),
+                      child: Padding(
+                        padding: const EdgeInsets.all(8),
+                        child: Text(e, style: const TextStyle(fontSize: 28)),
+                      ),
+                    ),
+                ],
+              ),
+              ListTile(
+                key: const Key('dm-save'),
+                leading: const Icon(Icons.bookmark_add_outlined),
+                title: Text(l.savedAction),
+                onTap: () => Navigator.pop(ctx, save),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    if (choice == null || !mounted) return;
+    if (choice == save) {
+      await saveWithUndo(context, targetType: 'dm', targetId: m.id);
+    } else {
+      await _react(m, choice);
+    }
+  }
+
+  Future<void> _react(DmMessage m, String emoji) async {
     try {
-      final t = await AppScope.of(context).dm.react(m.id, chosen);
+      final t = await AppScope.of(context).dm.react(m.id, emoji);
       if (!mounted) return;
-      setState(() => (_reactions[m.id] ??= {})[t.emoji] = t);
+      setState(() {
+        _messages = [
+          for (final x in _messages ?? const <DmMessage>[])
+            x.id == t.targetId
+                ? x.copyWith(reactions: applyToggle(x.reactions, t))
+                : x,
+        ];
+      });
     } on Object catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context)
@@ -533,7 +599,7 @@ class _DmChatScreenState extends State<DmChatScreen> {
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(widget.otherName),
+            Text(_name),
             if (_typing.isNotEmpty)
               Text(
                 typingText(l, _typing),
@@ -573,10 +639,7 @@ class _DmChatScreenState extends State<DmChatScreen> {
                   final m = messages[messages.length - 1 - i];
                   return _Bubble(
                     message: m,
-                    reactions: (_reactions[m.id]?.values ?? const [])
-                        .where((r) => r.count > 0)
-                        .toList(),
-                    onLongPress: m.deleted ? null : () => _react(m),
+                    onLongPress: m.deleted ? null : () => _actions(m),
                     onToggle: (emoji) => _react(m, emoji),
                   );
                 },
@@ -602,7 +665,7 @@ class _DmChatScreenState extends State<DmChatScreen> {
                       ),
                       minLines: 1,
                       maxLines: 4,
-                      onChanged: (_) => _typingPing.onInput(),
+                      onChanged: (_) => _typingPing?.onInput(),
                       onSubmitted: (_) => _send(),
                     ),
                   ),
@@ -631,13 +694,11 @@ class _DmChatScreenState extends State<DmChatScreen> {
 class _Bubble extends StatelessWidget {
   const _Bubble({
     required this.message,
-    required this.reactions,
     required this.onLongPress,
     required this.onToggle,
   });
 
   final DmMessage message;
-  final List<ReactionToggle> reactions;
   final VoidCallback? onLongPress;
   final void Function(String emoji) onToggle;
 
@@ -692,11 +753,11 @@ class _Bubble extends StatelessWidget {
               ),
             ),
           ),
-          if (reactions.isNotEmpty && !m.deleted)
+          if (m.reactions.isNotEmpty && !m.deleted)
             Wrap(
               spacing: 4,
               children: [
-                for (final r in reactions)
+                for (final r in m.reactions)
                   ReactionChip(
                     emoji: r.emoji,
                     count: r.count,
@@ -742,6 +803,21 @@ class _SavedScreenState extends State<SavedScreen> {
       if (mounted) setState(() => _error = e);
     } finally {
       if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  Future<void> _remove(SavedItem s) async {
+    final l = AppLocalizations.of(context)!;
+    try {
+      await AppScope.of(context).collab.unsave(s.id);
+      if (!mounted) return;
+      setState(() => _items = [...?_items]..removeWhere((x) => x.id == s.id));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(l.savedRemoved)));
+    } on Object catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(describeError(context, e))));
     }
   }
 
@@ -795,6 +871,21 @@ class _SavedScreenState extends State<SavedScreen> {
                   ].join('\n'),
                 ),
                 isThreeLine: s.note != null && s.note!.isNotEmpty,
+                // غير المتاح يبقى كي يُزيله صاحبه — بلا فتح.
+                trailing: IconButton(
+                  key: Key('unsave-${s.id}'),
+                  tooltip: l.savedRemove,
+                  icon: const Icon(Icons.bookmark_remove_outlined),
+                  onPressed: () => _remove(s),
+                ),
+                // الوجهة من الخادم وحده (`target`)؛ لا شاشة لها ⇒ لا نقر.
+                onTap: switch (s.target?.routePath) {
+                  final String path => () async {
+                    await context.push(path);
+                    if (mounted) _load();
+                  },
+                  _ => null,
+                },
               );
             },
           ),

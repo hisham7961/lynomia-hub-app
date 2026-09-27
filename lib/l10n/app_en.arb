@@ -318,5 +318,11 @@
   "myDocumentsInfected": "Blocked — flagged by the virus scan",
   "myDocumentsNoPreview": "In-app preview is for images only — open it from the web platform",
   "myDocumentsRestricted": "Access to this document is restricted by an explicit rule",
-  "myDocumentsNoPersist": "Documents are shown from memory and never saved on the device"
+  "myDocumentsNoPersist": "Documents are shown from memory and never saved on the device",
+  "savedAction": "Save",
+  "savedDone": "Saved",
+  "savedAlready": "Already saved",
+  "savedUndo": "Undo",
+  "savedRemove": "Remove from saved",
+  "savedRemoved": "Removed from saved"
 }

@@ -3,12 +3,12 @@
     "info": {
         "title": "Lynomia Business Hub — Mobile API",
         "version": "1",
-        "x-hub-version": "2.614.0",
+        "x-hub-version": "2.617.0",
         "description": "سطحُ الجوال الأصيل (first-party) لتطبيق iOS/Android — **مستقلٌّ عن `/api/v1`** (مفتاح التكامل) ولا يمسّه.\nالمصادقةُ جلسةٌ من زوجِ رمزَين: وصولٌ قصيرُ الأجل (Bearer) + تحديثٌ متجدّدٌ لمرّة، كلاهما مُجزّأٌ خادميّاً ومربوطٌ بالجهاز.\nكلُّ ردٍّ يحمل `X-Request-Id` و`X-API-Version`، وكلُّ خطأٍ يحمل `code` آليّاً (لا يُطالَب العميلُ بقراءة العربية) و`request_id`.\nالقفلُ التفاؤليّ عبر `If-Match` (نسخةُ السجل) ⇒ `VERSION_CONFLICT`، وعدمُ الأثرِ عبر `Idempotency-Key` على كلِّ جانبٍ قابلٍ للإعادة.\nترويساتُ السياق/التليمتري (X-Lynomia-*) **تضييقُ عرضٍ ووسمٌ لا تخويل** — راجع `x-context-headers`. المعرّفاتُ الخارجيّة (FCM/APNs/App-Attest/Play-Integrity/الروابط العالميّة/روابط المتجر) **NOT_CONFIGURED** — راجع `x-not-configured`."
     },
     "servers": [
         {
-            "url": "http://127.0.0.1:8098"
+            "url": "http://127.0.0.1:8765"
         }
     ],
     "security": [
@@ -72,6 +72,14 @@
         {
             "name": "dm",
             "description": "الرسائل المباشرة"
+        },
+        {
+            "name": "collab",
+            "description": "تكافؤُ التعاون (حاويات · منذ · كتابة · حضور · تفاعلات · محفوظات)"
+        },
+        {
+            "name": "work",
+            "description": "تقريرُ العملِ اليوميّ"
         },
         {
             "name": "push",
@@ -1988,6 +1996,13 @@
                                                     "items": {
                                                         "$ref": "#/components/schemas/Comment"
                                                     }
+                                                },
+                                                "cursor": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ],
+                                                    "description": "مؤشّرُ الذيل (آخرُ صفٍّ حُمِّل، جذراً أو ردّاً) بترميزِ conversations/{id}/since — للقناة (module=channel) وحدَها، وnull لغيرها؛ '' لخيطٍ فارغ"
                                                 }
                                             }
                                         },
@@ -2271,9 +2286,9 @@
         "/api/mobile/v1/conversations": {
             "get": {
                 "tags": [
-                    "mobile"
+                    "collab"
                 ],
-                "summary": "get api/mobile/v1/conversations",
+                "summary": "حاوياتي (قنوات/غرف/مجموعات/محادثات) مع غير المقروء — مرآةُ عضويّاتي",
                 "operationId": "mobile_conversations_index",
                 "x-route-name": "mobile.conversations.index",
                 "security": [
@@ -2310,9 +2325,6 @@
                     "401": {
                         "$ref": "#/components/responses/401"
                     },
-                    "403": {
-                        "$ref": "#/components/responses/403"
-                    },
                     "404": {
                         "$ref": "#/components/responses/404"
                     },
@@ -2325,9 +2337,9 @@
         "/api/mobile/v1/conversations/{id}/since": {
             "get": {
                 "tags": [
-                    "mobile"
+                    "collab"
                 ],
-                "summary": "get api/mobile/v1/conversations/{id}/since",
+                "summary": "الجديدُ في قناةٍ منذ مؤشّر (50 حدّاً) + من يكتب — غيرُ العضو 404",
                 "operationId": "mobile_conversations_since",
                 "x-route-name": "mobile.conversations.since",
                 "security": [
@@ -2344,6 +2356,9 @@
                             "type": "string"
                         },
                         "description": "معرّفُ السجل (UUID)"
+                    },
+                    {
+                        "$ref": "#/components/parameters/cursor"
                     }
                 ],
                 "responses": {
@@ -2361,7 +2376,23 @@
                                     "properties": {
                                         "data": {
                                             "type": "object",
-                                            "additionalProperties": true
+                                            "properties": {
+                                                "events": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/ChannelEvent"
+                                                    }
+                                                },
+                                                "cursor": {
+                                                    "type": "string"
+                                                },
+                                                "typing": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string"
+                                                    }
+                                                }
+                                            }
                                         },
                                         "request_id": {
                                             "type": "string",
@@ -2374,9 +2405,6 @@
                     },
                     "401": {
                         "$ref": "#/components/responses/401"
-                    },
-                    "403": {
-                        "$ref": "#/components/responses/403"
                     },
                     "404": {
                         "$ref": "#/components/responses/404"
@@ -2635,6 +2663,10 @@
                                                     "items": {
                                                         "$ref": "#/components/schemas/DmMessage"
                                                     }
+                                                },
+                                                "cursor": {
+                                                    "type": "string",
+                                                    "description": "مؤشّرُ آخرِ رسالةٍ مُعادة بترميزِ dm/threads/{user}/since — ابدأ «منذ» منه؛ '' لخيطٍ فارغ"
                                                 }
                                             }
                                         },
@@ -2840,9 +2872,9 @@
         "/api/mobile/v1/dm/threads/{user}/since": {
             "get": {
                 "tags": [
-                    "mobile"
+                    "collab"
                 ],
-                "summary": "get api/mobile/v1/dm/threads/{user}/since",
+                "summary": "الجديدُ في محادثتي مع {user} منذ مؤشّر (50 حدّاً) + كتابةُ الطرف — يختم الواردَ مقروءاً",
                 "operationId": "mobile_dm_since",
                 "x-route-name": "mobile.dm.since",
                 "security": [
@@ -2859,6 +2891,9 @@
                             "type": "string"
                         },
                         "description": "معرّفُ الطرفِ الآخر في المحادثة — المفتاحُ يُبنى خادميّاً من هويّتك+هذا (F8)"
+                    },
+                    {
+                        "$ref": "#/components/parameters/cursor"
                     }
                 ],
                 "responses": {
@@ -2876,7 +2911,23 @@
                                     "properties": {
                                         "data": {
                                             "type": "object",
-                                            "additionalProperties": true
+                                            "properties": {
+                                                "events": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/DmEvent"
+                                                    }
+                                                },
+                                                "cursor": {
+                                                    "type": "string"
+                                                },
+                                                "typing": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string"
+                                                    }
+                                                }
+                                            }
                                         },
                                         "request_id": {
                                             "type": "string",
@@ -2889,9 +2940,6 @@
                     },
                     "401": {
                         "$ref": "#/components/responses/401"
-                    },
-                    "403": {
-                        "$ref": "#/components/responses/403"
                     },
                     "404": {
                         "$ref": "#/components/responses/404"
@@ -3877,6 +3925,12 @@
                                                             "type": "boolean"
                                                         },
                                                         "can_ask": {
+                                                            "type": "boolean"
+                                                        },
+                                                        "collab_typing": {
+                                                            "type": "boolean"
+                                                        },
+                                                        "collab_presence": {
                                                             "type": "boolean"
                                                         }
                                                     }
@@ -5497,9 +5551,9 @@
         "/api/mobile/v1/saved": {
             "get": {
                 "tags": [
-                    "mobile"
+                    "collab"
                 ],
-                "summary": "get api/mobile/v1/saved",
+                "summary": "محفوظاتي — تُعاد تخويلاً عند كلِّ فتح (غيرُ المرئيّ available=false بلا جسمٍ ولا وجهة)",
                 "operationId": "mobile_saved_index",
                 "x-route-name": "mobile.saved.index",
                 "security": [
@@ -5522,7 +5576,14 @@
                                     "properties": {
                                         "data": {
                                             "type": "object",
-                                            "additionalProperties": true
+                                            "properties": {
+                                                "saved": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/SavedItem"
+                                                    }
+                                                }
+                                            }
                                         },
                                         "request_id": {
                                             "type": "string",
@@ -5536,8 +5597,167 @@
                     "401": {
                         "$ref": "#/components/responses/401"
                     },
-                    "403": {
-                        "$ref": "#/components/responses/403"
+                    "404": {
+                        "$ref": "#/components/responses/404"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/429"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "collab"
+                ],
+                "summary": "احفظ رسالةً أراها الآن (حرسُ رؤيةِ الويب نفسُه) — حفظٌ لا تبديل: الإعادةُ تعيد القائمةَ 200 created=false",
+                "operationId": "mobile_saved_store",
+                "x-route-name": "mobile.saved.store",
+                "security": [
+                    {
+                        "mobileBearerAuth": []
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "target_type",
+                                    "target_id"
+                                ],
+                                "properties": {
+                                    "target_type": {
+                                        "type": "string",
+                                        "enum": [
+                                            "comment",
+                                            "dm"
+                                        ]
+                                    },
+                                    "target_id": {
+                                        "type": "string",
+                                        "maxLength": 64
+                                    },
+                                    "note": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 500
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "201 حين أُنشئت، و200 (created=false) حين كانت محفوظةً سلفاً",
+                        "headers": {
+                            "X-Request-Id": {
+                                "$ref": "#/components/headers/X-Request-Id"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "saved": {
+                                                    "$ref": "#/components/schemas/SavedItem"
+                                                },
+                                                "created": {
+                                                    "type": "boolean"
+                                                }
+                                            }
+                                        },
+                                        "request_id": {
+                                            "type": "string",
+                                            "nullable": true
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/401"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/404"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/422"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/429"
+                    }
+                }
+            }
+        },
+        "/api/mobile/v1/saved/{id}": {
+            "delete": {
+                "tags": [
+                    "collab"
+                ],
+                "summary": "إزالةُ محفوظتي (لصاحبها وحده — غيرُها 404)",
+                "operationId": "mobile_saved_destroy",
+                "x-route-name": "mobile.saved.destroy",
+                "security": [
+                    {
+                        "mobileBearerAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "معرّفُ السجل (UUID)"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "نجاح",
+                        "headers": {
+                            "X-Request-Id": {
+                                "$ref": "#/components/headers/X-Request-Id"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "string"
+                                                },
+                                                "deleted": {
+                                                    "type": "boolean"
+                                                }
+                                            }
+                                        },
+                                        "request_id": {
+                                            "type": "string",
+                                            "nullable": true
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/401"
                     },
                     "404": {
                         "$ref": "#/components/responses/404"
@@ -6105,9 +6325,9 @@
         "/api/mobile/v1/work/daily-report": {
             "get": {
                 "tags": [
-                    "mobile"
+                    "work"
                 ],
-                "summary": "get api/mobile/v1/work/daily-report",
+                "summary": "مرادفُ work/today (العقدُ نفسُه)",
                 "operationId": "mobile_work_daily_report",
                 "x-route-name": "mobile.work.daily_report",
                 "security": [
@@ -6115,9 +6335,19 @@
                         "mobileBearerAuth": []
                     }
                 ],
+                "parameters": [
+                    {
+                        "name": "date",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
-                        "description": "نجاح",
+                        "description": "نجاح. 422 «لا ملفَ موظّف»: {error:\"no_employee_profile\", code:\"BUSINESS_RULE_VIOLATION\", message, details:{reason:\"no_employee_profile\"}, request_id} + X-Error-Code",
                         "headers": {
                             "X-Request-Id": {
                                 "$ref": "#/components/headers/X-Request-Id"
@@ -6126,17 +6356,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "object",
-                                            "additionalProperties": true
-                                        },
-                                        "request_id": {
-                                            "type": "string",
-                                            "nullable": true
-                                        }
-                                    }
+                                    "$ref": "#/components/schemas/WorkToday"
                                 }
                             }
                         }
@@ -6144,11 +6364,11 @@
                     "401": {
                         "$ref": "#/components/responses/401"
                     },
-                    "403": {
-                        "$ref": "#/components/responses/403"
-                    },
                     "404": {
                         "$ref": "#/components/responses/404"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/422"
                     },
                     "429": {
                         "$ref": "#/components/responses/429"
@@ -6159,9 +6379,9 @@
         "/api/mobile/v1/work/today": {
             "get": {
                 "tags": [
-                    "mobile"
+                    "work"
                 ],
-                "summary": "get api/mobile/v1/work/today",
+                "summary": "حالةُ امتثالِ يومي + بنودُه (self) — المفاتيحُ العلويّةُ القديمة + غلافٌ data/request_id مضاف",
                 "operationId": "mobile_work_today",
                 "x-route-name": "mobile.work.today",
                 "security": [
@@ -6169,9 +6389,19 @@
                         "mobileBearerAuth": []
                     }
                 ],
+                "parameters": [
+                    {
+                        "name": "date",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
-                        "description": "نجاح",
+                        "description": "نجاح. 422 «لا ملفَ موظّف»: {error:\"no_employee_profile\", code:\"BUSINESS_RULE_VIOLATION\", message, details:{reason:\"no_employee_profile\"}, request_id} + X-Error-Code",
                         "headers": {
                             "X-Request-Id": {
                                 "$ref": "#/components/headers/X-Request-Id"
@@ -6180,17 +6410,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "object",
-                                            "additionalProperties": true
-                                        },
-                                        "request_id": {
-                                            "type": "string",
-                                            "nullable": true
-                                        }
-                                    }
+                                    "$ref": "#/components/schemas/WorkToday"
                                 }
                             }
                         }
@@ -6198,11 +6418,11 @@
                     "401": {
                         "$ref": "#/components/responses/401"
                     },
-                    "403": {
-                        "$ref": "#/components/responses/403"
-                    },
                     "404": {
                         "$ref": "#/components/responses/404"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/422"
                     },
                     "429": {
                         "$ref": "#/components/responses/429"
@@ -7822,6 +8042,228 @@
                     "created_at": {
                         "type": "string",
                         "format": "date-time",
+                        "nullable": true
+                    },
+                    "reactions": {
+                        "$ref": "#/components/schemas/Reactions"
+                    }
+                }
+            },
+            "Reactions": {
+                "type": "array",
+                "description": "ملخّصُ التفاعلات — مرتّبٌ بقائمةِ الرموزِ الثابتة؛ فارغٌ للمحذوفة",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "emoji": {
+                            "type": "string"
+                        },
+                        "count": {
+                            "type": "integer"
+                        },
+                        "mine": {
+                            "type": "boolean"
+                        }
+                    }
+                }
+            },
+            "ChannelEvent": {
+                "type": "object",
+                "properties": {
+                    "type": {
+                        "type": "string"
+                    },
+                    "id": {
+                        "type": "string"
+                    },
+                    "parent_id": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "user_id": {
+                        "type": "string"
+                    },
+                    "author": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "body": {
+                        "type": "string"
+                    },
+                    "edited": {
+                        "type": "boolean"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "reactions": {
+                        "$ref": "#/components/schemas/Reactions"
+                    }
+                }
+            },
+            "DmEvent": {
+                "type": "object",
+                "properties": {
+                    "type": {
+                        "type": "string",
+                        "enum": [
+                            "message.created",
+                            "message.deleted"
+                        ]
+                    },
+                    "id": {
+                        "type": "string"
+                    },
+                    "mine": {
+                        "type": "boolean"
+                    },
+                    "body": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "deleted": {
+                        "type": "boolean"
+                    },
+                    "edited": {
+                        "type": "boolean"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "reactions": {
+                        "$ref": "#/components/schemas/Reactions"
+                    }
+                }
+            },
+            "SavedTarget": {
+                "type": [
+                    "object",
+                    "null"
+                ],
+                "description": "وجهةٌ قانونيّة — موجودةٌ حين available=true وحدَه. comment: القناةُ module=channel وrecord_id=معرّفُ المحادثة (يُفتح بـcomments?module=channel&record=)، والعامّةُ module=feed وrecord_id=null، والوحدةُ {module, record_id}. dm: user_id = الطرفُ الآخر (dm/threads/{user_id}/messages)",
+                "properties": {
+                    "kind": {
+                        "type": "string",
+                        "enum": [
+                            "comment",
+                            "dm"
+                        ]
+                    },
+                    "module": {
+                        "type": "string"
+                    },
+                    "record_id": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "comment_id": {
+                        "type": "string"
+                    },
+                    "parent_id": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "user_id": {
+                        "type": "string"
+                    },
+                    "message_id": {
+                        "type": "string"
+                    }
+                }
+            },
+            "SavedItem": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "type": {
+                        "type": "string",
+                        "enum": [
+                            "comment",
+                            "dm"
+                        ]
+                    },
+                    "available": {
+                        "type": "boolean"
+                    },
+                    "title": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "author": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "note": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "saved_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "target": {
+                        "$ref": "#/components/schemas/SavedTarget"
+                    }
+                }
+            },
+            "WorkToday": {
+                "type": "object",
+                "description": "المفاتيحُ العلويّةُ (compliance/entries/submit_hint) عقدٌ قائم؛ و`data` نسخةٌ منها بالغلاف الموحَّد + `request_id` (إضافيّ)",
+                "properties": {
+                    "compliance": {
+                        "type": "object",
+                        "additionalProperties": true
+                    },
+                    "entries": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "submit_hint": {
+                        "type": "object",
+                        "properties": {
+                            "method": {
+                                "type": "string"
+                            },
+                            "path": {
+                                "type": "string"
+                            },
+                            "note": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "data": {
+                        "type": "object",
+                        "properties": {
+                            "compliance": {
+                                "type": "object",
+                                "additionalProperties": true
+                            },
+                            "entries": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            },
+                            "submit_hint": {
+                                "type": "object",
+                                "additionalProperties": true
+                            }
+                        }
+                    },
+                    "request_id": {
+                        "type": "string",
                         "nullable": true
                     }
                 }

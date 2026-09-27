@@ -2,6 +2,8 @@
 /// يكتب الآن. المؤشر يصنعه الخادم وحده ولا يُفكّ في التطبيق.
 library;
 
+import '../comments/reactions.dart';
+
 /// سقف الصفحة الخادمي لكل نداء «منذ» — صفحةٌ أقصر ⇒ بلغنا الذيل.
 const kSincePageSize = 50;
 
@@ -20,6 +22,7 @@ class DmLiveEvent {
     this.deleted = false,
     this.edited = false,
     this.createdAt,
+    this.reactions = const [],
   });
 
   factory DmLiveEvent.fromJson(Map<String, dynamic> j) => DmLiveEvent(
@@ -30,6 +33,7 @@ class DmLiveEvent {
     deleted: j['deleted'] == true || j['type'] == kEvMessageDeleted,
     edited: j['edited'] == true,
     createdAt: DateTime.tryParse(j['created_at']?.toString() ?? ''),
+    reactions: parseReactions(j['reactions']),
   );
 
   final String type;
@@ -39,6 +43,9 @@ class DmLiveEvent {
   final bool deleted;
   final bool edited;
   final DateTime? createdAt;
+
+  /// ملخّص التفاعلات (خلفية ≥ v2.617؛ فارغ لما قبلها وللمحذوفة).
+  final List<CommentReaction> reactions;
 }
 
 /// حدث رسالة قناة/مجموعة.
@@ -52,6 +59,7 @@ class ChannelLiveEvent {
     required this.body,
     this.edited = false,
     this.createdAt,
+    this.reactions = const [],
   });
 
   factory ChannelLiveEvent.fromJson(Map<String, dynamic> j) => ChannelLiveEvent(
@@ -63,6 +71,7 @@ class ChannelLiveEvent {
     body: j['body']?.toString() ?? '',
     edited: j['edited'] == true,
     createdAt: DateTime.tryParse(j['created_at']?.toString() ?? ''),
+    reactions: parseReactions(j['reactions']),
   );
 
   final String type;
@@ -73,6 +82,7 @@ class ChannelLiveEvent {
   final String body;
   final bool edited;
   final DateTime? createdAt;
+  final List<CommentReaction> reactions;
 }
 
 /// صفحة «منذ»: الأحداث، والمؤشر التالي (أو نفسه إن لم يجد جديداً)، ومن يكتب.
@@ -128,8 +138,10 @@ class SinceBatch<E> {
   final bool caughtUp;
 }
 
-/// متتبّع مؤشرٍ واحد: يبدأ فارغاً (من أول الخيط — الخادم لا يعطي مؤشراً
-/// ابتدائياً؛ راجع docs/backend-change-requests.md#4) ويتقدم بما يعيده الخادم.
+/// متتبّع مؤشرٍ واحد يتقدم بما يعيده الخادم. يُبذَر بمؤشر الذيل الذي يعيده
+/// تحميل الخيط نفسه (خلفية ≥ v2.617 — backend-change-requests.md#4، محلول) فتبدأ
+/// النبضات من «الآن». خادمٌ أقدم بلا مؤشر ⇒ يبدأ فارغاً (من أول الخيط) ويلحق
+/// بالذيل صفحاتٍ محدودةً في كل نبضة — صحيحٌ وإن كان أكلف.
 class SinceFeed<E> {
   SinceFeed(this.fetch);
 
@@ -139,6 +151,12 @@ class SinceFeed<E> {
   bool _caughtUp = false;
 
   String get cursor => _cursor;
+
+  /// بذر المؤشر من تحميل الخيط (مؤشر الذيل): ما بعده «جديدٌ» حقاً.
+  void seed(String cursor) {
+    _cursor = cursor;
+    _caughtUp = true;
+  }
 
   /// هل بلغنا الذيل مرةً على الأقل (ما بعده «جديدٌ» حقاً).
   bool get caughtUp => _caughtUp;

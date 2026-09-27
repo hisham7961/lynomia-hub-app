@@ -9,6 +9,55 @@ import '../../l10n/app_localizations.dart';
 /// لا نقطة تسردها، والخادم يرفض سواها بـ`VALIDATION_FAILED` فلا اختلاق.
 const kReactionEmojis = ['👍', '❤️', '🎉', '😂', '🤔', '🙏'];
 
+/// ملخّص رمزٍ على رسالة/تعليق كما يعيده الخادم: `{emoji, count, mine}`.
+class CommentReaction {
+  const CommentReaction({
+    required this.emoji,
+    required this.count,
+    required this.mine,
+  });
+
+  factory CommentReaction.fromJson(Map<String, dynamic> j) => CommentReaction(
+    emoji: j['emoji']?.toString() ?? '',
+    count: (j['count'] as num?)?.toInt() ?? 0,
+    mine: j['mine'] == true,
+  );
+
+  final String emoji;
+  final int count;
+  final bool mine;
+}
+
+/// يقرأ `reactions: [{emoji,count,mine}]` (غائبٌ ⇒ قائمة فارغة).
+List<CommentReaction> parseReactions(Object? raw) => (raw as List? ?? const [])
+    .whereType<Map>()
+    .map((e) => CommentReaction.fromJson(e.cast<String, dynamic>()))
+    .where((r) => r.emoji.isNotEmpty && r.count > 0)
+    .toList();
+
+/// يطبّق حالة رمزٍ أعادها الخادم على ملخّص: العدد من الخادم، والصفر يزيل.
+List<CommentReaction> applyToggle(
+  List<CommentReaction> current,
+  ReactionToggle t,
+) {
+  final out = <CommentReaction>[];
+  var seen = false;
+  for (final r in current) {
+    if (r.emoji == t.emoji) {
+      seen = true;
+      if (t.count > 0) {
+        out.add(CommentReaction(emoji: t.emoji, count: t.count, mine: t.mine));
+      }
+    } else {
+      out.add(r);
+    }
+  }
+  if (!seen && t.count > 0) {
+    out.add(CommentReaction(emoji: t.emoji, count: t.count, mine: t.mine));
+  }
+  return out;
+}
+
 /// نتيجة تبديل تفاعل كما يعيدها الخادم: الحالة الجديدة لرمزٍ واحد.
 class ReactionToggle {
   const ReactionToggle({

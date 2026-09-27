@@ -1,4 +1,4 @@
-# Lynomia Hub — v0.4.0
+# Lynomia Hub — v0.5.0
 
 تطبيقُ الجوال الأصيل (iOS + Android) لمنصّة **Lynomia Business Hub** — عربيٌّ أولاً،
 RTL أولاً، مبنيٌّ بـFlutter فوق سطح `/api/mobile/v1` حصراً. الخادمُ مصدرُ الحقيقة

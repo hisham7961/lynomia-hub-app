@@ -304,25 +304,25 @@ class ApiClient {
     final map = body is Map
         ? body.cast<String, dynamic>()
         : const <String, dynamic>{};
-    // بعض النقاط (مثل `work/today`) تردّ `{error: '<رمز_آلي>', message}` بلا
-    // `code`: الرمزُ الآليّ حينها هو `error` نفسه (snake_case لا نص عربي) —
-    // يُحفظ خاماً كي يتفرّع المستدعي عليه لا على الرسالة.
+    // نقاط أقدم (مثل `work/today` قبل v2.617) تردّ `{error: '<رمز_آلي>', message}`
+    // بلا `code`: الرمز الآلي حينها `error` نفسه (snake_case لا نص عربي) — يُحفظ
+    // خاماً كي يتفرّع المستدعي عليه لا على الرسالة. وحين يكون `error` رمزاً آلياً
+    // فالنص المعروض هو `message`.
     final errorToken = map['error']?.toString();
+    final errorIsToken =
+        errorToken != null && RegExp(r'^[a-z][a-z0-9_]*$').hasMatch(errorToken);
     final rawCode =
         (map['code'] ??
                 resp.headers['x-error-code'] ??
-                (errorToken != null &&
-                        RegExp(r'^[a-z][a-z0-9_]*$').hasMatch(errorToken)
-                    ? errorToken
-                    : null))
+                (errorIsToken ? errorToken : null))
             ?.toString();
     return ApiException(
       code: ApiErrorCode.parse(rawCode),
       rawCode: rawCode,
       httpStatus: resp.statusCode,
-      message: rawCode != null && rawCode == errorToken && map['code'] == null
+      message: errorIsToken
           ? (map['message']?.toString() ?? '')
-          : (map['error']?.toString() ?? map['message']?.toString() ?? ''),
+          : (errorToken ?? map['message']?.toString() ?? ''),
       details: map['details'] is Map
           ? (map['details'] as Map).cast<String, dynamic>()
           : const {},

@@ -108,6 +108,60 @@ class ConversationsRail {
       channels.isNotEmpty || rooms.isNotEmpty || groups.isNotEmpty;
 }
 
+/// وجهة المحفوظة القانونية (خلفية ≥ v2.617) — null حين لم تعد متاحة.
+class SavedTarget {
+  const SavedTarget({
+    required this.kind,
+    this.module,
+    this.recordId,
+    this.commentId,
+    this.parentId,
+    this.userId,
+    this.messageId,
+  });
+
+  static SavedTarget? fromJson(Object? raw) {
+    if (raw is! Map) return null;
+    final j = raw.cast<String, dynamic>();
+    final kind = j['kind']?.toString();
+    if (kind != 'comment' && kind != 'dm') return null;
+    String? s(String k) {
+      final v = j[k]?.toString();
+      return v == null || v.isEmpty ? null : v;
+    }
+
+    return SavedTarget(
+      kind: kind!,
+      module: s('module'),
+      recordId: s('record_id'),
+      commentId: s('comment_id'),
+      parentId: s('parent_id'),
+      userId: s('user_id'),
+      messageId: s('message_id'),
+    );
+  }
+
+  /// `comment` أو `dm`.
+  final String kind;
+  final String? module;
+  final String? recordId;
+  final String? commentId;
+  final String? parentId;
+  final String? userId;
+  final String? messageId;
+
+  /// مسار الشاشة داخل التطبيق — أو null حين لا شاشة جوال لها (منشور `feed`
+  /// بلا سجل مثلاً): لا وجهة مختلقة.
+  String? get routePath {
+    if (kind == 'dm') return userId == null ? null : '/messages/$userId';
+    final m = module;
+    final r = recordId;
+    if (m == null || r == null) return null;
+    if (m == 'channel') return '/conversations/$r';
+    return '/r/$m/$r';
+  }
+}
+
 /// محفوظة مُعادةُ التخويل عند كل فتح: ما لم يعد يُرى `available=false` بلا جسم.
 class SavedItem {
   const SavedItem({
@@ -118,6 +172,7 @@ class SavedItem {
     this.author,
     this.note,
     this.savedAt,
+    this.target,
   });
 
   factory SavedItem.fromJson(Map<String, dynamic> j) => SavedItem(
@@ -128,6 +183,7 @@ class SavedItem {
     author: j['author']?.toString(),
     note: j['note']?.toString(),
     savedAt: DateTime.tryParse(j['saved_at']?.toString() ?? ''),
+    target: j['available'] == true ? SavedTarget.fromJson(j['target']) : null,
   );
 
   final String id;
@@ -139,6 +195,9 @@ class SavedItem {
   final String? author;
   final String? note;
   final DateTime? savedAt;
+
+  /// الوجهة — حين `available` وحده.
+  final SavedTarget? target;
 }
 
 class CollabRepository {
@@ -205,4 +264,38 @@ class CollabRepository {
           .whereType<Map>()
           .map((e) => SavedItem.fromJson(e.cast<String, dynamic>()))
           .toList();
+
+  /// `POST saved` — حفظ رسالةٍ أراها الآن. **حفظٌ لا تبديل** خادمياً: الإعادة تعيد
+  /// المحفوظة القائمة (200 · `created=false`) — فالإعادة التلقائية العابرة آمنة.
+  /// ما لا أراه ⇒ `RESOURCE_NOT_FOUND`.
+  Future<({SavedItem item, bool created})> save({
+    required String targetType,
+    required String targetId,
+    String? note,
+  }) async {
+    final resp = await api.send(
+      ApiRequest(
+        'POST',
+        'saved',
+        jsonBody: {
+          'target_type': targetType,
+          'target_id': targetId,
+          if (note != null && note.trim().isNotEmpty) 'note': note.trim(),
+        },
+        retriable: true,
+      ),
+    );
+    final data = resp.dataMap;
+    return (
+      item: SavedItem.fromJson(
+        (data['saved'] as Map?)?.cast<String, dynamic>() ?? const {},
+      ),
+      created: data['created'] == true,
+    );
+  }
+
+  /// `DELETE saved/{id}` — إزالة محفوظتي (غيرها ٤٠٤). لا إعادة تلقائية.
+  Future<void> unsave(String id) async {
+    await api.send(ApiRequest('DELETE', 'saved/$id'));
+  }
 }

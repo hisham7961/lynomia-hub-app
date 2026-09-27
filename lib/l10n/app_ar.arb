@@ -333,5 +333,11 @@
   "myDocumentsInfected": "محجوبة — وُسمت مصابة بفحص الفيروسات",
   "myDocumentsNoPreview": "المعاينة داخل التطبيق للصور فقط — افتحها من المنصة على الويب",
   "myDocumentsRestricted": "وصول هذه الوثيقة مقيَّد بقاعدة صريحة",
-  "myDocumentsNoPersist": "تُعرض الوثائق من الذاكرة ولا تُحفظ على الجهاز"
+  "myDocumentsNoPersist": "تُعرض الوثائق من الذاكرة ولا تُحفظ على الجهاز",
+  "savedAction": "احفظ",
+  "savedDone": "حُفظت في المحفوظات",
+  "savedAlready": "محفوظة سلفاً",
+  "savedUndo": "تراجع",
+  "savedRemove": "إزالة من المحفوظات",
+  "savedRemoved": "أُزيلت من المحفوظات"
 }

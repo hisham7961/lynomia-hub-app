@@ -14,6 +14,14 @@ import '../../core/errors/api_exception.dart';
 /// الرمز الآلي الذي يرده الخادم حين لا ملفَ موظفٍ نشطاً مربوطاً بالحساب.
 const kNoEmployeeProfile = 'no_employee_profile';
 
+/// «لا ملف موظف»: بالكود الآلي وسبب التفاصيل (خلفية ≥ v2.617:
+/// `BUSINESS_RULE_VIOLATION` + `details.reason`)، أو بالرمز الخام من `error`
+/// لخادمٍ أقدم بلا `code` — لا تفرّع على الرسالة العربية أبداً.
+bool isNoEmployeeProfile(ApiException e) =>
+    (e.code == ApiErrorCode.businessRuleViolation &&
+        e.details['reason']?.toString() == kNoEmployeeProfile) ||
+    (e.code == ApiErrorCode.unknown && e.rawCode == kNoEmployeeProfile);
+
 Decimal? _dec(Object? v) =>
     v == null ? null : Decimal.tryParse(v is num ? v.toString() : '$v');
 
@@ -200,14 +208,15 @@ class WorkRepository {
   Future<WorkDay> _fetch(String path, Map<String, String> query) async {
     try {
       final resp = await api.send(ApiRequest('GET', path, query: query));
-      // الرد بلا غلاف `data` (نقطة §93 الأقدم) — ونقبل الغلاف إن أُضيف لاحقاً.
+      // خلفية ≥ v2.617 تضيف الغلاف `data` بجانب المفاتيح العلوية القديمة؛
+      // والأقدم بلا غلاف — نقرأ الغلاف إن وُجد وإلا الجسم كما هو.
       final env = resp.envelope;
       final body = env['data'] is Map
           ? (env['data'] as Map).cast<String, dynamic>()
           : env;
       return WorkDay.fromJson(body);
     } on ApiException catch (e) {
-      if (e.rawCode == kNoEmployeeProfile) return WorkDay.noProfile;
+      if (isNoEmployeeProfile(e)) return WorkDay.noProfile;
       rethrow;
     }
   }

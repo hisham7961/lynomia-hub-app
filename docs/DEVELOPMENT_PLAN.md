@@ -13,7 +13,7 @@
 |---|---|---|
 | Flutter 3.47.5 / Dart 3.13.4 | ✅ جاهز | `/opt/flutter` — `flutter analyze` و`flutter test` (136 اختباراً) خضراء |
 | Android SDK 36 + build-tools 36.0.0 + JDK 17 | ✅ مُنصَّب | `/opt/android-sdk` · `flutter doctor`: Android toolchain ✓ |
-| بناء APK (debug) | ⏳ | أول محاولة أوقفها Maven Central بـ`429 Too Many Requests` (خنقٌ خارجي لا عيب مشروع) — يُعاد بتراجعٍ زمني |
+| بناء APK (debug) | ✅ نجح | `flutter build apk --debug` ⇒ `app-debug.apk` (174MB) — بعد إعادة محاولة (Maven Central خنق الطلبات بـ429 أولاً) |
 | iOS | ✗ غير ممكن هنا | يتطلب macOS + Xcode — يُبنى على جهاز Mac أو CI بـmacOS runner |
 | Web / Linux desktop | غير مطلوب | التطبيق يستهدف iOS + Android فقط (لا مجلد `web/`) |
 
